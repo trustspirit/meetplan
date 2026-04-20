@@ -10,7 +10,8 @@
     "test": "pnpm -r test",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
-    "emulators": "firebase emulators:start"
+    "emulators": "firebase emulators:start",
+    "deploy": "pnpm --filter web build && pnpm --filter functions build && firebase deploy"
   },
   "devDependencies": {
     "typescript": "^5.4.0",
