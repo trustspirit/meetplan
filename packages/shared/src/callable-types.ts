@@ -28,3 +28,13 @@ export interface GetResponseOutput {
     updatedAt: string;
   };
 }
+
+export const deleteEventInputSchema = z.object({
+  eventId: z.string().min(1),
+});
+
+export type DeleteEventInput = z.infer<typeof deleteEventInputSchema>;
+
+export interface DeleteEventOutput {
+  deletedResponses: number;
+}
