@@ -44,11 +44,11 @@ describe("buildMatrixModel", () => {
   it("produces one row per response with checkmark set", () => {
     const m = buildMatrixModel(event, responses, tz);
     expect(m.rows).toHaveLength(2);
-    expect(m.rows[0].name).toBe("A");
-    expect(m.rows[0].checks.s1).toBe(true);
-    expect(m.rows[0].checks.s2).toBe(true);
-    expect(m.rows[0].checks.s3).toBe(false);
-    expect(m.rows[1].checks.s3).toBe(true);
+    expect(m.rows[0]?.name).toBe("A");
+    expect(m.rows[0]?.checks.s1).toBe(true);
+    expect(m.rows[0]?.checks.s2).toBe(true);
+    expect(m.rows[0]?.checks.s3).toBe(false);
+    expect(m.rows[1]?.checks.s3).toBe(true);
   });
 
   it("computes per-slot participant count", () => {
@@ -69,7 +69,7 @@ describe("buildMatrixModel", () => {
       { id: "r_stale", name: "X", phone: "01099990000", selectedSlotIds: ["s1", "s_deleted"], ownerUid: null, editTokenHash: "z", createdAt: "", updatedAt: "" },
     ];
     const m = buildMatrixModel(event, stale, tz);
-    expect(m.rows[0].checks.s1).toBe(true);
-    expect("s_deleted" in m.rows[0].checks).toBe(false);
+    expect(m.rows[0]?.checks.s1).toBe(true);
+    expect("s_deleted" in (m.rows[0]?.checks ?? {})).toBe(false);
   });
 });
