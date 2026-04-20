@@ -8,7 +8,7 @@ export interface EventCreateState {
   paintedCells: Set<string>;
 }
 
-const initialState: EventCreateState = {
+const defaultInitialState: EventCreateState = {
   title: "",
   periodMinutes: 30,
   selectedDates: [],
@@ -19,14 +19,22 @@ const initialState: EventCreateState = {
 export function cellKey(dateYmd: string, hhmm: string): string {
   return `${dateYmd}_${hhmm}`;
 }
-
 export function parseCellKey(key: string): { dateYmd: string; hhmm: string } {
   const [dateYmd, hhmm] = key.split("_");
   return { dateYmd: dateYmd!, hhmm: hhmm! };
 }
 
-export function useEventCreateState() {
-  const [state, setState] = useState<EventCreateState>(initialState);
+export function useEventCreateState(initial?: Partial<EventCreateState>) {
+  const [state, setState] = useState<EventCreateState>({
+    ...defaultInitialState,
+    ...initial,
+    // Set and arrays are cloned to keep independent instances
+    paintedCells: new Set(initial?.paintedCells ?? defaultInitialState.paintedCells),
+    selectedDates: [...(initial?.selectedDates ?? defaultInitialState.selectedDates)],
+    dailyRange: initial?.dailyRange
+      ? ([...initial.dailyRange] as [string, string])
+      : ([...defaultInitialState.dailyRange] as [string, string]),
+  });
 
   const setTitle = useCallback((title: string) => setState((s) => ({ ...s, title })), []);
   const setPeriod = useCallback(

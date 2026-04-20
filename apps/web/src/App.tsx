@@ -5,6 +5,7 @@ import LoginPage from "@/pages/LoginPage";
 import DashboardPage from "@/features/dashboard/DashboardPage";
 import EventCreatePage from "@/features/event-create/EventCreatePage";
 import EventResultPage from "@/features/event-result/EventResultPage";
+import EventEditPage from "@/features/event-edit/EventEditPage";
 import RespondPage from "@/features/event-respond/RespondPage";
 
 export default function App() {
@@ -35,6 +36,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <EventResultPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/events/:eventId/edit"
+          element={
+            <ProtectedRoute>
+              <EventEditPage />
             </ProtectedRoute>
           }
         />

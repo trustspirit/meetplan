@@ -117,6 +117,9 @@ export default function EventResultPage() {
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <ShareLinkButton eventId={eventId} />
+          <Link to={`/events/${eventId}/edit`}>
+            <Button variant="outline" size="sm">편집</Button>
+          </Link>
           <Button
             variant={isClosed ? "default" : "outline"}
             size="sm"
