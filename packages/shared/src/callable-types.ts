@@ -38,3 +38,20 @@ export type DeleteEventInput = z.infer<typeof deleteEventInputSchema>;
 export interface DeleteEventOutput {
   deletedResponses: number;
 }
+
+const slotInputSchema = z.object({
+  id: z.string().min(1),
+  start: z.string().datetime(),
+  end: z.string().datetime(),
+});
+
+export const updateEventSlotsInputSchema = z.object({
+  eventId: z.string().min(1),
+  slots: z.array(slotInputSchema).min(1),
+});
+
+export type UpdateEventSlotsInput = z.infer<typeof updateEventSlotsInputSchema>;
+
+export interface UpdateEventSlotsOutput {
+  affectedResponses: number;
+}
