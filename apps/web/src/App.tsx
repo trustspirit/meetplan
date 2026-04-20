@@ -3,6 +3,7 @@ import { AuthProvider } from "@/features/auth/AuthProvider";
 import { ProtectedRoute } from "@/features/auth/ProtectedRoute";
 import LoginPage from "@/pages/LoginPage";
 import DashboardPage from "@/features/dashboard/DashboardPage";
+import EventCreatePage from "@/features/event-create/EventCreatePage";
 
 export default function App() {
   return (
@@ -15,6 +16,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <DashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/events/new"
+          element={
+            <ProtectedRoute>
+              <EventCreatePage />
             </ProtectedRoute>
           }
         />
