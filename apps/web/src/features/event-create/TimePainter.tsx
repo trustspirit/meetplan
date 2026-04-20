@@ -2,6 +2,7 @@ import { useRef, type PointerEvent } from "react";
 import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import { cellKey } from "./useEventCreateState";
+import { useOnce } from "@/lib/useOnce";
 import { buildTimeAxis } from "./timeAxis";
 
 interface Props {
@@ -22,6 +23,7 @@ export function TimePainter({
   onChangeRange,
 }: Props) {
   const axis = buildTimeAxis(dailyRange[0], dailyRange[1], periodMinutes);
+  const { shouldShow: showHint, dismiss: dismissHint } = useOnce("create-paint-hint");
   const painting = useRef<{ targetState: boolean } | null>(null);
 
   if (selectedDates.length === 0) {
@@ -36,6 +38,7 @@ export function TimePainter({
     (e.target as Element).setPointerCapture(e.pointerId);
     painting.current = { targetState: !currentlyOn };
     onSetCell(key, !currentlyOn);
+    if (showHint) dismissHint();
   };
   const handlePointerEnter = (key: string) => {
     if (painting.current) onSetCell(key, painting.current.targetState);
@@ -46,6 +49,15 @@ export function TimePainter({
 
   return (
     <div className="rounded-xl border p-4 bg-background" onPointerUp={handlePointerUp} onPointerCancel={handlePointerUp}>
+      {showHint && (
+        <div className="mb-3 flex items-start gap-2 rounded-md bg-accent/10 border border-accent/30 p-2.5 text-[11px] text-accent">
+          <span>💡</span>
+          <div className="flex-1">
+            <b>팁:</b> 셀을 클릭하거나 드래그해서 가능한 시간을 한번에 칠하세요.
+          </div>
+          <button type="button" onClick={dismissHint} className="text-accent/70 hover:text-accent px-1" aria-label="닫기">✕</button>
+        </div>
+      )}
       <div className="flex items-center justify-between mb-3">
         <div className="text-sm font-semibold">가용 시간 페인팅</div>
         <div className="flex items-center gap-2 text-xs">
@@ -96,9 +108,6 @@ export function TimePainter({
         </div>
       </div>
 
-      <p className="text-[11px] text-muted-foreground mt-3">
-        💡 클릭하거나 드래그해서 가능한 시간을 칠하세요.
-      </p>
     </div>
   );
 }

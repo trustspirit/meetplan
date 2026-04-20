@@ -1,6 +1,7 @@
 import { Fragment, useRef, type PointerEvent } from "react";
 import { formatInTimeZone } from "date-fns-tz";
 import { cn } from "@/lib/utils";
+import { useOnce } from "@/lib/useOnce";
 import type { CellGridModel } from "./slotsToCells";
 
 interface Props {
@@ -12,11 +13,13 @@ interface Props {
 
 export function ParticipantGrid({ grid, selectedSlotIds, onSetSlot, viewerTz }: Props) {
   const painting = useRef<{ targetState: boolean } | null>(null);
+  const { shouldShow: showHint, dismiss: dismissHint } = useOnce("respond-paint-hint");
 
   const handleDown = (slotId: string, on: boolean, e: PointerEvent) => {
     (e.target as Element).setPointerCapture(e.pointerId);
     painting.current = { targetState: !on };
     onSetSlot(slotId, !on);
+    if (showHint) dismissHint();
   };
   const handleEnter = (slotId: string) => {
     if (painting.current) onSetSlot(slotId, painting.current.targetState);
@@ -25,6 +28,22 @@ export function ParticipantGrid({ grid, selectedSlotIds, onSetSlot, viewerTz }: 
 
   return (
     <div className="rounded-xl border p-4 bg-background overflow-x-auto" onPointerUp={handleUp} onPointerCancel={handleUp}>
+      {showHint && (
+        <div className="mb-3 flex items-start gap-2 rounded-md bg-accent/10 border border-accent/30 p-2.5 text-[11px] text-accent">
+          <span>💡</span>
+          <div className="flex-1">
+            <b>처음이신가요?</b> 셀을 <b>클릭</b>하거나 <b>드래그</b>해서 여러 시간을 한번에 선택하세요.
+          </div>
+          <button
+            type="button"
+            onClick={dismissHint}
+            className="text-accent/70 hover:text-accent px-1"
+            aria-label="닫기"
+          >
+            ✕
+          </button>
+        </div>
+      )}
       <div
         className="grid gap-0.5"
         style={{
@@ -34,7 +53,6 @@ export function ParticipantGrid({ grid, selectedSlotIds, onSetSlot, viewerTz }: 
       >
         <div />
         {grid.dates.map((ymd) => {
-          // 정오 UTC로 앵커 — UTC±12 범위 밖이 아닌 한 날짜 이동 위험 없음
           const anchor = new Date(`${ymd}T12:00:00Z`);
           const weekday = formatInTimeZone(anchor, viewerTz, "EEE");
           const mdLabel = formatInTimeZone(anchor, viewerTz, "M/d");
@@ -77,7 +95,7 @@ export function ParticipantGrid({ grid, selectedSlotIds, onSetSlot, viewerTz }: 
       </div>
 
       <p className="text-[11px] text-muted-foreground mt-3">
-        💡 클릭하거나 드래그해서 가능한 시간을 체크하세요. 흐린 셀은 호스트가 제공한 시간이 아닙니다.
+        흐린 셀은 호스트가 제공한 시간이 아닙니다.
       </p>
     </div>
   );
