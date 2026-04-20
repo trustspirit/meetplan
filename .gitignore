@@ -1,0 +1,34 @@
+node_modules
+dist
+build
+.next
+coverage
+.turbo
+
+# Firebase
+.firebase/
+functions/lib/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# Playwright
+playwright-report/
+test-results/
+
+# Brainstorm artifacts
+.superpowers/
