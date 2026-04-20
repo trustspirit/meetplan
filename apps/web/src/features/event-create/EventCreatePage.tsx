@@ -4,10 +4,12 @@ import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/features/auth/useAuth";
+import { useMediaQuery } from "@/lib/useMediaQuery";
 import { eventCreateSchema } from "@meetplan/shared";
 import { BasicInfoForm } from "./BasicInfoForm";
 import { MultiDateCalendar } from "./MultiDateCalendar";
 import { TimePainter } from "./TimePainter";
+import { MobileWizard } from "./MobileWizard";
 import { useEventCreateState } from "./useEventCreateState";
 import { buildSlotsFromPaintedCells } from "./generateSlots";
 
@@ -28,6 +30,7 @@ export default function EventCreatePage() {
     setDailyRange,
     setCellPainted,
   } = useEventCreateState();
+  const isDesktop = useMediaQuery("(min-width: 640px)");
 
   const slots = buildSlotsFromPaintedCells(state.paintedCells, state.periodMinutes, HOST_TZ);
   const canCreate = state.title.trim().length > 0 && slots.length > 0 && !submitting;
@@ -62,6 +65,27 @@ export default function EventCreatePage() {
       setSubmitting(false);
     }
   };
+
+  if (!isDesktop) {
+    return (
+      <MobileWizard
+        title={state.title}
+        onTitleChange={setTitle}
+        periodMinutes={state.periodMinutes}
+        onPeriodChange={setPeriod}
+        selectedDates={state.selectedDates}
+        onToggleDate={toggleDate}
+        dailyRange={state.dailyRange}
+        onChangeRange={setDailyRange}
+        paintedCells={state.paintedCells}
+        onSetCell={setCellPainted}
+        onSubmit={handleCreate}
+        submitting={submitting}
+        canSubmit={canCreate}
+        slotCount={slots.length}
+      />
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-8">
