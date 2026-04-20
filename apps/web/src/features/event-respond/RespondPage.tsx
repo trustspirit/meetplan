@@ -83,12 +83,22 @@ export default function RespondPage() {
     setSubmitError(null);
     setSubmitting(true);
     try {
+      // 편집 경로 결정:
+      //  - 익명: URL 쿼리의 rid + token
+      //  - 로그인: 기존 응답이 있으면 그 id를 rid로 전달 (중복 doc 방지)
+      //  - 둘 다 아니면 신규 생성
+      const editArgs =
+        rid && token
+          ? { rid, token }
+          : user && existing.response
+          ? { rid: existing.response.id }
+          : {};
       const { data } = await submitResponseCallable({
         eventId,
         name: state.name.trim(),
         phone: normalizePhone(state.phone),
         selectedSlotIds: [...state.selectedSlotIds],
-        ...(rid && token ? { rid, token } : {}),
+        ...editArgs,
       });
 
       if (data.rawToken) {
