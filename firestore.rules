@@ -2,6 +2,10 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     function isAuthed() { return request.auth != null; }
+    function isEventHost(eventId) {
+      return isAuthed() &&
+        get(/databases/$(database)/documents/events/$(eventId)).data.ownerUid == request.auth.uid;
+    }
 
     match /users/{uid} {
       allow read, write: if isAuthed() && request.auth.uid == uid;
@@ -19,8 +23,10 @@ service cloud.firestore {
       allow delete: if false;
 
       match /responses/{responseId} {
-        // 이 Plan에서는 read/write 모두 닫음. Plan 2에서 확장.
-        allow read, write: if false;
+        allow get:   if isEventHost(eventId)
+                      || (isAuthed() && resource.data.ownerUid == request.auth.uid);
+        allow list:  if isEventHost(eventId);
+        allow write: if false;
       }
     }
   }
