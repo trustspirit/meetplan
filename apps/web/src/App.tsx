@@ -4,7 +4,7 @@ import { ProtectedRoute } from "@/features/auth/ProtectedRoute";
 import LoginPage from "@/pages/LoginPage";
 import DashboardPage from "@/features/dashboard/DashboardPage";
 import EventCreatePage from "@/features/event-create/EventCreatePage";
-import EventResultStub from "@/pages/EventResultStub";
+import EventResultPage from "@/features/event-result/EventResultPage";
 import RespondPage from "@/features/event-respond/RespondPage";
 
 export default function App() {
@@ -34,7 +34,7 @@ export default function App() {
           path="/events/:eventId/result"
           element={
             <ProtectedRoute>
-              <EventResultStub />
+              <EventResultPage />
             </ProtectedRoute>
           }
         />
