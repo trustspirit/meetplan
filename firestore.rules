@@ -1,0 +1,27 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAuthed() { return request.auth != null; }
+
+    match /users/{uid} {
+      allow read, write: if isAuthed() && request.auth.uid == uid;
+    }
+
+    match /events/{eventId} {
+      allow read: if true;
+      allow create: if isAuthed()
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.status == 'open';
+      allow update: if isAuthed()
+        && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && request.resource.data.slots == resource.data.slots;
+      allow delete: if false;
+
+      match /responses/{responseId} {
+        // 이 Plan에서는 read/write 모두 닫음. Plan 2에서 확장.
+        allow read, write: if false;
+      }
+    }
+  }
+}
