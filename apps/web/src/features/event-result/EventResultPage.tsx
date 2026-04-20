@@ -11,6 +11,7 @@ import { buildMatrixModel } from "./matrixModel";
 import { ResponseMatrix } from "./ResponseMatrix";
 import { MatchingView } from "./MatchingView";
 import { ShareLinkButton } from "./ShareLinkButton";
+import { DeleteEventButton } from "./DeleteEventButton";
 import { cn } from "@/lib/utils";
 
 const VIEWER_TZ =
@@ -114,7 +115,7 @@ export default function EventResultPage() {
             {event.periodMinutes}분 미팅 · 응답 {responsesState.responses.length}명 · 슬롯 {event.slots.length}개
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <ShareLinkButton eventId={eventId} />
           <Button
             variant={isClosed ? "default" : "outline"}
@@ -124,6 +125,11 @@ export default function EventResultPage() {
           >
             {statusUpdating ? "…" : isClosed ? "다시 열기" : "마감"}
           </Button>
+          <DeleteEventButton
+            eventId={eventId}
+            eventTitle={event.title}
+            responseCount={responsesState.responses.length}
+          />
         </div>
       </header>
 
