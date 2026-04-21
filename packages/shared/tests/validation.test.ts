@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   phoneRegex,
   normalizePhone,
+  formatKoreanPhone,
   eventCreateSchema,
   responseSubmitSchema,
 } from "../src/validation";
@@ -24,6 +25,40 @@ describe("normalizePhone", () => {
   it("strips hyphens", () => {
     expect(normalizePhone("010-1234-5678")).toBe("01012345678");
     expect(normalizePhone("01012345678")).toBe("01012345678");
+  });
+});
+
+describe("formatKoreanPhone", () => {
+  it.each([
+    ["", ""],
+    ["0", "0"],
+    ["01", "01"],
+    ["010", "010"],
+    ["0101", "010-1"],
+    ["01012", "010-12"],
+    ["010123", "010-123"],
+    ["0101234", "010-1234"],
+    ["01012345", "010-1234-5"],
+    ["010123456", "010-1234-56"],
+    ["0101234567", "010-1234-567"],
+    ["01012345678", "010-1234-5678"],
+  ])("progressive formatting: %s -> %s", (input, expected) => {
+    expect(formatKoreanPhone(input)).toBe(expected);
+  });
+
+  it("strips non-digit characters from input", () => {
+    expect(formatKoreanPhone("010.1234.5678")).toBe("010-1234-5678");
+    expect(formatKoreanPhone("010 1234 5678")).toBe("010-1234-5678");
+    expect(formatKoreanPhone("010-1234-5678")).toBe("010-1234-5678");
+  });
+
+  it("truncates to 11 digits maximum", () => {
+    expect(formatKoreanPhone("010123456789999")).toBe("010-1234-5678");
+  });
+
+  it("is idempotent on already-formatted input", () => {
+    const formatted = "010-1234-5678";
+    expect(formatKoreanPhone(formatted)).toBe(formatted);
   });
 });
 

@@ -1,4 +1,4 @@
-import { useRef, type PointerEvent } from "react";
+import { Fragment, useRef, type PointerEvent } from "react";
 import { format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import { cellKey } from "./useEventCreateState";
@@ -24,7 +24,37 @@ export function TimePainter({
 }: Props) {
   const axis = buildTimeAxis(dailyRange[0], dailyRange[1], periodMinutes);
   const { shouldShow: showHint, dismiss: dismissHint } = useOnce("create-paint-hint");
-  const painting = useRef<{ targetState: boolean } | null>(null);
+  // painting.current === null: not dragging
+  // painting.current.visited: keys already set this drag (prevents redundant setState)
+  const painting = useRef<{ targetState: boolean; visited: Set<string> } | null>(null);
+
+  const applyToCell = (key: string) => {
+    const p = painting.current;
+    if (!p || p.visited.has(key)) return;
+    p.visited.add(key);
+    onSetCell(key, p.targetState);
+  };
+
+  const handlePointerDown = (key: string, currentlyOn: boolean) => {
+    painting.current = { targetState: !currentlyOn, visited: new Set([key]) };
+    onSetCell(key, !currentlyOn);
+    if (showHint) dismissHint();
+  };
+
+  // Unified drag tracker — works for mouse AND touch (elementFromPoint sidesteps
+  // touch implicit pointer capture, so we don't need setPointerCapture).
+  const handleRootPointerMove = (e: PointerEvent<HTMLDivElement>) => {
+    if (!painting.current) return;
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    const cell = el?.closest<HTMLElement>("[data-paint-key]");
+    if (!cell) return;
+    const key = cell.dataset.paintKey;
+    if (key) applyToCell(key);
+  };
+
+  const handlePointerUp = () => {
+    painting.current = null;
+  };
 
   if (selectedDates.length === 0) {
     return (
@@ -34,21 +64,14 @@ export function TimePainter({
     );
   }
 
-  const handlePointerDown = (key: string, currentlyOn: boolean, e: PointerEvent) => {
-    (e.target as Element).setPointerCapture(e.pointerId);
-    painting.current = { targetState: !currentlyOn };
-    onSetCell(key, !currentlyOn);
-    if (showHint) dismissHint();
-  };
-  const handlePointerEnter = (key: string) => {
-    if (painting.current) onSetCell(key, painting.current.targetState);
-  };
-  const handlePointerUp = () => {
-    painting.current = null;
-  };
-
   return (
-    <div className="rounded-xl border p-4 bg-background" onPointerUp={handlePointerUp} onPointerCancel={handlePointerUp}>
+    <div
+      className="rounded-xl border p-4 bg-background"
+      onPointerMove={handleRootPointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+      onPointerLeave={handlePointerUp}
+    >
       {showHint && (
         <div className="mb-3 flex items-start gap-2 rounded-md bg-accent/10 border border-accent/30 p-2.5 text-[11px] text-accent">
           <span>💡</span>
@@ -96,56 +119,32 @@ export function TimePainter({
           ))}
 
           {axis.map((hhmm) => (
-            <TimeRow
-              key={hhmm}
-              hhmm={hhmm}
-              dates={selectedDates}
-              paintedCells={paintedCells}
-              onPointerDown={handlePointerDown}
-              onPointerEnter={handlePointerEnter}
-            />
+            <Fragment key={hhmm}>
+              <div className="text-right pr-1 text-[10px] text-muted-foreground leading-[22px] tabular-nums">
+                {hhmm}
+              </div>
+              {selectedDates.map((ymd) => {
+                const key = cellKey(ymd, hhmm);
+                const on = paintedCells.has(key);
+                return (
+                  <div
+                    key={key}
+                    role="gridcell"
+                    data-paint-key={key}
+                    aria-label={`${ymd} ${hhmm}`}
+                    aria-selected={on}
+                    onPointerDown={() => handlePointerDown(key, on)}
+                    className={cn(
+                      "h-[22px] rounded-sm cursor-pointer select-none transition-colors touch-none",
+                      on ? "bg-accent" : "bg-muted hover:bg-muted-foreground/20"
+                    )}
+                  />
+                );
+              })}
+            </Fragment>
           ))}
         </div>
       </div>
-
     </div>
-  );
-}
-
-function TimeRow({
-  hhmm,
-  dates,
-  paintedCells,
-  onPointerDown,
-  onPointerEnter,
-}: {
-  hhmm: string;
-  dates: string[];
-  paintedCells: Set<string>;
-  onPointerDown: (key: string, on: boolean, e: PointerEvent) => void;
-  onPointerEnter: (key: string) => void;
-}) {
-  return (
-    <>
-      <div className="text-right pr-1 text-[10px] text-muted-foreground leading-[22px] tabular-nums">{hhmm}</div>
-      {dates.map((ymd) => {
-        const key = cellKey(ymd, hhmm);
-        const on = paintedCells.has(key);
-        return (
-          <div
-            key={key}
-            role="gridcell"
-            aria-label={`${ymd} ${hhmm}`}
-            aria-selected={on}
-            onPointerDown={(e) => onPointerDown(key, on, e)}
-            onPointerEnter={() => onPointerEnter(key)}
-            className={cn(
-              "h-[22px] rounded-sm cursor-pointer select-none transition-colors",
-              on ? "bg-accent" : "bg-muted hover:bg-muted-foreground/20"
-            )}
-          />
-        );
-      })}
-    </>
   );
 }

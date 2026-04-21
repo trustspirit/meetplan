@@ -28,18 +28,35 @@ interface Props {
 export function MobileWizard(props: Props) {
   const [step, setStep] = useState<1 | 2>(1);
   const [activeDate, setActiveDate] = useState<string | null>(null);
-  const painting = useRef<{ targetState: boolean } | null>(null);
+  // painting.current === null: not dragging
+  // visited: keys already set this drag (prevents redundant setState)
+  const painting = useRef<{ targetState: boolean; visited: Set<string> } | null>(null);
 
   const canGoNext = props.title.trim().length > 0 && props.selectedDates.length > 0;
 
-  const handleDown = (key: string, on: boolean, e: PointerEvent) => {
-    (e.target as Element).setPointerCapture(e.pointerId);
-    painting.current = { targetState: !on };
+  const applyToCell = (key: string) => {
+    const p = painting.current;
+    if (!p || p.visited.has(key)) return;
+    p.visited.add(key);
+    props.onSetCell(key, p.targetState);
+  };
+
+  const handleDown = (key: string, on: boolean) => {
+    painting.current = { targetState: !on, visited: new Set([key]) };
     props.onSetCell(key, !on);
   };
-  const handleEnter = (key: string) => {
-    if (painting.current) props.onSetCell(key, painting.current.targetState);
+
+  // Unified drag tracker — works for mouse and touch via elementFromPoint
+  // (sidesteps touch implicit pointer capture on the start cell).
+  const handleRootPointerMove = (e: PointerEvent<HTMLDivElement>) => {
+    if (!painting.current) return;
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    const cell = el?.closest<HTMLElement>("[data-paint-key]");
+    if (!cell) return;
+    const key = cell.dataset.paintKey;
+    if (key) applyToCell(key);
   };
+
   const handleUp = () => { painting.current = null; };
 
   if (step === 1) {
@@ -96,7 +113,13 @@ export function MobileWizard(props: Props) {
   const axis = buildTimeAxis(props.dailyRange[0], props.dailyRange[1], props.periodMinutes);
 
   return (
-    <div className="flex flex-col gap-4 p-4" onPointerUp={handleUp} onPointerCancel={handleUp}>
+    <div
+      className="flex flex-col gap-4 p-4"
+      onPointerMove={handleRootPointerMove}
+      onPointerUp={handleUp}
+      onPointerCancel={handleUp}
+      onPointerLeave={handleUp}
+    >
       <div className="flex items-center justify-between">
         <button type="button" onClick={() => setStep(1)} className="text-sm hover:underline">← 이전</button>
         <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">
@@ -144,10 +167,13 @@ export function MobileWizard(props: Props) {
               </div>
               <div
                 role="gridcell"
+                data-paint-key={key}
                 aria-selected={on}
-                onPointerDown={(e) => handleDown(key, on, e)}
-                onPointerEnter={() => handleEnter(key)}
-                className={cn("h-[22px] rounded select-none transition-colors", on ? "bg-accent" : "bg-muted")}
+                onPointerDown={() => handleDown(key, on)}
+                className={cn(
+                  "h-[22px] rounded select-none transition-colors touch-none",
+                  on ? "bg-accent" : "bg-muted"
+                )}
               />
             </Fragment>
           );

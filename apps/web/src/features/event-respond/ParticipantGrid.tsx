@@ -12,22 +12,45 @@ interface Props {
 }
 
 export function ParticipantGrid({ grid, selectedSlotIds, onSetSlot, viewerTz }: Props) {
-  const painting = useRef<{ targetState: boolean } | null>(null);
+  // painting.current === null: not dragging
+  // visited: slotIds already set in this drag (prevents redundant setState)
+  const painting = useRef<{ targetState: boolean; visited: Set<string> } | null>(null);
   const { shouldShow: showHint, dismiss: dismissHint } = useOnce("respond-paint-hint");
 
-  const handleDown = (slotId: string, on: boolean, e: PointerEvent) => {
-    (e.target as Element).setPointerCapture(e.pointerId);
-    painting.current = { targetState: !on };
+  const applyToSlot = (slotId: string) => {
+    const p = painting.current;
+    if (!p || p.visited.has(slotId)) return;
+    p.visited.add(slotId);
+    onSetSlot(slotId, p.targetState);
+  };
+
+  const handleDown = (slotId: string, on: boolean) => {
+    painting.current = { targetState: !on, visited: new Set([slotId]) };
     onSetSlot(slotId, !on);
     if (showHint) dismissHint();
   };
-  const handleEnter = (slotId: string) => {
-    if (painting.current) onSetSlot(slotId, painting.current.targetState);
+
+  // Unified drag tracker — works for mouse and touch.
+  // elementFromPoint sidesteps touch's implicit pointer capture on the start cell.
+  const handleRootPointerMove = (e: PointerEvent<HTMLDivElement>) => {
+    if (!painting.current) return;
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    const cell = el?.closest<HTMLElement>("[data-slot-id]");
+    if (!cell) return;
+    const slotId = cell.dataset.slotId;
+    if (slotId) applyToSlot(slotId);
   };
+
   const handleUp = () => { painting.current = null; };
 
   return (
-    <div className="rounded-xl border p-4 bg-background overflow-x-auto" onPointerUp={handleUp} onPointerCancel={handleUp}>
+    <div
+      className="rounded-xl border p-4 bg-background overflow-x-auto"
+      onPointerMove={handleRootPointerMove}
+      onPointerUp={handleUp}
+      onPointerCancel={handleUp}
+      onPointerLeave={handleUp}
+    >
       {showHint && (
         <div className="mb-3 flex items-start gap-2 rounded-md bg-accent/10 border border-accent/30 p-2.5 text-[11px] text-accent">
           <span>💡</span>
@@ -76,16 +99,17 @@ export function ParticipantGrid({ grid, selectedSlotIds, onSetSlot, viewerTz }: 
                 <div
                   key={cellKey}
                   role="gridcell"
+                  // data-slot-id enables elementFromPoint lookup during drag
+                  {...(available && slotId ? { "data-slot-id": slotId } : {})}
                   aria-label={`${ymd} ${hhmm}`}
                   aria-selected={selected}
                   aria-disabled={!available}
-                  onPointerDown={available && slotId ? (e) => handleDown(slotId, selected, e) : undefined}
-                  onPointerEnter={available && slotId ? () => handleEnter(slotId) : undefined}
+                  onPointerDown={available && slotId ? () => handleDown(slotId, selected) : undefined}
                   className={cn(
                     "h-[22px] rounded-sm select-none transition-colors",
                     !available && "bg-muted/30 cursor-not-allowed",
-                    available && !selected && "bg-muted hover:bg-muted-foreground/20 cursor-pointer",
-                    available && selected && "bg-accent cursor-pointer"
+                    available && !selected && "bg-muted hover:bg-muted-foreground/20 cursor-pointer touch-none",
+                    available && selected && "bg-accent cursor-pointer touch-none"
                   )}
                 />
               );

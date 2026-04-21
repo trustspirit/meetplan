@@ -10,7 +10,9 @@ import { fileURLToPath } from "node:url";
 import { doc, getDoc, setDoc, updateDoc, deleteDoc } from "firebase/firestore";
 
 // ESM 환경이라 __dirname 없음
-const rulesPath = fileURLToPath(new URL("../../firestore.rules", import.meta.url));
+const rulesPath = fileURLToPath(
+  new URL("../../firestore.rules", import.meta.url),
+);
 
 let testEnv: RulesTestEnvironment;
 
@@ -20,20 +22,30 @@ beforeAll(async () => {
     firestore: {
       rules: readFileSync(rulesPath, "utf8"),
       host: "localhost",
-      port: 8080,
+      port: 8280,
     },
   });
 });
 
-afterAll(async () => { await testEnv.cleanup(); });
-beforeEach(async () => { await testEnv.clearFirestore(); });
+afterAll(async () => {
+  await testEnv.cleanup();
+});
+beforeEach(async () => {
+  await testEnv.clearFirestore();
+});
 
 const EV = {
   ownerUid: "host1",
   title: "T",
   periodMinutes: 30,
   timezone: "Asia/Seoul",
-  slots: [{ id: "s_1", start: "2026-04-22T05:00:00.000Z", end: "2026-04-22T05:30:00.000Z" }],
+  slots: [
+    {
+      id: "s_1",
+      start: "2026-04-22T05:00:00.000Z",
+      end: "2026-04-22T05:30:00.000Z",
+    },
+  ],
   status: "open",
   createdAt: new Date(),
   updatedAt: new Date(),
@@ -44,11 +56,18 @@ describe("events rules", () => {
     await testEnv.withSecurityRulesDisabled(async (c) => {
       await setDoc(doc(c.firestore(), "events/e1"), EV);
     });
-    await assertSucceeds(getDoc(doc(testEnv.unauthenticatedContext().firestore(), "events/e1")));
+    await assertSucceeds(
+      getDoc(doc(testEnv.unauthenticatedContext().firestore(), "events/e1")),
+    );
   });
 
   it("unauthed cannot create", async () => {
-    await assertFails(setDoc(doc(testEnv.unauthenticatedContext().firestore(), "events/e1"), EV));
+    await assertFails(
+      setDoc(
+        doc(testEnv.unauthenticatedContext().firestore(), "events/e1"),
+        EV,
+      ),
+    );
   });
 
   it("authed host can create for themselves", async () => {
@@ -66,7 +85,9 @@ describe("events rules", () => {
       await setDoc(doc(c.firestore(), "events/e1"), EV);
     });
     const ctx = testEnv.authenticatedContext("host1");
-    await assertSucceeds(updateDoc(doc(ctx.firestore(), "events/e1"), { title: "T2" }));
+    await assertSucceeds(
+      updateDoc(doc(ctx.firestore(), "events/e1"), { title: "T2" }),
+    );
   });
 
   it("owner cannot change slots directly", async () => {
@@ -77,7 +98,7 @@ describe("events rules", () => {
     await assertFails(
       updateDoc(doc(ctx.firestore(), "events/e1"), {
         slots: [{ id: "s_new", start: "x", end: "y" }],
-      })
+      }),
     );
   });
 

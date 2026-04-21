@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { phoneRegex } from "@meetplan/shared";
+import { phoneRegex, formatKoreanPhone } from "@meetplan/shared";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -14,6 +14,11 @@ interface Props {
 export function ParticipantForm({ name, phone, onNameChange, onPhoneChange }: Props) {
   const [phoneTouched, setPhoneTouched] = useState(false);
   const phoneInvalid = phoneTouched && phone.length > 0 && !phoneRegex.test(phone);
+
+  const handlePhoneChange = (raw: string) => {
+    // 숫자만 추출해 자동 포맷팅. 백스페이스로 하이픈만 지우려 해도 숫자 지울 때까지는 유지됨.
+    onPhoneChange(formatKoreanPhone(raw));
+  };
 
   return (
     <section className="flex flex-col gap-4">
@@ -35,9 +40,10 @@ export function ParticipantForm({ name, phone, onNameChange, onPhoneChange }: Pr
           id="resp-phone"
           className={cn("mt-2", phoneInvalid && "border-destructive focus-visible:ring-destructive")}
           value={phone}
-          onChange={(e) => onPhoneChange(e.target.value)}
+          onChange={(e) => handlePhoneChange(e.target.value)}
           onBlur={() => setPhoneTouched(true)}
-          inputMode="tel"
+          inputMode="numeric"
+          maxLength={13}
           placeholder="010-1234-5678"
         />
         {phoneInvalid ? (
