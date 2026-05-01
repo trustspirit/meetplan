@@ -7,7 +7,6 @@ import { useAuth } from "@/features/auth/useAuth";
 import { useEventData } from "./useEventData";
 import { useExistingResponse } from "./useExistingResponse";
 import { useRespondState } from "./useRespondState";
-import { useGoogleCalendarBusy } from "./useGoogleCalendarBusy";
 import { slotsToCells } from "./slotsToCells";
 import { RespondDesktop } from "./RespondDesktop";
 import { RespondMobile } from "./RespondMobile";
@@ -37,10 +36,6 @@ export default function RespondPage() {
     [existing.response]
   );
   const { state, setName, setPhone, setSlotChecked } = useRespondState(prefill);
-
-  // Google Calendar busy-time integration (opt-in, logged-in users only)
-  const calendar = useGoogleCalendarBusy();
-  const [calendarChoice, setCalendarChoice] = useState<"pending" | "dismissed">("pending");
 
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -77,36 +72,6 @@ export default function RespondPage() {
 
   const event = eventState.event;
   const grid = slotsToCells(event.slots, VIEWER_TZ);
-
-  // Compute which slot IDs overlap with Google Calendar busy intervals
-  const busySlotIds = useMemo(() => {
-    if (!calendar.synced || calendar.busyIntervals.length === 0) return new Set<string>();
-    const busy = new Set<string>();
-    for (const slot of event.slots) {
-      const slotStart = new Date(slot.start).getTime();
-      const slotEnd = new Date(slot.end).getTime();
-      for (const interval of calendar.busyIntervals) {
-        const iStart = new Date(interval.start).getTime();
-        const iEnd = new Date(interval.end).getTime();
-        if (slotStart < iEnd && iStart < slotEnd) {
-          busy.add(slot.id);
-          break;
-        }
-      }
-    }
-    return busy;
-  }, [event.slots, calendar.busyIntervals, calendar.synced]);
-
-  const handleCalendarConnect = async () => {
-    if (event.slots.length === 0) return;
-    const times = event.slots.flatMap((s) => [s.start, s.end]).sort();
-    const timeMin = times[0]!;
-    const timeMax = times[times.length - 1]!;
-    const success = await calendar.syncCalendar(timeMin, timeMax);
-    if (success) setCalendarChoice("dismissed");
-  };
-
-  const handleCalendarSkip = () => setCalendarChoice("dismissed");
 
   const nameOk = state.name.trim().length > 0;
   const phoneOk = phoneRegex.test(state.phone);
@@ -169,16 +134,6 @@ export default function RespondPage() {
     submitting,
     onSubmit: handleSubmit,
     submitError,
-    busySlotIds,
-    // Calendar opt-in props — only for logged-in users
-    ...(user ? {
-      calendarChoice,
-      calendarSyncing: calendar.loading,
-      calendarError: calendar.error,
-      calendarSynced: calendar.synced,
-      onCalendarConnect: handleCalendarConnect,
-      onCalendarSkip: handleCalendarSkip,
-    } : {}),
   };
 
   return isDesktop ? <RespondDesktop {...commonProps} /> : <RespondMobile {...commonProps} />;

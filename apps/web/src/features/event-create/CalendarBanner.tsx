@@ -3,9 +3,10 @@ interface Props {
   error: string | null;
   onConnect: () => void;
   onSkip: () => void;
+  disabled?: boolean;
 }
 
-export function CalendarBanner({ syncing, error, onConnect, onSkip }: Props) {
+export function CalendarBanner({ syncing, error, onConnect, onSkip, disabled }: Props) {
   return (
     <div className="rounded-xl border border-border bg-muted/40 px-4 py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-start gap-2">
@@ -13,7 +14,9 @@ export function CalendarBanner({ syncing, error, onConnect, onSkip }: Props) {
         <div>
           <p className="text-sm font-medium">구글 캘린더 연동</p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            기존 일정이 있는 시간대를 그리드에서 한눈에 확인하세요
+            {disabled
+              ? "날짜를 먼저 선택하면 기존 일정을 확인할 수 있습니다"
+              : "기존 일정이 있는 시간대를 페인팅 그리드에서 확인하세요"}
           </p>
           {error && <p className="text-xs text-destructive mt-1">{error} — 다시 시도하거나 건너뛰세요</p>}
         </div>
@@ -30,8 +33,8 @@ export function CalendarBanner({ syncing, error, onConnect, onSkip }: Props) {
         <button
           type="button"
           onClick={onConnect}
-          disabled={syncing}
-          className="text-xs font-medium bg-accent text-accent-foreground rounded-md px-3 py-1.5 hover:opacity-90 disabled:opacity-60 transition-opacity"
+          disabled={syncing || disabled}
+          className="text-xs font-medium bg-accent text-accent-foreground rounded-md px-3 py-1.5 hover:opacity-90 disabled:opacity-40 transition-opacity"
         >
           {syncing ? "연동 중…" : "연동하기"}
         </button>

@@ -1,27 +1,60 @@
-import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useMemo, useState } from "react";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/features/auth/useAuth";
 import { useMediaQuery } from "@/lib/useMediaQuery";
 import { eventCreateSchema } from "@meetplan/shared";
+import { toZonedInstant } from "@meetplan/shared";
+import type { Slot } from "@meetplan/shared";
 import { BasicInfoForm } from "./BasicInfoForm";
 import { MultiDateCalendar } from "./MultiDateCalendar";
 import { TimePainter } from "./TimePainter";
 import { MobileWizard } from "./MobileWizard";
-import { useEventCreateState } from "./useEventCreateState";
+import { CalendarBanner } from "./CalendarBanner";
+import { useEventCreateState, cellKey } from "./useEventCreateState";
 import { buildSlotsFromPaintedCells } from "./generateSlots";
+import { buildTimeAxis } from "./timeAxis";
+import { useGoogleCalendarBusy } from "../event-respond/useGoogleCalendarBusy";
+import { slotsToPaintedCells } from "../event-edit/slotsToPaintedCells";
 
 // 브라우저의 IANA TZ 자동 감지, 폴백 "Asia/Seoul"
 const HOST_TZ =
   Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Seoul";
 
+type FromResultState = {
+  sourceTitle: string;
+  sourceSlots: Slot[];
+  sourcePeriod: number;
+} | null;
+
 export default function EventCreatePage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Pre-populate from result page if navigated with source state
+  const fromResult = (location.state as FromResultState) ?? null;
+  const initialState = fromResult
+    ? (() => {
+        const { selectedDates, paintedCells, dailyRange } = slotsToPaintedCells(
+          fromResult.sourceSlots,
+          fromResult.sourcePeriod,
+          HOST_TZ
+        );
+        return {
+          title: `${fromResult.sourceTitle} (후속)`,
+          periodMinutes: fromResult.sourcePeriod,
+          selectedDates,
+          paintedCells,
+          dailyRange,
+        };
+      })()
+    : undefined;
+
   const {
     state,
     setTitle,
@@ -29,8 +62,41 @@ export default function EventCreatePage() {
     toggleDate,
     setDailyRange,
     setCellPainted,
-  } = useEventCreateState();
+  } = useEventCreateState(initialState);
   const isDesktop = useMediaQuery("(min-width: 640px)");
+
+  // Google Calendar busy-time integration (opt-in)
+  const calendar = useGoogleCalendarBusy();
+  const [calendarChoice, setCalendarChoice] = useState<"pending" | "dismissed">("pending");
+
+  const handleCalendarConnect = async () => {
+    if (state.selectedDates.length === 0) return;
+    const sorted = [...state.selectedDates].sort();
+    const timeMin = toZonedInstant(sorted[0]!, "00:00", HOST_TZ);
+    const timeMax = toZonedInstant(sorted[sorted.length - 1]!, "23:59", HOST_TZ);
+    const success = await calendar.syncCalendar(timeMin, timeMax);
+    if (success) setCalendarChoice("dismissed");
+  };
+
+  // Compute busy cell keys by checking each grid cell against freeBusy intervals
+  const busyCells = useMemo(() => {
+    if (!calendar.synced || calendar.busyIntervals.length === 0) return new Set<string>();
+    const busy = new Set<string>();
+    const axis = buildTimeAxis(state.dailyRange[0], state.dailyRange[1], state.periodMinutes);
+    for (const ymd of state.selectedDates) {
+      for (const hhmm of axis) {
+        const startMs = new Date(toZonedInstant(ymd, hhmm, HOST_TZ)).getTime();
+        const endMs = startMs + state.periodMinutes * 60 * 1000;
+        for (const interval of calendar.busyIntervals) {
+          if (startMs < new Date(interval.end).getTime() && new Date(interval.start).getTime() < endMs) {
+            busy.add(cellKey(ymd, hhmm));
+            break;
+          }
+        }
+      }
+    }
+    return busy;
+  }, [calendar.synced, calendar.busyIntervals, state.selectedDates, state.dailyRange, state.periodMinutes]);
 
   const slots = buildSlotsFromPaintedCells(state.paintedCells, state.periodMinutes, HOST_TZ);
   const canCreate = state.title.trim().length > 0 && slots.length > 0 && !submitting;
@@ -83,6 +149,13 @@ export default function EventCreatePage() {
         submitting={submitting}
         canSubmit={canCreate}
         slotCount={slots.length}
+        busyCells={busyCells}
+        calendarChoice={calendarChoice}
+        calendarSyncing={calendar.loading}
+        calendarError={calendar.error}
+        calendarSynced={calendar.synced}
+        onCalendarConnect={handleCalendarConnect}
+        onCalendarSkip={() => setCalendarChoice("dismissed")}
       />
     );
   }
@@ -104,16 +177,33 @@ export default function EventCreatePage() {
           periodMinutes={state.periodMinutes}
           onPeriodChange={setPeriod}
         />
-        <section className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6 items-start">
-          <MultiDateCalendar selectedDates={state.selectedDates} onToggleDate={toggleDate} />
-          <TimePainter
-            selectedDates={state.selectedDates}
-            dailyRange={state.dailyRange}
-            periodMinutes={state.periodMinutes}
-            paintedCells={state.paintedCells}
-            onSetCell={setCellPainted}
-            onChangeRange={setDailyRange}
-          />
+        <section className="flex flex-col gap-4">
+          {calendarChoice === "pending" && (
+            <CalendarBanner
+              syncing={calendar.loading}
+              error={calendar.error}
+              onConnect={handleCalendarConnect}
+              onSkip={() => setCalendarChoice("dismissed")}
+              disabled={state.selectedDates.length === 0}
+            />
+          )}
+          {calendar.synced && (
+            <p className="text-xs text-muted-foreground flex items-center gap-1">
+              <span>📅</span> 구글 캘린더 연동됨 — 줄무늬 셀에 기존 일정이 있습니다
+            </p>
+          )}
+          <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6 items-start">
+            <MultiDateCalendar selectedDates={state.selectedDates} onToggleDate={toggleDate} />
+            <TimePainter
+              selectedDates={state.selectedDates}
+              dailyRange={state.dailyRange}
+              periodMinutes={state.periodMinutes}
+              paintedCells={state.paintedCells}
+              onSetCell={setCellPainted}
+              onChangeRange={setDailyRange}
+              busyCells={busyCells}
+            />
+          </div>
         </section>
       </div>
 

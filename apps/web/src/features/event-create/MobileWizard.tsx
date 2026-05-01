@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { MultiDateCalendar } from "./MultiDateCalendar";
+import { CalendarBanner } from "./CalendarBanner";
 import { buildTimeAxis } from "./timeAxis";
 import { cellKey } from "./useEventCreateState";
 
@@ -23,6 +24,13 @@ interface Props {
   submitting: boolean;
   canSubmit: boolean;
   slotCount: number;
+  busyCells?: Set<string>;
+  calendarChoice?: "pending" | "dismissed";
+  calendarSyncing?: boolean;
+  calendarError?: string | null;
+  calendarSynced?: boolean;
+  onCalendarConnect?: () => void;
+  onCalendarSkip?: () => void;
 }
 
 export function MobileWizard(props: Props) {
@@ -128,6 +136,20 @@ export function MobileWizard(props: Props) {
         <div className="text-xs text-muted-foreground">{props.slotCount} 슬롯</div>
       </div>
 
+      {props.calendarChoice === "pending" && props.onCalendarConnect && (
+        <CalendarBanner
+          syncing={props.calendarSyncing ?? false}
+          error={props.calendarError ?? null}
+          onConnect={props.onCalendarConnect}
+          onSkip={props.onCalendarSkip!}
+        />
+      )}
+      {props.calendarSynced && (
+        <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+          <span>📅</span> 구글 캘린더 연동됨
+        </p>
+      )}
+
       <div className="flex gap-2 overflow-x-auto pb-2">
         {props.selectedDates.map((ymd) => (
           <button
@@ -160,6 +182,7 @@ export function MobileWizard(props: Props) {
         {axis.map((hhmm) => {
           const key = cellKey(currentDate, hhmm);
           const on = props.paintedCells.has(key);
+          const isBusy = props.busyCells?.has(key) ?? false;
           return (
             <Fragment key={hhmm}>
               <div className="text-right text-[10px] text-muted-foreground leading-[22px] tabular-nums pr-1">
@@ -172,13 +195,23 @@ export function MobileWizard(props: Props) {
                 onPointerDown={() => handleDown(key, on)}
                 className={cn(
                   "h-[22px] rounded select-none transition-colors touch-none",
-                  on ? "bg-accent" : "bg-muted"
+                  on && !isBusy && "bg-accent",
+                  on && isBusy && "bg-accent cell-busy",
+                  !on && !isBusy && "bg-muted",
+                  !on && isBusy && "bg-muted cell-busy",
                 )}
               />
             </Fragment>
           );
         })}
       </div>
+
+      {props.busyCells && props.busyCells.size > 0 && (
+        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+          <span className="inline-block w-3 h-3 rounded-sm bg-muted cell-busy shrink-0" />
+          줄무늬 = 캘린더 일정 있음
+        </div>
+      )}
 
       <div className="text-[10px] text-muted-foreground text-center p-2 bg-muted rounded">
         👆 꾹 눌러 드래그해서 연속된 시간을 한번에 칠하세요

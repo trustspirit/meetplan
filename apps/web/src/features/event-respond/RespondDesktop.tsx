@@ -5,7 +5,6 @@ import type { CellGridModel } from "./slotsToCells";
 import type { RespondState } from "./useRespondState";
 import { ParticipantGrid } from "./ParticipantGrid";
 import { ParticipantForm } from "./ParticipantForm";
-import { CalendarBanner } from "./CalendarBanner";
 
 interface Props {
   event: MeetplanEvent;
@@ -19,13 +18,6 @@ interface Props {
   submitting: boolean;
   onSubmit: () => void;
   submitError: string | null;
-  busySlotIds?: Set<string>;
-  calendarChoice?: "pending" | "dismissed";
-  calendarSyncing?: boolean;
-  calendarError?: string | null;
-  calendarSynced?: boolean;
-  onCalendarConnect?: () => void;
-  onCalendarSkip?: () => void;
 }
 
 export function RespondDesktop(props: Props) {
@@ -50,26 +42,12 @@ export function RespondDesktop(props: Props) {
         )}
       </header>
 
-      <div className="py-8 flex flex-col gap-6">
-        {props.calendarChoice === "pending" && props.onCalendarConnect && (
-          <CalendarBanner
-            syncing={props.calendarSyncing ?? false}
-            error={props.calendarError ?? null}
-            onConnect={props.onCalendarConnect}
-            onSkip={props.onCalendarSkip!}
-          />
-        )}
-        {props.calendarSynced && (
-          <p className="text-xs text-muted-foreground flex items-center gap-1">
-            <span>📅</span> 구글 캘린더 연동됨 — 줄무늬 셀에 기존 일정이 있습니다
-          </p>
-        )}
+      <div className="py-8 flex flex-col gap-8">
         <ParticipantGrid
           grid={props.grid}
           selectedSlotIds={props.state.selectedSlotIds}
           onSetSlot={props.onSetSlot}
           viewerTz={props.viewerTz}
-          {...(props.busySlotIds ? { busySlotIds: props.busySlotIds } : {})}
         />
         <ParticipantForm
           name={props.state.name}
@@ -93,3 +71,4 @@ export function RespondDesktop(props: Props) {
     </div>
   );
 }
+

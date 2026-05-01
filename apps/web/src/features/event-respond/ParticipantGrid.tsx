@@ -9,10 +9,9 @@ interface Props {
   selectedSlotIds: Set<string>;
   onSetSlot: (slotId: string, on: boolean) => void;
   viewerTz: string;
-  busySlotIds?: Set<string>;
 }
 
-export function ParticipantGrid({ grid, selectedSlotIds, onSetSlot, viewerTz, busySlotIds }: Props) {
+export function ParticipantGrid({ grid, selectedSlotIds, onSetSlot, viewerTz }: Props) {
   // painting.current === null: not dragging
   // visited: slotIds already set in this drag (prevents redundant setState)
   const painting = useRef<{ targetState: boolean; visited: Set<string> } | null>(null);
@@ -96,7 +95,6 @@ export function ParticipantGrid({ grid, selectedSlotIds, onSetSlot, viewerTz, bu
               const available = grid.availableCells.has(cellKey);
               const slotId = grid.slotIdByCell.get(cellKey);
               const selected = !!(slotId && selectedSlotIds.has(slotId));
-              const isBusy = !!(slotId && busySlotIds?.has(slotId));
               return (
                 <div
                   key={cellKey}
@@ -110,10 +108,8 @@ export function ParticipantGrid({ grid, selectedSlotIds, onSetSlot, viewerTz, bu
                   className={cn(
                     "h-[22px] rounded-sm select-none transition-colors",
                     !available && "bg-muted/30 cursor-not-allowed",
-                    available && !selected && !isBusy && "bg-muted hover:bg-muted-foreground/20 cursor-pointer touch-none",
-                    available && !selected && isBusy && "bg-muted cell-busy hover:bg-muted-foreground/10 cursor-pointer touch-none",
-                    available && selected && !isBusy && "bg-accent cursor-pointer touch-none",
-                    available && selected && isBusy && "bg-accent cell-busy cursor-pointer touch-none",
+                    available && !selected && "bg-muted hover:bg-muted-foreground/20 cursor-pointer touch-none",
+                    available && selected && "bg-accent cursor-pointer touch-none"
                   )}
                 />
               );
@@ -122,15 +118,9 @@ export function ParticipantGrid({ grid, selectedSlotIds, onSetSlot, viewerTz, bu
         ))}
       </div>
 
-      <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground mt-3">
-        <span>흐린 셀은 호스트가 제공한 시간이 아닙니다.</span>
-        {busySlotIds && busySlotIds.size > 0 && (
-          <span className="flex items-center gap-1">
-            <span className="inline-block w-3 h-3 rounded-sm bg-muted cell-busy" />
-            줄무늬 = 캘린더 일정 있음 (선택 가능)
-          </span>
-        )}
-      </div>
+      <p className="text-[11px] text-muted-foreground mt-3">
+        흐린 셀은 호스트가 제공한 시간이 아닙니다.
+      </p>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link, Navigate, useParams } from "react-router-dom";
+import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ type Tab = "matrix" | "matching";
 export default function EventResultPage() {
   const { eventId } = useParams<{ eventId: string }>();
   const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const eventState = useEventData(eventId);
   const event = eventState.event;
 
@@ -117,6 +118,22 @@ export default function EventResultPage() {
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <ShareLinkButton eventId={eventId} />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              navigate("/events/new", {
+                state: {
+                  sourceTitle: event.title,
+                  sourceSlots: event.slots,
+                  sourcePeriod: event.periodMinutes,
+                },
+              })
+            }
+            title="이 이벤트의 시간대를 그대로 가져와 새 이벤트 생성"
+          >
+            📋 새 이벤트로 복사
+          </Button>
           <Link to={`/events/${eventId}/edit`}>
             <Button variant="outline" size="sm">편집</Button>
           </Link>

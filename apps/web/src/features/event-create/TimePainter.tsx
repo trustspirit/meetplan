@@ -12,6 +12,7 @@ interface Props {
   paintedCells: Set<string>;
   onSetCell: (key: string, on: boolean) => void;
   onChangeRange: (range: [string, string]) => void;
+  busyCells?: Set<string>;
 }
 
 export function TimePainter({
@@ -21,6 +22,7 @@ export function TimePainter({
   paintedCells,
   onSetCell,
   onChangeRange,
+  busyCells,
 }: Props) {
   const axis = buildTimeAxis(dailyRange[0], dailyRange[1], periodMinutes);
   const { shouldShow: showHint, dismiss: dismissHint } = useOnce("create-paint-hint");
@@ -126,6 +128,7 @@ export function TimePainter({
               {selectedDates.map((ymd) => {
                 const key = cellKey(ymd, hhmm);
                 const on = paintedCells.has(key);
+                const isBusy = busyCells?.has(key) ?? false;
                 return (
                   <div
                     key={key}
@@ -136,7 +139,10 @@ export function TimePainter({
                     onPointerDown={() => handlePointerDown(key, on)}
                     className={cn(
                       "h-[22px] rounded-sm cursor-pointer select-none transition-colors touch-none",
-                      on ? "bg-accent" : "bg-muted hover:bg-muted-foreground/20"
+                      on && !isBusy && "bg-accent",
+                      on && isBusy && "bg-accent cell-busy",
+                      !on && !isBusy && "bg-muted hover:bg-muted-foreground/20",
+                      !on && isBusy && "bg-muted cell-busy hover:bg-muted-foreground/10",
                     )}
                   />
                 );
@@ -145,6 +151,12 @@ export function TimePainter({
           ))}
         </div>
       </div>
+      {busyCells && busyCells.size > 0 && (
+        <div className="flex items-center gap-1.5 mt-3 text-[11px] text-muted-foreground">
+          <span className="inline-block w-3 h-3 rounded-sm bg-muted cell-busy shrink-0" />
+          줄무늬 = 구글 캘린더에 기존 일정 있음 (페인팅 가능)
+        </div>
+      )}
     </div>
   );
 }
