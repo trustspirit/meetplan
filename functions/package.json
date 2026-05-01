@@ -18,6 +18,7 @@
     "firebase-functions": "^5.1.1"
   },
   "devDependencies": {
+    "@meetplan/shared": "workspace:*",
     "@types/node": "^20.11.0",
     "esbuild": "^0.28.0",
     "typescript": "^5.4.0",
