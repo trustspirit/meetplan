@@ -17,7 +17,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "prepare": "tsc"
+    "prepare": "tsc && tsc -p tsconfig.esm.json"
   },
   "dependencies": {
     "zod": "^3.22.4",

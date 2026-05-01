@@ -7,7 +7,11 @@ const rootDir = fileURLToPath(new URL(".", import.meta.url));
 export default defineConfig({
   plugins: [react()],
   resolve: {
-    alias: { "@": `${rootDir}src` },
+    alias: {
+      "@": `${rootDir}src`,
+      "@meetplan/shared": `${rootDir}../../packages/shared/src/index.ts`,
+    },
+    conditions: ["import", "module", "browser", "default"],
   },
   test: {
     globals: true,
