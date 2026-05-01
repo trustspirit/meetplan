@@ -103,9 +103,6 @@ importers:
         specifier: ^5.1.1
         version: 5.1.1(firebase-admin@12.7.0)
     devDependencies:
-      '@meetplan/shared':
-        specifier: workspace:*
-        version: link:../packages/shared
       '@types/node':
         specifier: ^20.11.0
         version: 20.19.39

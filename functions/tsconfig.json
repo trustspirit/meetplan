@@ -6,7 +6,10 @@
     "noEmit": true,
     "declaration": false,
     "declarationMap": false,
-    "types": ["node"]
+    "types": ["node"],
+    "paths": {
+      "@meetplan/shared": ["../packages/shared/src/index.ts"]
+    }
   },
   "include": ["src/**/*", "tests/**/*"]
 }
