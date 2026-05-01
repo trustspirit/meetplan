@@ -42,7 +42,12 @@ export function DeleteEventButton({ eventId, eventTitle, responseCount }: Props)
 
   if (!confirming) {
     return (
-      <Button variant="outline" size="sm" onClick={() => setConfirming(true)}>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => setConfirming(true)}
+        className="border-destructive text-destructive hover:bg-destructive/10"
+      >
         이벤트 삭제
       </Button>
     );

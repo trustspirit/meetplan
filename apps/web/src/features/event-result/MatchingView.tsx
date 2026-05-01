@@ -8,26 +8,70 @@ interface Props {
   model: MatrixModel;
   participantNameById: Record<string, string>;
   participantColors: Record<string, string>;
-  hiddenCount: number;
+  hiddenIds: Set<string>;
+  onToggleHidden: (id: string) => void;
 }
 
 type ViewMode = "list" | "grid";
 
-export function MatchingView({ matching, model, participantNameById, participantColors, hiddenCount }: Props) {
+export function MatchingView({ matching, model, participantNameById, participantColors, hiddenIds, onToggleHidden }: Props) {
   const [view, setView] = useState<ViewMode>("list");
+  const [hoveredId, setHoveredId] = useState<string | null>(null);
 
-  if (matching.totalParticipants === 0) {
+  const hiddenCount = hiddenIds.size;
+
+  if (model.rows.length === 0) {
     return (
       <div className="rounded-xl border p-10 text-center text-sm text-muted-foreground bg-background">
-        {hiddenCount > 0
-          ? `${hiddenCount}명이 숨겨져 있어 배정 대상이 없습니다. 범례에서 참가자를 표시하세요.`
-          : "응답이 모이면 자동 배정 조합이 표시됩니다"}
+        응답이 모이면 자동 배정 조합이 표시됩니다
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3">
+      {/* Participant legend */}
+      <div className="flex flex-wrap gap-2 rounded-xl border bg-muted/20 px-3 py-2.5">
+        {model.rows.map((r) => {
+          const color = participantColors[r.responseId] ?? "#888";
+          const hidden = hiddenIds.has(r.responseId);
+          const hovered = hoveredId === r.responseId;
+          return (
+            <label
+              key={r.responseId}
+              className={cn(
+                "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs cursor-pointer select-none border-2 transition-all",
+                hidden ? "opacity-40" : "opacity-100"
+              )}
+              style={{
+                borderColor: hovered ? color : "transparent",
+                backgroundColor: hovered ? color + "22" : "transparent",
+              }}
+              onMouseEnter={() => setHoveredId(r.responseId)}
+              onMouseLeave={() => setHoveredId(null)}
+            >
+              <input
+                type="checkbox"
+                checked={!hidden}
+                onChange={() => onToggleHidden(r.responseId)}
+                className="w-3 h-3 cursor-pointer"
+                style={{ accentColor: color }}
+              />
+              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
+              <span className={hidden ? "line-through" : ""}>{r.name}</span>
+            </label>
+          );
+        })}
+      </div>
+      {matching.totalParticipants === 0 && (
+        <div className="rounded-xl border p-10 text-center text-sm text-muted-foreground bg-background">
+          {hiddenCount > 0
+            ? `${hiddenCount}명이 숨겨져 있어 배정 대상이 없습니다. 위 범례에서 참가자를 표시하세요.`
+            : "응답이 모이면 자동 배정 조합이 표시됩니다"}
+        </div>
+      )}
+
+      {matching.totalParticipants > 0 && (<>
       {/* Summary + view toggle */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="rounded-lg border bg-muted/20 p-4 text-sm flex-1 min-w-0">
@@ -55,11 +99,12 @@ export function MatchingView({ matching, model, participantNameById, participant
       ) : (
         <GridView matching={matching} model={model} participantNameById={participantNameById} participantColors={participantColors} />
       )}
+      </>)}
     </div>
   );
 }
 
-type SubViewProps = Omit<Props, "hiddenCount">;
+type SubViewProps = Pick<Props, "matching" | "model" | "participantNameById" | "participantColors">;
 
 /* ─── List view (original card layout) ─── */
 

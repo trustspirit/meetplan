@@ -160,13 +160,20 @@ export default function EventResultPage() {
             📋 새 이벤트로 복사
           </Button>
           <Link to={`/events/${eventId}/edit`}>
-            <Button variant="outline" size="sm">편집</Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="border-blue-400 text-blue-600 hover:bg-blue-50 dark:border-blue-500 dark:text-blue-400 dark:hover:bg-blue-950"
+            >
+              편집
+            </Button>
           </Link>
           <Button
             variant={isClosed ? "default" : "outline"}
             size="sm"
             onClick={toggleStatus}
             disabled={statusUpdating}
+            className={!isClosed ? "border-amber-400 text-amber-700 hover:bg-amber-50 dark:border-amber-500 dark:text-amber-400 dark:hover:bg-amber-950" : ""}
           >
             {statusUpdating ? "…" : isClosed ? "다시 열기" : "마감"}
           </Button>
@@ -208,7 +215,8 @@ export default function EventResultPage() {
             model={matrixModel}
             participantNameById={participantNameById}
             participantColors={participantColors}
-            hiddenCount={hiddenIds.size}
+            hiddenIds={hiddenIds}
+            onToggleHidden={toggleHidden}
           />
         )}
       </div>

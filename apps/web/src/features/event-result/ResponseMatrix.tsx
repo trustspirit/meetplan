@@ -131,11 +131,10 @@ function HeatmapView({ model, totalResponses, participantColors, hiddenIds, hove
                   return <td key={d.dateYmd} className="px-2 py-1.5 border-l border-border/40 bg-muted/10" />;
                 }
 
-                // Filter participants: exclude hidden; in spotlight show only hovered
+                // Spotlight mode: show only hovered (even if hidden); normal mode: exclude hidden
                 const displayed = cell.participants.filter((p) => {
-                  if (hiddenIds.has(p.responseId)) return false;
-                  if (hoveredId && hoveredId !== p.responseId) return false;
-                  return true;
+                  if (hoveredId) return hoveredId === p.responseId;
+                  return !hiddenIds.has(p.responseId);
                 });
                 const visibleCount = cell.participants.filter((p) => !hiddenIds.has(p.responseId)).length;
                 const ratio = visibleTotal > 0 ? visibleCount / visibleTotal : 0;
@@ -162,10 +161,9 @@ function HeatmapView({ model, totalResponses, participantColors, hiddenIds, hove
                         return (
                           <span
                             key={p.responseId}
-                            className="block text-[10px] leading-tight px-1 rounded font-medium truncate max-w-[108px]"
+                            className="block text-[10px] leading-tight px-1 rounded font-medium truncate max-w-[108px] bg-background"
                             style={{
                               color,
-                              backgroundColor: color + "22",
                               borderLeft: `2px solid ${color}`,
                             }}
                           >
@@ -319,10 +317,10 @@ function ViewToggleButton({
 }
 
 function heatBg(ratio: number): string {
-  if (ratio === 0) return "bg-muted/20";
-  if (ratio <= 0.25) return "bg-accent/20";
-  if (ratio <= 0.5) return "bg-accent/40";
-  if (ratio <= 0.75) return "bg-accent/60";
-  return "bg-accent/80";
+  if (ratio === 0) return "bg-muted/10";
+  if (ratio <= 0.25) return "bg-muted/25";
+  if (ratio <= 0.5) return "bg-muted/45";
+  if (ratio <= 0.75) return "bg-muted/65";
+  return "bg-muted/80";
 }
 
