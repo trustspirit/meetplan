@@ -89,14 +89,20 @@ export function TimePainter({
           <input
             type="time"
             value={dailyRange[0]}
-            onChange={(e) => onChangeRange([e.target.value, dailyRange[1]])}
+            onChange={(e) => {
+              const newStart = e.target.value;
+              onChangeRange([newStart, dailyRange[1] > newStart ? dailyRange[1] : newStart]);
+            }}
             className="border rounded px-2 py-1 w-24"
           />
           <span>–</span>
           <input
             type="time"
             value={dailyRange[1]}
-            onChange={(e) => onChangeRange([dailyRange[0], e.target.value])}
+            onChange={(e) => {
+              const newEnd = e.target.value;
+              onChangeRange([dailyRange[0], newEnd > dailyRange[0] ? newEnd : dailyRange[0]]);
+            }}
             className="border rounded px-2 py-1 w-24"
           />
         </div>

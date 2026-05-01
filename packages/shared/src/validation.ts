@@ -31,7 +31,10 @@ export const eventCreateSchema = z.object({
   description: z.string().max(500).optional(),
   periodMinutes: z.number().int().min(5).max(180),
   timezone: z.string().min(1),
-  slots: z.array(slotSchema).min(1),
+  slots: z.array(slotSchema).min(1).refine(
+    (slots) => new Set(slots.map((s) => s.id)).size === slots.length,
+    { message: "슬롯 ID가 중복되었습니다" }
+  ),
 });
 
 export type EventCreateInput = z.infer<typeof eventCreateSchema>;

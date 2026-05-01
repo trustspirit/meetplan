@@ -109,7 +109,16 @@ export function useGoogleCalendarBusy(): GoogleCalendarBusyState {
         }),
       });
 
-      if (!response.ok) throw new Error("캘린더 일정을 불러오지 못했습니다");
+      if (!response.ok) {
+        if (response.status === 401) {
+          // Token expired — reset so user must reconnect
+          setAccessToken(null);
+          setCalendarList([]);
+          setSynced(false);
+          throw new Error("캘린더 인증이 만료되었습니다. 다시 연동해주세요.");
+        }
+        throw new Error("캘린더 일정을 불러오지 못했습니다");
+      }
 
       const data = await response.json();
       // freeBusy returns busy times keyed by the calendar id

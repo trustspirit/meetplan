@@ -20,8 +20,11 @@ export function cellKey(dateYmd: string, hhmm: string): string {
   return `${dateYmd}_${hhmm}`;
 }
 export function parseCellKey(key: string): { dateYmd: string; hhmm: string } {
-  const [dateYmd, hhmm] = key.split("_");
-  return { dateYmd: dateYmd!, hhmm: hhmm! };
+  const idx = key.indexOf("_");
+  if (idx < 1 || idx === key.length - 1) {
+    throw new Error(`Invalid cell key format: "${key}"`);
+  }
+  return { dateYmd: key.slice(0, idx), hhmm: key.slice(idx + 1) };
 }
 
 export function useEventCreateState(initial?: Partial<EventCreateState>) {

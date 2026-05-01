@@ -29,7 +29,7 @@ export interface TimeGroup {
 export interface GroupedCell {
   slotId: string;
   count: number;
-  participantNames: string[];
+  participants: { responseId: string; name: string }[];
 }
 
 export interface MatrixModel {
@@ -92,7 +92,7 @@ export function buildMatrixModel(
     groupedCells[key] = {
       slotId: col.slotId,
       count: slotCounts[col.slotId] ?? 0,
-      participantNames: rows.filter((r) => r.checks[col.slotId]).map((r) => r.name),
+      participants: rows.filter((r) => r.checks[col.slotId]).map((r) => ({ responseId: r.responseId, name: r.name })),
     };
   }
 

@@ -17,6 +17,11 @@ import { cn } from "@/lib/utils";
 const VIEWER_TZ =
   Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Seoul";
 
+const PARTICIPANT_COLORS = [
+  "#f43f5e", "#3b82f6", "#10b981", "#f59e0b", "#8b5cf6",
+  "#06b6d4", "#ec4899", "#84cc16", "#f97316", "#6366f1",
+];
+
 type Tab = "matrix" | "matching";
 
 export default function EventResultPage() {
@@ -39,17 +44,37 @@ export default function EventResultPage() {
     [event, responsesState.responses]
   );
 
+  const participantColors = useMemo(
+    () => Object.fromEntries(
+      responsesState.responses.map((r, i) => [r.id, PARTICIPANT_COLORS[i % PARTICIPANT_COLORS.length]!])
+    ),
+    [responsesState.responses]
+  );
+
+  const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
+  const toggleHidden = (id: string) =>
+    setHiddenIds((prev) => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
+
+  const visibleResponses = useMemo(
+    () => responsesState.responses.filter((r) => !hiddenIds.has(r.id)),
+    [responsesState.responses, hiddenIds]
+  );
+
   const matching = useMemo(() => {
-    if (!event) {
-      return { maxSize: 0, totalParticipants: 0, matchings: [], truncated: false };
+    const empty = { maxSize: 0, totalParticipants: 0, matchings: [], truncated: false };
+    if (!event) return empty;
+    try {
+      const participants = visibleResponses.map((r) => ({
+        id: r.id,
+        availableSlotIds: r.selectedSlotIds,
+      }));
+      const slotIds = event.slots.map((s) => s.id);
+      return findMatchings({ participants, slotIds });
+    } catch (e) {
+      console.error("findMatchings failed:", e);
+      return empty;
     }
-    const participants = responsesState.responses.map((r) => ({
-      id: r.id,
-      availableSlotIds: r.selectedSlotIds,
-    }));
-    const slotIds = event.slots.map((s) => s.id);
-    return findMatchings({ participants, slotIds });
-  }, [event, responsesState.responses]);
+  }, [event, visibleResponses]);
 
   const participantNameById = useMemo(
     () => Object.fromEntries(responsesState.responses.map((r) => [r.id, r.name])),
@@ -170,12 +195,20 @@ export default function EventResultPage() {
         {responsesState.loading ? (
           <div className="text-center text-sm text-muted-foreground py-10">응답 불러오는 중…</div>
         ) : tab === "matrix" ? (
-          <ResponseMatrix model={matrixModel} totalResponses={responsesState.responses.length} />
+          <ResponseMatrix
+            model={matrixModel}
+            totalResponses={responsesState.responses.length}
+            participantColors={participantColors}
+            hiddenIds={hiddenIds}
+            onToggleHidden={toggleHidden}
+          />
         ) : (
           <MatchingView
             matching={matching}
             model={matrixModel}
             participantNameById={participantNameById}
+            participantColors={participantColors}
+            hiddenCount={hiddenIds.size}
           />
         )}
       </div>

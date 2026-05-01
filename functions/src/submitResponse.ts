@@ -67,6 +67,21 @@ export const submitResponse = onCall(
     }
 
     // 신규 생성 경로
+    // For authenticated users: use uid as deterministic doc ID to prevent duplicates on retry/double-submit
+    if (authedUid) {
+      const docRef = responsesCol.doc(authedUid);
+      const base = {
+        id: docRef.id,
+        name: input.name,
+        phone: normalizedPhone,
+        selectedSlotIds: input.selectedSlotIds,
+        createdAt: now,
+        updatedAt: now,
+      };
+      await docRef.set({ ...base, ownerUid: authedUid, editTokenHash: null }, { merge: false });
+      return { responseId: docRef.id };
+    }
+
     const docRef = responsesCol.doc();
     const base = {
       id: docRef.id,
@@ -76,15 +91,9 @@ export const submitResponse = onCall(
       createdAt: now,
       updatedAt: now,
     };
-
-    if (authedUid) {
-      await docRef.set({ ...base, ownerUid: authedUid, editTokenHash: null });
-      return { responseId: docRef.id };
-    } else {
-      const rawToken = generateToken();
-      const editTokenHash = hashToken(rawToken);
-      await docRef.set({ ...base, ownerUid: null, editTokenHash });
-      return { responseId: docRef.id, rawToken };
-    }
+    const rawToken = generateToken();
+    const editTokenHash = hashToken(rawToken);
+    await docRef.set({ ...base, ownerUid: null, editTokenHash });
+    return { responseId: docRef.id, rawToken };
   }
 );

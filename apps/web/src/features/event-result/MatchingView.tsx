@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { MatchingResult } from "@meetplan/shared";
 import type { MatrixModel } from "./matrixModel";
 import { cn } from "@/lib/utils";
@@ -7,17 +7,21 @@ interface Props {
   matching: MatchingResult;
   model: MatrixModel;
   participantNameById: Record<string, string>;
+  participantColors: Record<string, string>;
+  hiddenCount: number;
 }
 
 type ViewMode = "list" | "grid";
 
-export function MatchingView({ matching, model, participantNameById }: Props) {
+export function MatchingView({ matching, model, participantNameById, participantColors, hiddenCount }: Props) {
   const [view, setView] = useState<ViewMode>("list");
 
   if (matching.totalParticipants === 0) {
     return (
       <div className="rounded-xl border p-10 text-center text-sm text-muted-foreground bg-background">
-        응답이 모이면 자동 배정 조합이 표시됩니다
+        {hiddenCount > 0
+          ? `${hiddenCount}명이 숨겨져 있어 배정 대상이 없습니다. 범례에서 참가자를 표시하세요.`
+          : "응답이 모이면 자동 배정 조합이 표시됩니다"}
       </div>
     );
   }
@@ -33,6 +37,7 @@ export function MatchingView({ matching, model, participantNameById }: Props) {
           <div className="text-xs text-muted-foreground mt-1">
             가능한 조합 {matching.matchings.length}개{matching.truncated ? "+" : ""} 표시
             {matching.truncated && " (상위 20개)"}
+            {hiddenCount > 0 && <span className="ml-2 text-amber-600">· {hiddenCount}명 숨김 제외</span>}
           </div>
         </div>
         <div className="flex gap-1 shrink-0">
@@ -46,17 +51,19 @@ export function MatchingView({ matching, model, participantNameById }: Props) {
       </div>
 
       {view === "list" ? (
-        <ListView matching={matching} model={model} participantNameById={participantNameById} />
+        <ListView matching={matching} model={model} participantNameById={participantNameById} participantColors={participantColors} />
       ) : (
-        <GridView matching={matching} model={model} participantNameById={participantNameById} />
+        <GridView matching={matching} model={model} participantNameById={participantNameById} participantColors={participantColors} />
       )}
     </div>
   );
 }
 
+type SubViewProps = Omit<Props, "hiddenCount">;
+
 /* ─── List view (original card layout) ─── */
 
-function ListView({ matching, model, participantNameById }: Props) {
+function ListView({ matching, model, participantNameById, participantColors }: SubViewProps) {
   const slotLabelById = Object.fromEntries(
     model.slotColumns.map((c) => [c.slotId, `${c.dateLabel} ${c.timeLabel}`])
   );
@@ -74,14 +81,22 @@ function ListView({ matching, model, participantNameById }: Props) {
               조합 #{idx + 1}
             </div>
             <div className="flex flex-col gap-1.5 text-sm">
-              {Object.entries(m.assignments).map(([pid, slotId]) => (
-                <div key={pid} className="flex items-center justify-between">
-                  <span>{participantNameById[pid] ?? pid}</span>
-                  <span className="text-accent font-medium tabular-nums">
-                    {slotLabelById[slotId] ?? slotId}
-                  </span>
-                </div>
-              ))}
+              {Object.entries(m.assignments).map(([pid, slotId]) => {
+                const color = participantColors[pid];
+                return (
+                  <div key={pid} className="flex items-center justify-between gap-2">
+                    <span className="flex items-center gap-1.5 min-w-0">
+                      {color && (
+                        <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
+                      )}
+                      <span className="truncate">{participantNameById[pid] ?? pid}</span>
+                    </span>
+                    <span className="text-accent font-medium tabular-nums whitespace-nowrap">
+                      {slotLabelById[slotId] ?? slotId}
+                    </span>
+                  </div>
+                );
+              })}
               {m.unmatched.length > 0 && (
                 <div className="pt-2 mt-2 border-t text-[11px] text-muted-foreground">
                   미배정: {m.unmatched.map((id) => participantNameById[id] ?? id).join(", ")}
@@ -97,17 +112,24 @@ function ListView({ matching, model, participantNameById }: Props) {
 
 /* ─── Grid view (date columns × time rows, one grid per combination) ─── */
 
-function GridView({ matching, model, participantNameById }: Props) {
+function GridView({ matching, model, participantNameById, participantColors }: SubViewProps) {
   const { dateGroups, timeGroups, groupedCells } = model;
   const [selectedIdx, setSelectedIdx] = useState(0);
+
+  // Clamp selectedIdx when matching recalculates (e.g. hidden participants change)
+  useEffect(() => {
+    if (selectedIdx >= matching.matchings.length) {
+      setSelectedIdx(0);
+    }
+  }, [matching.matchings.length, selectedIdx]);
 
   const m = matching.matchings[selectedIdx];
   if (!m) return null;
 
-  // slotId → assigned participant name for this combination
-  const slotToName: Record<string, string> = {};
+  // slotId → assigned participant id for this combination
+  const slotToPid: Record<string, string> = {};
   for (const [pid, slotId] of Object.entries(m.assignments)) {
-    slotToName[slotId] = participantNameById[pid] ?? pid;
+    slotToPid[slotId] = pid;
   }
 
   return (
@@ -162,17 +184,20 @@ function GridView({ matching, model, participantNameById }: Props) {
                       <td key={d.dateYmd} className="px-2 py-2 border-l border-border/40 bg-muted/10" />
                     );
                   }
-                  const assignedName = slotToName[cell.slotId];
+                  const assignedPid = slotToPid[cell.slotId];
+                  const assignedName = assignedPid ? (participantNameById[assignedPid] ?? assignedPid) : undefined;
+                  const assignedColor = assignedPid ? participantColors[assignedPid] : undefined;
                   return (
                     <td
                       key={d.dateYmd}
-                      className={cn(
-                        "px-2 py-2 border-l border-border/40 text-center",
-                        assignedName ? "bg-accent/20" : "bg-background"
-                      )}
+                      className="px-2 py-2 border-l border-border/40 text-center"
+                      style={assignedColor ? { backgroundColor: assignedColor + "22" } : undefined}
                     >
                       {assignedName ? (
-                        <span className="inline-block text-[11px] font-semibold text-accent-foreground truncate max-w-[90px]">
+                        <span
+                          className="inline-block text-[11px] font-semibold truncate max-w-[90px]"
+                          style={{ color: assignedColor }}
+                        >
                           {assignedName}
                         </span>
                       ) : (
