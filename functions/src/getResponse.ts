@@ -8,7 +8,7 @@ import { getDb } from "./lib/admin";
 import { verifyToken } from "./lib/tokens";
 
 export const getResponse = onCall(
-  { region: "asia-northeast3", maxInstances: 10 },
+  { region: "asia-northeast3", maxInstances: 10, invoker: "public" },
   async (req: CallableRequest<unknown>): Promise<GetResponseOutput> => {
     const parsed = getResponseInputSchema.safeParse(req.data);
     if (!parsed.success) {

@@ -62,7 +62,7 @@ export async function updateEventSlotsImpl(req: {
 }
 
 export const updateEventSlots = onCall(
-  { region: "asia-northeast3", maxInstances: 10 },
+  { region: "asia-northeast3", maxInstances: 10, invoker: "public" },
   async (req: CallableRequest<unknown>): Promise<UpdateEventSlotsOutput> =>
     updateEventSlotsImpl({ data: req.data, auth: req.auth ? { uid: req.auth.uid } : null })
 );

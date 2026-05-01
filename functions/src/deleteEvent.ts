@@ -46,7 +46,7 @@ export async function deleteEventImpl(req: {
 }
 
 export const deleteEvent = onCall(
-  { region: "asia-northeast3", maxInstances: 10 },
+  { region: "asia-northeast3", maxInstances: 10, invoker: "public" },
   async (req: CallableRequest<unknown>): Promise<DeleteEventOutput> =>
     deleteEventImpl({ data: req.data, auth: req.auth ? { uid: req.auth.uid } : null })
 );

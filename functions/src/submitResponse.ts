@@ -10,7 +10,7 @@ import { getDb } from "./lib/admin";
 import { generateToken, hashToken, verifyToken } from "./lib/tokens";
 
 export const submitResponse = onCall(
-  { region: "asia-northeast3", maxInstances: 10 },
+  { region: "asia-northeast3", maxInstances: 10, invoker: "public" },
   async (req: CallableRequest<unknown>): Promise<SubmitResponseOutput> => {
     const parsed = submitResponseInputSchema.safeParse(req.data);
     if (!parsed.success) {
