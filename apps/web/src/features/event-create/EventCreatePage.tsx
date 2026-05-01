@@ -70,6 +70,11 @@ export default function EventCreatePage() {
   const [calendarChoice, setCalendarChoice] = useState<"pending" | "dismissed">("pending");
 
   const handleCalendarConnect = async () => {
+    await calendar.connectCalendar();
+    // On success, calendarList is populated → CalendarBanner shows picker automatically
+  };
+
+  const handleCalendarApply = async () => {
     if (state.selectedDates.length === 0) return;
     const sorted = [...state.selectedDates].sort();
     const timeMin = toZonedInstant(sorted[0]!, "00:00", HOST_TZ);
@@ -156,6 +161,10 @@ export default function EventCreatePage() {
         calendarSynced={calendar.synced}
         onCalendarConnect={handleCalendarConnect}
         onCalendarSkip={() => setCalendarChoice("dismissed")}
+        calendarList={calendar.calendarList}
+        calendarSelectedId={calendar.selectedCalendarId}
+        onCalendarIdChange={calendar.setSelectedCalendarId}
+        onCalendarApply={handleCalendarApply}
       />
     );
   }
@@ -185,6 +194,10 @@ export default function EventCreatePage() {
               onConnect={handleCalendarConnect}
               onSkip={() => setCalendarChoice("dismissed")}
               disabled={state.selectedDates.length === 0}
+              calendarList={calendar.calendarList}
+              selectedCalendarId={calendar.selectedCalendarId}
+              onCalendarIdChange={calendar.setSelectedCalendarId}
+              onApply={handleCalendarApply}
             />
           )}
           {calendar.synced && (

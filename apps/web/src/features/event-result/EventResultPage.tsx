@@ -35,7 +35,7 @@ export default function EventResultPage() {
   // Fallbacks for null event handle the pre-load state.
   const matrixModel = useMemo(
     () => event ? buildMatrixModel(event, responsesState.responses, VIEWER_TZ)
-               : { slotColumns: [], rows: [], slotCounts: {} },
+               : { slotColumns: [], rows: [], slotCounts: {}, dateGroups: [], timeGroups: [], groupedCells: {} },
     [event, responsesState.responses]
   );
 

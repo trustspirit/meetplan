@@ -8,6 +8,7 @@ import { MultiDateCalendar } from "./MultiDateCalendar";
 import { CalendarBanner } from "./CalendarBanner";
 import { buildTimeAxis } from "./timeAxis";
 import { cellKey } from "./useEventCreateState";
+import type { CalendarListItem } from "../event-respond/useGoogleCalendarBusy";
 
 interface Props {
   title: string;
@@ -31,6 +32,10 @@ interface Props {
   calendarSynced?: boolean;
   onCalendarConnect?: () => void;
   onCalendarSkip?: () => void;
+  calendarList?: CalendarListItem[];
+  calendarSelectedId?: string | null;
+  onCalendarIdChange?: (id: string) => void;
+  onCalendarApply?: () => void;
 }
 
 export function MobileWizard(props: Props) {
@@ -142,6 +147,10 @@ export function MobileWizard(props: Props) {
           error={props.calendarError ?? null}
           onConnect={props.onCalendarConnect}
           onSkip={props.onCalendarSkip!}
+          {...(props.calendarList ? { calendarList: props.calendarList } : {})}
+          {...(props.calendarSelectedId !== undefined ? { selectedCalendarId: props.calendarSelectedId } : {})}
+          {...(props.onCalendarIdChange ? { onCalendarIdChange: props.onCalendarIdChange } : {})}
+          {...(props.onCalendarApply ? { onApply: props.onCalendarApply } : {})}
         />
       )}
       {props.calendarSynced && (
