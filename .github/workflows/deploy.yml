@@ -5,11 +5,59 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# deploy 중 취소 시 IAM 설정이 누락될 수 있으므로 cancel-in-progress 비활성화
 concurrency:
   group: deploy-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      functions: ${{ steps.result.outputs.functions }}
+      web: ${{ steps.result.outputs.web }}
+      firestore: ${{ steps.result.outputs.firestore }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        if: github.event_name == 'push'
+        with:
+          filters: |
+            functions:
+              - 'functions/**'
+              - 'packages/shared/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'firebase.json'
+            web:
+              - 'apps/web/**'
+              - 'packages/shared/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'firebase.json'
+            firestore:
+              - 'firestore.rules'
+              - 'firestore.indexes.json'
+              - 'firebase.json'
+
+      - id: result
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "functions=true" >> $GITHUB_OUTPUT
+            echo "web=true" >> $GITHUB_OUTPUT
+            echo "firestore=true" >> $GITHUB_OUTPUT
+          else
+            echo "functions=${{ steps.filter.outputs.functions }}" >> $GITHUB_OUTPUT
+            echo "web=${{ steps.filter.outputs.web }}" >> $GITHUB_OUTPUT
+            echo "firestore=${{ steps.filter.outputs.firestore }}" >> $GITHUB_OUTPUT
+          fi
+
   test:
     runs-on: ubuntu-latest
     steps:
@@ -35,7 +83,8 @@ jobs:
           pnpm --filter functions test
 
   deploy:
-    needs: test
+    needs: [test, changes]
+    if: needs.changes.outputs.functions == 'true' || needs.changes.outputs.web == 'true' || needs.changes.outputs.firestore == 'true'
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -52,6 +101,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Write apps/web/.env.production
+        if: needs.changes.outputs.web == 'true'
         working-directory: apps/web
         env:
           VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
@@ -68,9 +118,11 @@ jobs:
           } > .env.production
 
       - name: Build web
+        if: needs.changes.outputs.web == 'true'
         run: pnpm --filter web build
 
       - name: Build functions
+        if: needs.changes.outputs.functions == 'true'
         run: pnpm --filter functions build
 
       - name: Authenticate to Google Cloud
@@ -84,4 +136,35 @@ jobs:
       - name: Deploy to Firebase
         env:
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-        run: firebase deploy --project "$FIREBASE_PROJECT_ID" --force --non-interactive
+        run: |
+          TARGETS=""
+          if [ "${{ needs.changes.outputs.functions }}" = "true" ]; then
+            TARGETS="${TARGETS:+$TARGETS,}functions"
+          fi
+          if [ "${{ needs.changes.outputs.web }}" = "true" ]; then
+            TARGETS="${TARGETS:+$TARGETS,}hosting"
+          fi
+          if [ "${{ needs.changes.outputs.firestore }}" = "true" ]; then
+            TARGETS="${TARGETS:+$TARGETS,}firestore"
+          fi
+          firebase deploy --only "$TARGETS" --project "$FIREBASE_PROJECT_ID" --force --non-interactive
+
+      # invoker: "public" 이 update 시 IAM 재설정을 보장하지 않으므로 명시적으로 설정
+      # 새로운 public callable function 추가 시 이 목록에도 추가 필요
+      - name: Set Cloud Run functions to public invoker (CORS fix)
+        if: needs.changes.outputs.functions == 'true'
+        env:
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+        run: |
+          for fn in submitresponse getresponse deleteevent updateeventslots; do
+            for attempt in 1 2 3; do
+              gcloud run services add-iam-policy-binding "$fn" \
+                --member="allUsers" \
+                --role="roles/run.invoker" \
+                --region="asia-northeast3" \
+                --platform="managed" \
+                --project="$FIREBASE_PROJECT_ID" && break
+              echo "Attempt $attempt failed for $fn, retrying..."
+              sleep 5
+            done
+          done
