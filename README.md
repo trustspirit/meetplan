@@ -1,198 +1,157 @@
 # MeetPlan
 
-A simple scheduler for 1:1 meetings. The host publishes their available times; each participant picks the times they can make, and the system auto-suggests non-overlapping assignment combinations (one slot per participant).
+가능한 시간을 공유하고, 겹치지 않는 1:1 일정을 자동으로 찾아주는 스케줄러.
 
-## Development
+호스트가 가능 시간을 등록하면 참여자들이 각자 가능한 슬롯을 선택하고, 시스템이 모든 참여자를 최대한 커버하는 비중복 배정 조합을 제안합니다.
 
-### Requirements
+---
+
+## 주요 기능
+
+- **이벤트 생성** — 달력에서 날짜를 선택하고 드래그로 시간 슬롯을 페인팅
+- **공유 링크** — 참여자는 로그인 없이 링크 하나로 응답 가능 (익명 토큰 기반 수정 지원)
+- **가용성 매트릭스** — 참여자×슬롯 교차표로 응답 현황 한눈에 파악
+- **자동 배정 제안** — 최대 참여자가 겹치지 않게 배정되는 조합을 자동 계산
+- **슬롯 편집** — 이벤트 생성 후에도 시간 슬롯 수정 가능, 영향받는 응답만 선별 정리
+- **모바일 최적화** — 터치 드래그 페인팅, 앱바 네비게이션, 스켈레톤 로딩
+
+---
+
+## 기술 스택
+
+| 영역 | 기술 |
+|---|---|
+| 프론트엔드 | React 18 + TypeScript + Vite + Tailwind CSS |
+| 백엔드 | Firebase Cloud Functions (Node 20) |
+| 데이터베이스 | Cloud Firestore |
+| 인증 | Firebase Authentication (Google) |
+| 빌드/패키지 | pnpm workspaces (monorepo) |
+| 테스트 | Vitest (단위), Playwright (E2E), Firebase Emulator (rules) |
+
+---
+
+## 프로젝트 구조
+
+```
+meetplan/
+├── apps/web/          # Vite + React 클라이언트
+├── functions/         # Cloud Functions
+│   └── src/
+│       ├── submitResponse.ts
+│       ├── getResponse.ts
+│       ├── deleteEvent.ts
+│       └── updateEventSlots.ts
+├── packages/shared/   # 공유 타입, 검증, 시간 유틸, 매칭 알고리즘
+└── tests/rules/       # Firestore 보안 규칙 테스트
+```
+
+---
+
+## 개발 환경 설정
+
+### 사전 요구사항
+
 - Node.js 20+
 - pnpm 9+
-- Firebase CLI (`npm i -g firebase-tools`)
+- Firebase CLI: `npm i -g firebase-tools`
 
-### Initial setup
+### 초기 설정
+
 ```bash
 pnpm install
 cp apps/web/.env.example apps/web/.env.local
-# Fill .env.local with your Firebase Web app config + VITE_USE_EMULATOR=true
+# .env.local에 Firebase Web 앱 설정값 입력 + VITE_USE_EMULATOR=true
 ```
 
-### Local run (emulators + dev)
+### 로컬 실행
+
 ```bash
-# Terminal 1
+# 터미널 1 — Firebase 에뮬레이터
 firebase emulators:start
 
-# Terminal 2
+# 터미널 2 — 웹 개발 서버
 pnpm dev
 ```
-- Web: http://localhost:5173
-- Firebase Emulator UI: http://localhost:4000
 
-### Tests
+| 주소 | 설명 |
+|---|---|
+| http://localhost:5173 | 웹 앱 |
+| http://localhost:4000 | Firebase Emulator UI |
+
+---
+
+## 테스트
+
 ```bash
-pnpm test                      # All workspace unit tests
-pnpm --filter web test:e2e     # E2E (requires emulators + dev)
-pnpm --filter rules-tests test # Firestore security rules (requires emulator)
-```
+# 전체 단위 테스트
+pnpm test
 
-## Project structure
-- `apps/web` — Vite + React client
-- `functions` — Cloud Functions (`submitResponse`, `getResponse`, `deleteEvent`, `updateEventSlots`)
-- `packages/shared` — domain types, zod validation, time/slot utilities, callable types, matching algorithm
-- `tests/rules` — Firestore security rules tests
+# E2E (에뮬레이터 + 개발 서버 실행 상태에서)
+pnpm --filter web test:e2e
 
-## Design doc
-`docs/specs/2026-04-20-meetplan-design.md`
-
-## Manual verification — participant response flow (Plan 2)
-
-End-to-end check of the participant submission flow:
-
-1. Build functions: `pnpm --filter functions build`
-2. Start emulators: `firebase emulators:start` (picks up `functions/lib/index.js` automatically)
-3. Start dev server: `pnpm dev`
-4. Sign in as the host and create an event
-5. Copy the share link from the event result page — format `http://localhost:5173/e/<eventId>`
-6. Open the link in **another browser or an incognito window** as a participant:
-   - Enter name + phone → check slots → submit
-   - Anonymous submit: verify the edit URL on the success screen and copy it
-   - Reopen the edit URL in a new tab → response prefilled → edit → resubmit
-   - Logged-in submit: revisit `/e/<eventId>` with the same account → auto-prefilled
-7. In the Firestore Emulator UI (http://localhost:4000/firestore), confirm the `events/<eventId>/responses` subcollection
-
-### Rules tests (optional)
-```bash
-firebase emulators:start --only firestore
+# Firestore 보안 규칙 (에뮬레이터 필요)
 pnpm --filter rules-tests test
-```
-Expected: PASS (events 7 + responses 7).
 
-### Functions unit tests
-```bash
+# Functions 단위 테스트
 pnpm --filter functions test
 ```
-Covers token generation/verification, `deleteEvent`, and `updateEventSlots` (integration tests require the emulator).
 
-## Manual verification — host result view (Plan 3)
+---
 
-1. Run through the Plan 2 flow above and collect a few participant responses
-2. Sign in as host → Dashboard → click the event → `/events/:id/result`
-3. Header:
-   - Response count, slot count, status badge (Open / Closed)
-   - "🔗 Copy share link" → copies `/e/:id` to the clipboard
-   - "Close" → status flips to Closed → participants visiting `/e/:id` see a "closed event" screen
-   - "Reopen" → restores Open state
-4. Tabs:
-   - **Availability matrix**: participants × slots with check marks; bottom row shows "available count / total responses"
-   - **Auto-suggested assignments**: "Up to N / M participants matched" + combination cards (capped at 20, overflow shown as "top 20")
-   - Unmatched participants are shown at the bottom of each combination card
-5. Edge cases:
-   - Zero responses: matrix shows "No responses yet", matching shows "Combinations will appear once responses come in..."
-   - Everyone picks the same slot → multiple distinct assignment combinations
+## 배포
 
-### Non-owner access check
-Sign in with a different account and navigate directly to `/events/:other-user-event-id/result` → redirected to `/dashboard`. The Firestore responses subscription never starts (ownership confirmed before subscribing).
+### 최초 설정
 
-## Manual verification — hardening (Plan 4)
+1. Firebase Console에서 프로젝트 생성 (Hosting, Firestore, Functions, Authentication 활성화)
+2. Authentication → 로그인 방법 → Google 활성화
+3. Firestore 위치: `asia-northeast3`
+4. `firebase login` → `firebase use --add` → 프로젝트 선택
+5. 배포 도메인을 Authentication 승인 도메인 목록에 추가
+6. Web 앱 등록 후 설정값을 `apps/web/.env.production`에 저장 (`VITE_USE_EMULATOR=false`)
 
-### Delete event flow
-1. Host creates an event and collects 1–2 participant responses
-2. Go to `/events/:id/result` → click "Delete event" in the header
-3. In the confirmation dialog, click "Permanently delete" (Escape key or backdrop click also cancel)
-4. You are redirected to `/dashboard`; the event no longer appears in the list
-5. In the Firestore Emulator UI, confirm both `events/:id` and `events/:id/responses/*` are gone
+### 배포 실행
 
-### Edit event slots (Plan 5 — see below)
-A dedicated edit page is available via the "Edit" button on the result view. (Details in the Plan 5 section.)
-
-### First-visit hint
-1. Clear localStorage: DevTools → Application → Local Storage → remove `meetplan:once:*` keys
-2. Host event create page: the "Tip:" banner appears → disappears on X click or first cell click
-3. Participant respond page: the "First time?" banner appears → same dismissal behavior
-4. Reload the page — the banner should stay dismissed
-
-## Manual verification — event editing (Plan 5)
-
-### Edit slots
-1. Host creates an event and collects 1–2 participant responses
-2. On `/events/:id/result`, click "Edit" in the header (between "Copy share link" and "Close")
-3. On the edit page (`/events/:id/edit`), verify:
-   - Calendar: existing dates are highlighted in the accent color
-   - Painter: existing slots are prefilled with the accent background
-   - Time range (HH:mm–HH:mm): auto-detected from the earliest start and latest end of existing slots
-   - If responses exist, an amber warning banner is shown:
-     - "Only responses that had selected a time that was removed will have that selection cleared; other selections stay."
-     - "The share link (`/e/...`) stays the same."
-4. Add/remove dates, paint/unpaint slots
-5. Click "Save" → redirected to `/events/:id/result`
-6. On the result view matrix, verify:
-   - Responses that had selected a removed slot: that check mark is cleared
-   - Newly added slots: all empty (participants need to revisit to pick them)
-7. In the Firestore Emulator UI, confirm `event.slots` is replaced and `responses.selectedSlotIds` are cleaned up
-
-### Edge cases
-- Remove all slots and try to save → "Save" button is disabled
-- Concurrent participant submission during edit → Firestore transaction retries automatically; response consistency is preserved
-- Another user navigates directly to `/events/:other-id/edit` → redirected to the dashboard
-
-## Deployment (manual)
-
-### One-time setup
-1. In Firebase Console, create `meetplan-prod` (or your preferred name)
-2. Enable Hosting, Firestore, Functions, Authentication
-3. Authentication → Sign-in method → enable Google
-4. Firestore → location `asia-northeast3`
-5. Locally: `firebase login` → `firebase use --add` → select the project (alias `default`)
-6. Add your deployed domain to the Authentication authorized domains list
-7. Register a Web app and save its config into `apps/web/.env.production` (set `VITE_USE_EMULATOR=false` and fill the remaining keys)
-
-### Deploy
 ```bash
 pnpm deploy
 ```
-Internally runs `web build → functions build → firebase deploy`, shipping Hosting, Firestore Rules, Indexes, and Functions together. To deploy only one area:
+
+내부적으로 `web build → functions build → firebase deploy`를 순서대로 실행합니다.
+부분 배포가 필요하면:
+
 ```bash
 firebase deploy --only hosting
 firebase deploy --only firestore:rules
 firebase deploy --only functions
 ```
 
-## v1 release checklist (manual)
+---
 
-Confirm the v1 scope is code-complete:
+## 주요 흐름 검증
 
-### Functionality
-- [ ] Host Google sign-in / sign-out
-- [ ] Dashboard empty state → "+ Create your first event"
-- [ ] Event creation: title, period, multi-date selection, drag time painting
-- [ ] Event creation mobile wizard (375px viewport)
-- [ ] Share link copy → open `/e/:id` in an incognito browser
-- [ ] Participant response: anonymous submit → token-save screen → revisit via token link → prefill → edit
-- [ ] Participant response: Google-authed submit → revisit with same account → prefill
-- [ ] Participant inline phone-format error
-- [ ] Participant response mobile (375px)
-- [ ] Host result view — availability matrix tab
-- [ ] Host result view — auto-suggested assignments tab (top N, unmatched shown)
-- [ ] Close / Reopen toggle
-- [ ] Edit event slots (with warning banner and Firestore cleanup)
-- [ ] Delete event (confirm dialog → dashboard redirect → Firestore cleanup)
-- [ ] First-visit drag-paint hints (host + participant)
+### 참여자 응답 흐름
 
-### Security
-- [ ] Non-owner direct-navigating to `/events/:id/result` is redirected to the dashboard
-- [ ] Participants cannot read another participant's response even by guessing the rid (Firestore rules)
-- [ ] `getResponse` with a wrong token returns `permission-denied`
-- [ ] Submitting to a closed event returns `event-closed`
+1. 에뮬레이터 + 개발 서버 실행
+2. 호스트로 로그인 → 이벤트 생성 → 결과 페이지에서 공유 링크 복사
+3. **다른 브라우저 또는 시크릿 창**에서 공유 링크 접속
+4. 이름 + 전화번호 입력 → 슬롯 선택 → 제출
+   - 익명 제출: 완료 화면의 수정 링크 저장 → 링크 재접속 시 응답 자동 채워짐
+   - 로그인 제출: 같은 계정으로 재접속 시 자동 채워짐
+5. Firestore Emulator UI에서 `events/<id>/responses` 서브컬렉션 확인
 
-### Data consistency
-- [ ] Firestore Emulator UI: phone numbers are normalized (hyphens stripped)
-- [ ] Firestore Emulator UI: `editTokenHash` is a hash, mutually exclusive with `ownerUid`
-- [ ] After deleting an event, all responses are also gone
+### 호스트 결과 뷰
 
-### Tests
-- [ ] `pnpm test` — all unit tests pass
-- [ ] `firebase emulators:start --only firestore && pnpm --filter rules-tests test` — rules tests pass
+1. 참여자 응답 수집 후 호스트로 로그인 → 대시보드 → 이벤트 클릭
+2. **가용성 매트릭스** 탭: 참여자×슬롯 교차표, 슬롯별 가능 인원 수
+3. **자동 배정 제안** 탭: 비중복 배정 조합 (최대 20개), 미매칭 참여자 표시
+4. 마감/다시 열기 토글 — 마감 시 참여자 페이지에 잠금 화면 표시
 
-### Deployment
-- [ ] `pnpm --filter web build` — bundle size acceptable (target ≤ 200 KB gzip)
-- [ ] `pnpm --filter functions build` — `functions/lib/` produced
-- [ ] `firebase emulators:start` loads the freshly built Functions
+---
+
+## 보안 검증
+
+| 항목 | 확인 방법 |
+|---|---|
+| 비소유자 결과 페이지 접근 | 다른 계정으로 `/events/:id/result` 직접 접근 → 대시보드로 리다이렉트 |
+| 참여자 응답 교차 조회 방지 | Firestore 규칙 테스트: `pnpm --filter rules-tests test` |
+| 잘못된 토큰으로 getResponse | `permission-denied` 반환 확인 |
+| 마감된 이벤트 응답 제출 | `event-closed` 반환 확인 |
