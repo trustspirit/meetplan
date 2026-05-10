@@ -8,6 +8,7 @@ import { MultiDateCalendar } from "./MultiDateCalendar";
 import { CalendarBanner } from "./CalendarBanner";
 import { buildTimeAxis } from "./timeAxis";
 import { cellKey } from "./useEventCreateState";
+import { PeriodPicker } from "./PeriodPicker";
 import type { CalendarListItem } from "../event-respond/useGoogleCalendarBusy";
 
 interface Props {
@@ -90,20 +91,8 @@ export function MobileWizard(props: Props) {
         </div>
         <div>
           <Label>미팅 길이</Label>
-          <div className="mt-2 grid grid-cols-4 gap-1">
-            {[15, 30, 45, 60].map((p) => (
-              <button
-                key={p}
-                type="button"
-                onClick={() => props.onPeriodChange(p)}
-                className={cn(
-                  "py-2 rounded-md text-sm border",
-                  p === props.periodMinutes ? "bg-primary text-primary-foreground border-primary" : "border-border"
-                )}
-              >
-                {p}분
-              </button>
-            ))}
+          <div className="mt-2">
+            <PeriodPicker value={props.periodMinutes} onChange={props.onPeriodChange} />
           </div>
         </div>
         <MultiDateCalendar selectedDates={props.selectedDates} onToggleDate={props.onToggleDate} />
