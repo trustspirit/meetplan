@@ -1,7 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-const PERIOD_PRESETS = [15, 30, 45, 60] as const;
+import { PeriodPicker } from "./PeriodPicker";
 
 interface Props {
   title: string;
@@ -25,25 +24,8 @@ export function BasicInfoForm({ title, onTitleChange, periodMinutes, onPeriodCha
       </div>
       <div>
         <Label>미팅 길이</Label>
-        <div className="mt-2 flex gap-2">
-          {PERIOD_PRESETS.map((p) => {
-            const on = p === periodMinutes;
-            return (
-              <button
-                key={p}
-                type="button"
-                onClick={() => onPeriodChange(p)}
-                className={
-                  "px-4 py-2 rounded-md text-sm border transition-colors " +
-                  (on
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-background border-border hover:bg-muted")
-                }
-              >
-                {p}분
-              </button>
-            );
-          })}
+        <div className="mt-2">
+          <PeriodPicker value={periodMinutes} onChange={onPeriodChange} />
         </div>
       </div>
     </section>
