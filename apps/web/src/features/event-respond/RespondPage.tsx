@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { Navigate, useParams, useSearchParams } from "react-router-dom";
+import { Navigate, useParams, useSearchParams, Link } from "react-router-dom";
+import { AlertCircle, Lock } from "lucide-react";
 import { phoneRegex, normalizePhone } from "@meetplan/shared";
 import { useMediaQuery } from "@/lib/useMediaQuery";
 import { submitResponseCallable } from "@/lib/callable";
@@ -51,16 +52,22 @@ export default function RespondPage() {
   }
   if (eventState.error || !eventState.event) {
     return (
-      <div className="p-10 text-center">
-        <p className="text-destructive font-medium">{eventState.error ?? "이벤트를 찾을 수 없습니다"}</p>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 p-8 text-center">
+        <AlertCircle size={36} className="text-destructive" />
+        <div className="font-semibold">이벤트를 찾을 수 없어요</div>
+        <p className="text-sm text-muted-foreground max-w-xs">
+          {eventState.error ?? "링크가 잘못되었거나 삭제된 이벤트입니다."}
+        </p>
+        <Link to="/dashboard" className="mt-2 text-sm text-primary hover:underline">← 대시보드로</Link>
       </div>
     );
   }
   if (eventState.event.status === "closed") {
     return (
-      <div className="p-10 text-center">
-        <h2 className="text-lg font-semibold">마감된 이벤트입니다</h2>
-        <p className="text-sm text-muted-foreground mt-2">호스트에게 문의해주세요.</p>
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 p-8 text-center">
+        <Lock size={36} className="text-muted-foreground" />
+        <div className="font-semibold">마감된 이벤트입니다</div>
+        <p className="text-sm text-muted-foreground">호스트에게 문의해주세요.</p>
       </div>
     );
   }
