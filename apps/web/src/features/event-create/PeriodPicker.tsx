@@ -84,6 +84,7 @@ export function PeriodPicker({ value, onChange }: Props) {
           <span className="text-sm text-muted-foreground">분</span>
           <button
             type="button"
+            onMouseDown={(e) => e.preventDefault()}
             onClick={handleCustomClose}
             className="text-muted-foreground hover:text-foreground p-1"
             aria-label="직접 입력 닫기"

@@ -18,6 +18,10 @@ describe("nearestPreset", () => {
     expect(nearestPreset(75)).toBe(60));
   it("returns exact preset when given exact preset value", () =>
     expect(nearestPreset(30)).toBe(30));
+  it("tie-breaking: returns lower preset when equidistant (22.5 → 15)", () =>
+    expect(nearestPreset(22.5)).toBe(15));
+  it("tie-breaking: returns lower preset when equidistant (37.5 → 30)", () =>
+    expect(nearestPreset(37.5)).toBe(30));
 });
 
 describe("isPreset", () => {
