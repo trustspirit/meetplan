@@ -42,8 +42,8 @@ export default function RespondPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [result, setResult] = useState<
-    | { kind: "anon"; editUrl: string; name: string; slotCount: number }
-    | { kind: "authed"; name: string; slotCount: number }
+    | { kind: "anon"; editUrl: string; name: string; slotCount: number; periodMinutes: number }
+    | { kind: "authed"; name: string; slotCount: number; periodMinutes: number }
     | null
   >(null);
 
@@ -79,8 +79,8 @@ export default function RespondPage() {
   }
   if (result) {
     return result.kind === "anon"
-      ? <SubmitSuccessAnon name={result.name} editUrl={result.editUrl} slotCount={result.slotCount} />
-      : <SubmitSuccessAuthed name={result.name} slotCount={result.slotCount} />;
+      ? <SubmitSuccessAnon name={result.name} editUrl={result.editUrl} slotCount={result.slotCount} periodMinutes={result.periodMinutes} />
+      : <SubmitSuccessAuthed name={result.name} slotCount={result.slotCount} periodMinutes={result.periodMinutes} />;
   }
 
   const event = eventState.event;
@@ -117,17 +117,17 @@ export default function RespondPage() {
       if (data.rawToken) {
         // 신규 익명 제출 — 서버가 새 토큰 발급
         const url = `${window.location.origin}/e/${eventId}?rid=${data.responseId}&t=${data.rawToken}`;
-        setResult({ kind: "anon", editUrl: url, name: state.name.trim(), slotCount: state.selectedSlotIds.size });
+        setResult({ kind: "anon", editUrl: url, name: state.name.trim(), slotCount: state.selectedSlotIds.size, periodMinutes: event.periodMinutes });
       } else if (user) {
         // 로그인 제출 (신규 또는 수정) — 토큰 개념 없음
-        setResult({ kind: "authed", name: state.name.trim(), slotCount: state.selectedSlotIds.size });
+        setResult({ kind: "authed", name: state.name.trim(), slotCount: state.selectedSlotIds.size, periodMinutes: event.periodMinutes });
       } else if (rid && token) {
         // 익명 편집 — 기존 rid/token 재사용해 동일 편집 URL 유지
         const url = `${window.location.origin}/e/${eventId}?rid=${rid}&t=${token}`;
-        setResult({ kind: "anon", editUrl: url, name: state.name.trim(), slotCount: state.selectedSlotIds.size });
+        setResult({ kind: "anon", editUrl: url, name: state.name.trim(), slotCount: state.selectedSlotIds.size, periodMinutes: event.periodMinutes });
       } else {
         // 이 분기는 원칙적으로 도달 불가 (익명 + 신규인데 rawToken 없음은 서버 응답 계약 위반).
-        setResult({ kind: "authed", name: state.name.trim(), slotCount: state.selectedSlotIds.size });
+        setResult({ kind: "authed", name: state.name.trim(), slotCount: state.selectedSlotIds.size, periodMinutes: event.periodMinutes });
       }
     } catch (e) {
       setSubmitError(e instanceof Error ? e.message : "저장 실패");
