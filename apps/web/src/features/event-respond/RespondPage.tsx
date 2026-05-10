@@ -13,6 +13,7 @@ import { RespondDesktop } from "./RespondDesktop";
 import { RespondMobile } from "./RespondMobile";
 import { SubmitSuccessAnon } from "./SubmitSuccessAnon";
 import { SubmitSuccessAuthed } from "./SubmitSuccessAuthed";
+import { PageSkeleton } from "@/components/ui/PageSkeleton";
 
 const VIEWER_TZ =
   Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Seoul";
@@ -48,7 +49,12 @@ export default function RespondPage() {
 
   if (!eventId) return <Navigate to="/" replace />;
   if (eventState.loading || existing.loading) {
-    return <div className="p-10 text-center text-muted-foreground">불러오는 중…</div>;
+    return (
+      <>
+        <div className="sm:hidden"><PageSkeleton variant="detail" /></div>
+        <div className="hidden sm:block p-10 text-center text-muted-foreground">불러오는 중…</div>
+      </>
+    );
   }
   if (eventState.error || !eventState.event) {
     return (
