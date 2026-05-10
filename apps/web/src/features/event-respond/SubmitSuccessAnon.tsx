@@ -22,7 +22,7 @@ export function SubmitSuccessAnon({ name, editUrl, slotCount, periodMinutes }: P
   };
 
   return (
-    <div className="max-w-xl mx-auto">
+    <div className="max-w-xl mx-auto min-h-screen bg-background">
       <div className="bg-zinc-900 text-white px-6 py-8 text-center">
         <Check size={28} className="mx-auto mb-2" />
         <div className="font-semibold text-base">응답 완료</div>
