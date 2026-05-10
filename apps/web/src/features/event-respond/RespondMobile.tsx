@@ -64,7 +64,7 @@ export function RespondMobile(props: Props) {
             <div className="text-sm text-muted-foreground">시간을 선택해주세요</div>
           )}
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-3 shrink-0">
           {props.submitError && (
             <span className="text-[11px] text-destructive">{props.submitError}</span>
           )}
