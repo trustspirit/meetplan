@@ -7,19 +7,26 @@ interface Props {
   eventId: string;
   eventTitle: string;
   responseCount: number;
+  autoOpen?: boolean;
+  onClose?: () => void;
 }
 
-export function DeleteEventButton({ eventId, eventTitle, responseCount }: Props) {
+export function DeleteEventButton({ eventId, eventTitle, responseCount, autoOpen, onClose }: Props) {
   const navigate = useNavigate();
-  const [confirming, setConfirming] = useState(false);
+  const [confirming, setConfirming] = useState(autoOpen ?? false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const cancelRef = useRef<HTMLButtonElement>(null);
 
-  // Focus the cancel button when dialog opens — keyboard users can Escape/Enter
   useEffect(() => {
     if (confirming) cancelRef.current?.focus();
   }, [confirming]);
+
+  const handleCancel = () => {
+    if (deleting) return;
+    setConfirming(false);
+    onClose?.();
+  };
 
   const onDelete = async () => {
     setError(null);
@@ -34,13 +41,14 @@ export function DeleteEventButton({ eventId, eventTitle, responseCount }: Props)
   };
 
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === "Escape" && !deleting) {
+    if (e.key === "Escape") {
       e.stopPropagation();
-      setConfirming(false);
+      handleCancel();
     }
   };
 
   if (!confirming) {
+    if (autoOpen) return null;
     return (
       <Button
         variant="outline"
@@ -60,9 +68,7 @@ export function DeleteEventButton({ eventId, eventTitle, responseCount }: Props)
       aria-labelledby="delete-dialog-title"
       onKeyDown={onKeyDown}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-      onClick={(e) => {
-        if (e.target === e.currentTarget && !deleting) setConfirming(false);
-      }}
+      onClick={(e) => { if (e.target === e.currentTarget) handleCancel(); }}
     >
       <div className="bg-background rounded-xl border shadow-lg max-w-sm w-full p-5">
         <h2 id="delete-dialog-title" className="text-base font-semibold">
@@ -73,21 +79,10 @@ export function DeleteEventButton({ eventId, eventTitle, responseCount }: Props)
         </p>
         {error && <p className="text-sm text-destructive mt-2">{error}</p>}
         <div className="flex justify-end gap-2 mt-5">
-          <Button
-            ref={cancelRef}
-            variant="outline"
-            size="sm"
-            onClick={() => setConfirming(false)}
-            disabled={deleting}
-          >
+          <Button ref={cancelRef} variant="outline" size="sm" onClick={handleCancel} disabled={deleting}>
             취소
           </Button>
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={onDelete}
-            disabled={deleting}
-          >
+          <Button variant="destructive" size="sm" onClick={onDelete} disabled={deleting}>
             {deleting ? "삭제 중…" : "영구 삭제"}
           </Button>
         </div>
