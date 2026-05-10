@@ -71,11 +71,11 @@ export function MobileHeader({ title, subtitle, logo, onBack, actions, menuItems
 
           {menuOpen && (
             <div className="absolute right-0 top-full mt-1 w-52 rounded-xl border bg-background text-foreground shadow-lg overflow-hidden z-50">
-              {menuItems.map((item) => {
+              {menuItems.map((item, i) => {
                 const isDanger = item.variant === "danger";
                 const isWarning = item.variant === "warning";
-                const prevItem = menuItems.find(mi => mi.label === item.label);
-                const showDivider = isDanger && menuItems.indexOf(item) > 0 && prevItem?.variant !== "danger";
+                const prevItem = menuItems[i - 1];
+                const showDivider = isDanger && i > 0 && prevItem?.variant !== "danger";
                 return (
                   <div key={item.label}>
                     {showDivider && <div className="border-t mx-3 my-1" />}
