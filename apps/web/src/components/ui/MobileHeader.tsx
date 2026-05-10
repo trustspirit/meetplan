@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
+import type { ReactNode } from "react";
 import { ChevronLeft, MoreVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface MenuItem {
-  icon: React.ReactNode;
+  icon: ReactNode;
   label: string;
   onClick: () => void;
   variant?: "default" | "warning" | "danger";
@@ -14,7 +15,7 @@ interface Props {
   subtitle?: string;
   logo?: boolean;
   onBack?: () => void;
-  actions?: React.ReactNode;
+  actions?: ReactNode;
   menuItems?: MenuItem[];
 }
 
@@ -30,7 +31,11 @@ export function MobileHeader({ title, subtitle, logo, onBack, actions, menuItems
       }
     };
     document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
+    document.addEventListener("touchstart", handleClick as EventListener, { passive: true });
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("touchstart", handleClick as EventListener);
+    };
   }, [menuOpen]);
 
   return (
@@ -66,13 +71,13 @@ export function MobileHeader({ title, subtitle, logo, onBack, actions, menuItems
 
           {menuOpen && (
             <div className="absolute right-0 top-full mt-1 w-52 rounded-xl border bg-background text-foreground shadow-lg overflow-hidden z-50">
-              {menuItems.map((item, i) => {
+              {menuItems.map((item) => {
                 const isDanger = item.variant === "danger";
                 const isWarning = item.variant === "warning";
-                const prevItem = menuItems[i - 1];
-                const showDivider = isDanger && i > 0 && prevItem?.variant !== "danger";
+                const prevItem = menuItems.find(mi => mi.label === item.label);
+                const showDivider = isDanger && menuItems.indexOf(item) > 0 && prevItem?.variant !== "danger";
                 return (
-                  <div key={i}>
+                  <div key={item.label}>
                     {showDivider && <div className="border-t mx-3 my-1" />}
                     <button
                       type="button"
