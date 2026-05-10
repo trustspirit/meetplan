@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { AlertCircle } from "lucide-react";
 import { phoneRegex, formatKoreanPhone } from "@meetplan/shared";
 import { cn } from "@/lib/utils";
 
@@ -47,7 +48,10 @@ export function ParticipantForm({ name, phone, onNameChange, onPhoneChange }: Pr
           placeholder="010-1234-5678"
         />
         {phoneInvalid ? (
-          <p className="text-[11px] text-destructive mt-1">⚠ 010-1234-5678 형식으로 입력해주세요</p>
+          <p className="flex items-center gap-1 text-[11px] text-destructive mt-1">
+            <AlertCircle size={11} className="shrink-0" />
+            010-1234-5678 형식으로 입력해주세요
+          </p>
         ) : (
           <p className="text-[11px] text-muted-foreground mt-1">호스트가 확정 시간을 문자로 알릴 때 사용해요</p>
         )}
