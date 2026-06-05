@@ -25,6 +25,7 @@ export interface GetResponseOutput {
     name: string;
     phone: string;
     selectedSlotIds: string[];
+    wardAssignments?: { wardId: string; wardName: string; date: string }[];
     updatedAt: string;
   };
 }

@@ -196,6 +196,51 @@ const ko = {
   'share.compact': '공유',
   'share.copied': '복사됨',
   'share.ariaLabel': '공유 링크 복사',
+
+  // ── Event type ───────────────────────────────────────────────────────
+  'eventType.label': '이벤트 유형',
+  'eventType.meeting': '일반 미팅',
+  'eventType.wardVisit': '와드 방문',
+
+  // ── Ward visit — create ──────────────────────────────────────────────
+  'ward.stakeLabel': '스테이크 / 지방부',
+  'ward.stakePlaceholder': '스테이크를 선택하세요',
+  'ward.datesLabel': '방문 가능 일요일',
+  'ward.datesHint': '응답자가 와드/지부별 방문 날짜를 이 중에서 배정합니다',
+  'ward.submitMobile': '이벤트 만들기',
+  'ward.selectSundayHint': '일요일만 선택할 수 있습니다',
+
+  // ── Ward visit — respond ─────────────────────────────────────────────
+  'ward.respondTitle': '와드 방문 날짜 배정',
+  'ward.respondSubtitle': '{stake} · 아래 와드/지부별로 방문 날짜를 선택해주세요',
+  'ward.assignedCount': '{count}개 배정됨',
+  'ward.totalCount': '전체 {count}개',
+  'ward.submitAssignment': '배정 제출',
+  'ward.assignHint': '와드/지부별로 방문 날짜를 선택하세요',
+  'ward.conflictTitle': '제출 전 확인하세요',
+  'ward.confirmAnyway': '그래도 이대로 제출하시겠습니까?',
+  'ward.confirmAndSubmit': '확인 후 제출',
+  'ward.backToEdit': '다시 수정',
+  'ward.noWards': '소속 와드/지부 정보가 없습니다',
+  'ward.noDates': '방문 가능 날짜가 없습니다',
+  'ward.saving': '저장 중…',
+  'ward.saveFailed': '저장 실패',
+  'ward.successTitle': '{name}님, 배정이 완료되었습니다!',
+  'ward.successDesc': '{stake}의 와드/지부 방문 날짜 배정이 저장되었습니다.',
+  'ward.saveEditLink': '수정이 필요하면 이 링크를 저장하세요',
+  'ward.dateConflict': '날짜 중복',
+  'ward.unassignedWarning': '{count}개 와드/지부 미배정',
+  'ward.dateOccupied': '{name}이(가) 이미 이 날짜를 사용 중',
+  'ward.selectedSundays': '선택된 일요일: {count}일',
+
+  // ── Ward visit — result ──────────────────────────────────────────────
+  'ward.resultTitle': '와드 방문 배정 현황',
+  'ward.resultNoResponse': '아직 배정이 없습니다',
+  'ward.resultNoResponseHint': '공유 링크를 전달하면 배정자가 날짜를 배정할 수 있습니다',
+  'ward.resultColWard': '와드 / 지부',
+  'ward.resultColDate': '방문 날짜',
+  'ward.resultUnassigned': '미배정',
+  'ward.respondedBy': '{name}님이 배정',
 } as const;
 
 type Dict = typeof ko;
@@ -377,6 +422,47 @@ const en: TranslationMap = {
   'share.compact': 'Share',
   'share.copied': 'Copied',
   'share.ariaLabel': 'Copy share link',
+
+  'eventType.label': 'Event type',
+  'eventType.meeting': 'Regular meeting',
+  'eventType.wardVisit': 'Ward visit',
+
+  'ward.stakeLabel': 'Stake / District',
+  'ward.stakePlaceholder': 'Select a stake',
+  'ward.datesLabel': 'Available Sundays',
+  'ward.datesHint': 'The respondent will assign a visit date from these options for each ward/branch',
+  'ward.submitMobile': 'Create event',
+  'ward.selectSundayHint': 'Only Sundays can be selected',
+
+  'ward.respondTitle': 'Ward Visit Date Assignment',
+  'ward.respondSubtitle': '{stake} · Please assign a visit date for each ward/branch below',
+  'ward.assignedCount': '{count} assigned',
+  'ward.totalCount': '{count} total',
+  'ward.submitAssignment': 'Submit assignment',
+  'ward.assignHint': 'Select a visit date for each ward/branch',
+  'ward.conflictTitle': 'Please review before submitting',
+  'ward.confirmAnyway': 'Submit with these assignments anyway?',
+  'ward.confirmAndSubmit': 'Confirm and submit',
+  'ward.backToEdit': 'Go back and edit',
+  'ward.noWards': 'No wards/branches found for this stake',
+  'ward.noDates': 'No available dates',
+  'ward.saving': 'Saving…',
+  'ward.saveFailed': 'Save failed',
+  'ward.successTitle': '{name}, assignment complete!',
+  'ward.successDesc': 'Ward/branch visit dates for {stake} have been saved.',
+  'ward.saveEditLink': 'Save this link if you need to edit later',
+  'ward.dateConflict': 'Date conflict',
+  'ward.unassignedWarning': '{count} ward(s)/branch(es) unassigned',
+  'ward.dateOccupied': '{name} is already using this date',
+  'ward.selectedSundays': 'Selected Sundays: {count}',
+
+  'ward.resultTitle': 'Ward Visit Assignments',
+  'ward.resultNoResponse': 'No assignments yet',
+  'ward.resultNoResponseHint': 'Share the link so the assignee can fill in visit dates',
+  'ward.resultColWard': 'Ward / Branch',
+  'ward.resultColDate': 'Visit date',
+  'ward.resultUnassigned': 'Unassigned',
+  'ward.respondedBy': 'Assigned by {name}',
 };
 
 const dicts: Record<Locale, TranslationMap> = { ko, en };
@@ -386,8 +472,7 @@ function readStoredLocale(): Locale | null {
 }
 
 const stored = readStoredLocale();
-const detected: Locale =
-  stored ?? (typeof navigator !== 'undefined' && navigator.language.startsWith('ko') ? 'ko' : 'en');
+const detected: Locale = stored ?? 'ko';
 
 let _locale: Locale = detected;
 

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 import { ChevronLeft, MoreVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { LanguageToggle } from "@/components/ui/LanguageToggle";
 
 export interface MenuItem {
   icon: ReactNode;
@@ -57,6 +58,8 @@ export function MobileHeader({ title, subtitle, logo, onBack, actions, menuItems
       {!title && <div className="flex-1" />}
 
       {actions}
+
+      <LanguageToggle variant="on-primary" className="shrink-0" />
 
       {menuItems && menuItems.length > 0 && (
         <div className="relative shrink-0" ref={menuRef}>

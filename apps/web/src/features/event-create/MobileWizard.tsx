@@ -11,6 +11,8 @@ import { buildTimeAxis } from "./timeAxis";
 import { cellKey } from "./useEventCreateState";
 import { PeriodPicker } from "./PeriodPicker";
 import { t } from "@/lib/i18n";
+import { STAKES } from "@meetplan/shared";
+import type { EventType } from "@meetplan/shared";
 import type { CalendarListItem } from "../event-respond/useGoogleCalendarBusy";
 
 interface Props {
@@ -39,6 +41,11 @@ interface Props {
   calendarSelectedId?: string | null;
   onCalendarIdChange?: (id: string) => void;
   onCalendarApply?: () => void;
+  // ward_visit
+  eventType: EventType;
+  onEventTypeChange: (v: EventType) => void;
+  stakeId: string;
+  onStakeChange: (v: string) => void;
 }
 
 export function MobileWizard(props: Props) {
@@ -46,7 +53,9 @@ export function MobileWizard(props: Props) {
   const [activeDate, setActiveDate] = useState<string | null>(null);
   const painting = useRef<{ targetState: boolean; visited: Set<string> } | null>(null);
 
-  const canGoNext = props.title.trim().length > 0 && props.selectedDates.length > 0;
+  const isWardVisit = props.eventType === "ward_visit";
+  const canGoNextMeeting = props.title.trim().length > 0 && props.selectedDates.length > 0;
+  const canSubmitWardVisit = props.title.trim().length > 0 && props.stakeId.length > 0 && props.selectedDates.length > 0;
 
   const applyToCell = (key: string) => {
     const p = painting.current;
@@ -73,10 +82,36 @@ export function MobileWizard(props: Props) {
 
   if (step === 1) {
     return (
-      <div className="flex flex-col gap-6 p-4">
+      <div className="flex flex-col gap-6 p-4 pb-8">
+        {/* Step label */}
         <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">
-          {t('wizard.step1')}
+          {isWardVisit ? t('eventType.wardVisit') : t('wizard.step1')}
         </div>
+
+        {/* Event type toggle */}
+        <div>
+          <Label>{t('eventType.label')}</Label>
+          <div className="mt-2 flex rounded-lg border border-border overflow-hidden">
+            {(["meeting", "ward_visit"] as EventType[]).map((type) => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => props.onEventTypeChange(type)}
+                className={cn(
+                  "flex-1 py-2.5 text-sm font-medium transition-colors",
+                  type !== "meeting" && "border-l border-border",
+                  props.eventType === type
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {type === "meeting" ? t('eventType.meeting') : t('eventType.wardVisit')}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Title */}
         <div>
           <Label htmlFor="ev-title-m">{t('form.eventTitle')}</Label>
           <Input
@@ -87,27 +122,75 @@ export function MobileWizard(props: Props) {
             placeholder={t('form.eventTitlePlaceholder')}
           />
         </div>
-        <div>
+
+        {/* Ward visit: stake selector (slides in) */}
+        <div className={cn(
+          "overflow-hidden transition-all duration-300",
+          isWardVisit ? "max-h-40 opacity-100" : "max-h-0 opacity-0 pointer-events-none"
+        )}>
+          <Label htmlFor="ev-stake-m">{t('ward.stakeLabel')}</Label>
+          <select
+            id="ev-stake-m"
+            value={props.stakeId}
+            onChange={(e) => props.onStakeChange(e.target.value)}
+            className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2.5 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <option value="">{t('ward.stakePlaceholder')}</option>
+            {STAKES.map((s) => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Meeting: period picker */}
+        <div className={cn(
+          "overflow-hidden transition-all duration-300",
+          !isWardVisit ? "max-h-40 opacity-100" : "max-h-0 opacity-0 pointer-events-none"
+        )}>
           <Label>{t('form.meetingLength')}</Label>
           <div className="mt-2">
             <PeriodPicker value={props.periodMinutes} onChange={props.onPeriodChange} />
           </div>
         </div>
-        <MultiDateCalendar selectedDates={props.selectedDates} onToggleDate={props.onToggleDate} />
-        <Button
-          size="lg"
-          disabled={!canGoNext}
-          onClick={() => {
-            setStep(2);
-            if (!activeDate && props.selectedDates.length > 0) setActiveDate(props.selectedDates[0]!);
-          }}
-        >
-          {t('wizard.next')} →
-        </Button>
+
+        {/* Date picker */}
+        <div>
+          {isWardVisit && (
+            <p className="text-xs text-muted-foreground mb-2">{t('ward.datesLabel')} — {t('ward.selectSundayHint')}</p>
+          )}
+          <MultiDateCalendar
+            selectedDates={props.selectedDates}
+            onToggleDate={props.onToggleDate}
+            sundayOnly={isWardVisit}
+          />
+        </div>
+
+        {/* CTA button */}
+        {isWardVisit ? (
+          <Button
+            size="lg"
+            disabled={!canSubmitWardVisit || props.submitting}
+            onClick={props.onSubmit}
+          >
+            {props.submitting ? t('common.saving') : t('ward.submitMobile')}
+          </Button>
+        ) : (
+          <Button
+            size="lg"
+            disabled={!canGoNextMeeting}
+            onClick={() => {
+              setStep(2);
+              if (!activeDate && props.selectedDates.length > 0) setActiveDate(props.selectedDates[0]!);
+            }}
+          >
+            {t('wizard.next')} →
+          </Button>
+        )}
       </div>
     );
   }
 
+  // Step 2: time painting (meeting only)
   const currentDate = activeDate ?? props.selectedDates[0]!;
   const axis = buildTimeAxis(props.dailyRange[0], props.dailyRange[1], props.periodMinutes);
 

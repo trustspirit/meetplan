@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { format, parseISO } from "date-fns";
 import { db } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/features/auth/useAuth";
 import { useEventData } from "@/features/event-respond/useEventData";
-import { findMatchings } from "@meetplan/shared";
+import { findMatchings, getWardsByStake, getStakeName } from "@meetplan/shared";
 import { useResponses } from "./useResponses";
 import { buildMatrixModel } from "./matrixModel";
 import { ResponseMatrix } from "./ResponseMatrix";
@@ -17,7 +18,7 @@ import { Copy, Pencil, CircleSlash, RotateCcw, Trash2, AlertCircle } from "lucid
 import { MobileHeader } from "@/components/ui/MobileHeader";
 import { PageSkeleton } from "@/components/ui/PageSkeleton";
 import { LanguageToggle } from "@/components/ui/LanguageToggle";
-import { t } from "@/lib/i18n";
+import { t, getLocale } from "@/lib/i18n";
 
 const VIEWER_TZ =
   Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Seoul";
@@ -130,6 +131,114 @@ export default function EventResultPage() {
   }
   if (!user || event.ownerUid !== user.uid) {
     return <Navigate to="/dashboard" replace />;
+  }
+
+  // Ward visit events: show assignment result instead of matrix
+  if (event.eventType === "ward_visit") {
+    const wards = getWardsByStake(event.stakeId ?? "");
+    const stakeName = getStakeName(event.stakeId ?? "");
+    const latestResponse = responsesState.responses[responsesState.responses.length - 1];
+    const wardAssignments = latestResponse?.wardAssignments ?? [];
+    const assignmentByWardId = Object.fromEntries(wardAssignments.map((a) => [a.wardId, a.date]));
+    const dayShort = (d: Date) =>
+      new Intl.DateTimeFormat(getLocale() === 'ko' ? 'ko-KR' : 'en-US', { weekday: 'short' }).format(d);
+
+    return (
+      <div>
+        <MobileHeader
+          title={event.title}
+          subtitle={stakeName}
+          onBack={() => navigate("/dashboard")}
+          actions={<ShareLinkButton eventId={eventId} compact />}
+          menuItems={[
+            {
+              icon: <Trash2 size={14} />,
+              label: t('result.delete'),
+              onClick: () => setConfirmingDelete(true),
+              variant: "danger" as const,
+            },
+          ]}
+        />
+
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 flex flex-col gap-6">
+          <div className="hidden sm:flex items-center justify-between pb-4 border-b">
+            <div>
+              <Link to="/dashboard" className="text-xs text-muted-foreground hover:underline">
+                {t('common.backToDashboardShort')}
+              </Link>
+              <h1 className="text-xl font-semibold mt-1">{event.title}</h1>
+              <div className="text-sm text-muted-foreground mt-0.5">{stakeName} · {t('eventType.wardVisit')}</div>
+            </div>
+            <div className="flex items-center gap-2">
+              <LanguageToggle />
+              <ShareLinkButton eventId={eventId} />
+              <DeleteEventButton eventId={eventId} eventTitle={event.title} responseCount={responsesState.responses.length} />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between">
+              <h2 className="font-semibold text-sm">{t('ward.resultTitle')}</h2>
+              {latestResponse && (
+                <span className="text-xs text-muted-foreground">
+                  {t('ward.respondedBy', { name: latestResponse.name })}
+                </span>
+              )}
+            </div>
+
+            {!latestResponse || wardAssignments.length === 0 ? (
+              <div className="rounded-xl border p-6 text-center flex flex-col gap-2">
+                <p className="font-medium text-sm">{t('ward.resultNoResponse')}</p>
+                <p className="text-xs text-muted-foreground">{t('ward.resultNoResponseHint')}</p>
+                <div className="mt-2">
+                  <ShareLinkButton eventId={eventId} />
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-xl border overflow-hidden">
+                <div className="grid grid-cols-2 bg-muted/50 border-b">
+                  <div className="p-3 text-xs font-semibold text-muted-foreground">{t('ward.resultColWard')}</div>
+                  <div className="p-3 text-xs font-semibold text-muted-foreground border-l">{t('ward.resultColDate')}</div>
+                </div>
+                {wards.map((ward, i) => {
+                  const date = assignmentByWardId[ward.id];
+                  return (
+                    <div
+                      key={ward.id}
+                      className={cn(
+                        "grid grid-cols-2 border-t",
+                        date ? "bg-background" : "bg-muted/10"
+                      )}
+                    >
+                      <div className="p-3 text-sm font-medium">{ward.name}</div>
+                      <div className={cn(
+                        "p-3 text-sm border-l",
+                        date ? "text-foreground font-semibold" : "text-muted-foreground"
+                      )}>
+                        {date ? (() => {
+                          const d = parseISO(date);
+                          return `${format(d, "M/d")}(${dayShort(d)})`;
+                        })() : t('ward.resultUnassigned')}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {confirmingDelete && (
+          <DeleteEventButton
+            eventId={eventId}
+            eventTitle={event.title}
+            responseCount={responsesState.responses.length}
+            autoOpen
+            onClose={() => setConfirmingDelete(false)}
+          />
+        )}
+      </div>
+    );
   }
 
   const isClosed = event.status === "closed";

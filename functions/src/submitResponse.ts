@@ -22,13 +22,16 @@ export const submitResponse = onCall(
     const eventRef = db.doc(`events/${input.eventId}`);
     const eventSnap = await eventRef.get();
     if (!eventSnap.exists) throw new HttpsError("not-found", "event not found");
-    const event = eventSnap.data() as { status: string; slots: { id: string }[] };
+    const event = eventSnap.data() as { status: string; slots: { id: string }[]; eventType?: string };
     if (event.status !== "open") throw new HttpsError("failed-precondition", "event is closed");
 
-    const validSlotIds = new Set(event.slots.map((s) => s.id));
-    for (const id of input.selectedSlotIds) {
-      if (!validSlotIds.has(id)) {
-        throw new HttpsError("invalid-argument", `slot ${id} does not exist on event`);
+    const isWardVisit = event.eventType === "ward_visit";
+    if (!isWardVisit) {
+      const validSlotIds = new Set(event.slots.map((s) => s.id));
+      for (const id of input.selectedSlotIds) {
+        if (!validSlotIds.has(id)) {
+          throw new HttpsError("invalid-argument", `slot ${id} does not exist on event`);
+        }
       }
     }
 
@@ -57,40 +60,37 @@ export const submitResponse = onCall(
         }
       }
 
-      await docRef.update({
+      const updateData: Record<string, unknown> = {
         name: input.name,
         phone: normalizedPhone,
         selectedSlotIds: input.selectedSlotIds,
         updatedAt: now,
-      });
+      };
+      if (input.wardAssignments) updateData.wardAssignments = input.wardAssignments;
+      await docRef.update(updateData);
       return { responseId: input.rid };
     }
 
-    // 신규 생성 경로
-    // For authenticated users: use uid as deterministic doc ID to prevent duplicates on retry/double-submit
-    if (authedUid) {
-      const docRef = responsesCol.doc(authedUid);
-      const base = {
-        id: docRef.id,
-        name: input.name,
-        phone: normalizedPhone,
-        selectedSlotIds: input.selectedSlotIds,
-        createdAt: now,
-        updatedAt: now,
-      };
-      await docRef.set({ ...base, ownerUid: authedUid, editTokenHash: null }, { merge: false });
-      return { responseId: docRef.id };
-    }
-
-    const docRef = responsesCol.doc();
-    const base = {
-      id: docRef.id,
+    const baseFields: Record<string, unknown> = {
       name: input.name,
       phone: normalizedPhone,
       selectedSlotIds: input.selectedSlotIds,
       createdAt: now,
       updatedAt: now,
     };
+    if (input.wardAssignments) baseFields.wardAssignments = input.wardAssignments;
+
+    // 신규 생성 경로
+    // For authenticated users: use uid as deterministic doc ID to prevent duplicates on retry/double-submit
+    if (authedUid) {
+      const docRef = responsesCol.doc(authedUid);
+      const base = { id: docRef.id, ...baseFields };
+      await docRef.set({ ...base, ownerUid: authedUid, editTokenHash: null }, { merge: false });
+      return { responseId: docRef.id };
+    }
+
+    const docRef = responsesCol.doc();
+    const base = { id: docRef.id, ...baseFields };
     const rawToken = generateToken();
     const editTokenHash = hashToken(rawToken);
     await docRef.set({ ...base, ownerUid: null, editTokenHash });

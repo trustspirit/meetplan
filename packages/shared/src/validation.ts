@@ -26,16 +26,30 @@ const slotSchema = z.object({
   end: z.string().datetime(),
 });
 
+const wardAssignmentSchema = z.object({
+  wardId: z.string().min(1),
+  wardName: z.string().min(1),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+});
+
 export const eventCreateSchema = z.object({
   title: z.string().min(1).max(80),
   description: z.string().max(500).optional(),
-  periodMinutes: z.number().int().min(5).max(180),
+  periodMinutes: z.number().int().min(0).max(180),
   timezone: z.string().min(1),
-  slots: z.array(slotSchema).min(1).refine(
+  slots: z.array(slotSchema).refine(
     (slots) => new Set(slots.map((s) => s.id)).size === slots.length,
     { message: "슬롯 ID가 중복되었습니다" }
   ),
-});
+  eventType: z.enum(["meeting", "ward_visit"]).default("meeting"),
+  stakeId: z.string().optional(),
+  wardVisitDates: z.array(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)).optional(),
+}).refine(data => {
+  if (data.eventType === "ward_visit") {
+    return !!data.stakeId && (data.wardVisitDates?.length ?? 0) > 0;
+  }
+  return data.slots.length > 0;
+}, { message: "필수 정보가 누락되었습니다" });
 
 export type EventCreateInput = z.infer<typeof eventCreateSchema>;
 
@@ -43,9 +57,13 @@ export const responseSubmitSchema = z.object({
   eventId: z.string().min(1),
   name: z.string().min(1).max(40),
   phone: z.string().regex(phoneRegex, "010-1234-5678 형식으로 입력해주세요"),
-  selectedSlotIds: z.array(z.string()).min(1),
+  selectedSlotIds: z.array(z.string()),
+  wardAssignments: z.array(wardAssignmentSchema).optional(),
   rid: z.string().optional(),
   token: z.string().optional(),
-});
+}).refine(
+  data => data.selectedSlotIds.length > 0 || (data.wardAssignments && data.wardAssignments.length > 0),
+  { message: "슬롯 또는 와드 배정이 필요합니다" }
+);
 
 export type ResponseSubmitInput = z.infer<typeof responseSubmitSchema>;

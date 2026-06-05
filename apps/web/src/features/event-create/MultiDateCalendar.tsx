@@ -6,9 +6,10 @@ import { cn } from "@/lib/utils";
 interface Props {
   selectedDates: string[];
   onToggleDate: (ymd: string) => void;
+  sundayOnly?: boolean;
 }
 
-export function MultiDateCalendar({ selectedDates, onToggleDate }: Props) {
+export function MultiDateCalendar({ selectedDates, onToggleDate, sundayOnly = false }: Props) {
   const [viewMonth, setViewMonth] = useState(() => startOfMonth(new Date()));
   const today = startOfToday();
 
@@ -34,25 +35,31 @@ export function MultiDateCalendar({ selectedDates, onToggleDate }: Props) {
         </div>
       </div>
       <div className="grid grid-cols-7 gap-0.5">
-        {["일","월","화","수","목","금","토"].map((d) => (
-          <div key={d} className="text-[10px] text-muted-foreground text-center py-1 font-medium">{d}</div>
+        {["일","월","화","수","목","금","토"].map((d, i) => (
+          <div key={d} className={cn(
+            "text-[10px] text-center py-1 font-medium",
+            sundayOnly && i === 0 ? "text-primary font-bold" : "text-muted-foreground"
+          )}>{d}</div>
         ))}
         {days.map((day) => {
           const ymd = format(day, "yyyy-MM-dd");
           const past = isBefore(day, today);
           const inMonth = isSameMonth(day, viewMonth);
+          const isSunday = day.getDay() === 0;
+          const disabled = past || (sundayOnly && !isSunday);
           const selected = selectedDates.includes(ymd);
           return (
             <button
               key={ymd}
               type="button"
-              disabled={past}
-              onClick={() => onToggleDate(ymd)}
+              disabled={disabled}
+              onClick={() => !disabled && onToggleDate(ymd)}
               className={cn(
                 "aspect-square rounded-md text-xs inline-flex items-center justify-center transition-colors",
                 !inMonth && "text-muted-foreground/40",
-                past && "text-muted-foreground/30 cursor-not-allowed",
-                !past && !selected && "hover:bg-muted",
+                disabled && "text-muted-foreground/30 cursor-not-allowed",
+                !disabled && !selected && "hover:bg-muted",
+                !disabled && sundayOnly && isSunday && !selected && "text-primary font-medium",
                 selected && "bg-accent text-accent-foreground font-semibold"
               )}
             >

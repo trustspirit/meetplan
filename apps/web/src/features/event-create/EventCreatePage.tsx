@@ -8,12 +8,13 @@ import { useAuth } from "@/features/auth/useAuth";
 import { useMediaQuery } from "@/lib/useMediaQuery";
 import { eventCreateSchema } from "@meetplan/shared";
 import { toZonedInstant } from "@meetplan/shared";
-import type { Slot } from "@meetplan/shared";
+import type { Slot, EventType } from "@meetplan/shared";
 import { BasicInfoForm } from "./BasicInfoForm";
 import { MultiDateCalendar } from "./MultiDateCalendar";
 import { TimePainter } from "./TimePainter";
 import { MobileWizard } from "./MobileWizard";
 import { CalendarBanner } from "./CalendarBanner";
+import { MobileHeader } from "@/components/ui/MobileHeader";
 import { useEventCreateState, cellKey } from "./useEventCreateState";
 import { buildSlotsFromPaintedCells } from "./generateSlots";
 import { buildTimeAxis } from "./timeAxis";
@@ -37,6 +38,10 @@ export default function EventCreatePage() {
   const location = useLocation();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Event type state
+  const [eventType, setEventType] = useState<EventType>("meeting");
+  const [stakeId, setStakeId] = useState("");
 
   const fromResult = (location.state as FromResultState) ?? null;
   const initialState = fromResult
@@ -83,6 +88,7 @@ export default function EventCreatePage() {
   };
 
   const busyCells = useMemo(() => {
+    if (eventType === "ward_visit") return new Set<string>();
     if (!calendar.synced || calendar.busyIntervals.length === 0) return new Set<string>();
     const busy = new Set<string>();
     const axis = buildTimeAxis(state.dailyRange[0], state.dailyRange[1], state.periodMinutes);
@@ -99,36 +105,52 @@ export default function EventCreatePage() {
       }
     }
     return busy;
-  }, [calendar.synced, calendar.busyIntervals, state.selectedDates, state.dailyRange, state.periodMinutes]);
+  }, [eventType, calendar.synced, calendar.busyIntervals, state.selectedDates, state.dailyRange, state.periodMinutes]);
 
-  const slots = buildSlotsFromPaintedCells(state.paintedCells, state.periodMinutes, HOST_TZ);
-  const canCreate = state.title.trim().length > 0 && slots.length > 0 && !submitting;
+  const slots = eventType === "meeting"
+    ? buildSlotsFromPaintedCells(state.paintedCells, state.periodMinutes, HOST_TZ)
+    : [];
+
+  const canCreate = eventType === "ward_visit"
+    ? state.title.trim().length > 0 && stakeId.length > 0 && state.selectedDates.length > 0 && !submitting
+    : state.title.trim().length > 0 && slots.length > 0 && !submitting;
 
   const handleCreate = async () => {
     if (!user) return;
     setError(null);
     setSubmitting(true);
     try {
-      const payload = {
-        title: state.title.trim(),
-        periodMinutes: state.periodMinutes,
-        timezone: HOST_TZ,
-        slots,
-      };
+      const payload = eventType === "ward_visit"
+        ? {
+            title: state.title.trim(),
+            periodMinutes: 0,
+            timezone: HOST_TZ,
+            slots: [],
+            eventType: "ward_visit" as const,
+            stakeId,
+            wardVisitDates: state.selectedDates,
+          }
+        : {
+            title: state.title.trim(),
+            periodMinutes: state.periodMinutes,
+            timezone: HOST_TZ,
+            slots,
+          };
+
       const parsed = eventCreateSchema.safeParse(payload);
       if (!parsed.success) {
         setError(parsed.error.errors[0]?.message ?? t('common.inputError'));
         setSubmitting(false);
         return;
       }
-      const doc = await addDoc(collection(db, "events"), {
+      const docRef = await addDoc(collection(db, "events"), {
         ...parsed.data,
         ownerUid: user.uid,
         status: "open",
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       });
-      navigate(`/events/${doc.id}/result`);
+      navigate(`/events/${docRef.id}/result`);
     } catch (e) {
       setError(e instanceof Error ? e.message : t('common.saveFailed'));
       setSubmitting(false);
@@ -137,33 +159,40 @@ export default function EventCreatePage() {
 
   if (!isDesktop) {
     return (
-      <MobileWizard
-        title={state.title}
-        onTitleChange={setTitle}
-        periodMinutes={state.periodMinutes}
-        onPeriodChange={setPeriod}
-        selectedDates={state.selectedDates}
-        onToggleDate={toggleDate}
-        dailyRange={state.dailyRange}
-        onChangeRange={setDailyRange}
-        paintedCells={state.paintedCells}
-        onSetCell={setCellPainted}
-        onSubmit={handleCreate}
-        submitting={submitting}
-        canSubmit={canCreate}
-        slotCount={slots.length}
-        busyCells={busyCells}
-        calendarChoice={calendarChoice}
-        calendarSyncing={calendar.loading}
-        calendarError={calendar.error}
-        calendarSynced={calendar.synced}
-        onCalendarConnect={handleCalendarConnect}
-        onCalendarSkip={() => setCalendarChoice("dismissed")}
-        calendarList={calendar.calendarList}
-        calendarSelectedId={calendar.selectedCalendarId}
-        onCalendarIdChange={calendar.setSelectedCalendarId}
-        onCalendarApply={handleCalendarApply}
-      />
+      <>
+        <MobileHeader logo onBack={() => navigate("/dashboard")} />
+        <MobileWizard
+          title={state.title}
+          onTitleChange={setTitle}
+          periodMinutes={state.periodMinutes}
+          onPeriodChange={setPeriod}
+          selectedDates={state.selectedDates}
+          onToggleDate={toggleDate}
+          dailyRange={state.dailyRange}
+          onChangeRange={setDailyRange}
+          paintedCells={state.paintedCells}
+          onSetCell={setCellPainted}
+          onSubmit={handleCreate}
+          submitting={submitting}
+          canSubmit={canCreate}
+          slotCount={slots.length}
+          busyCells={busyCells}
+          calendarChoice={calendarChoice}
+          calendarSyncing={calendar.loading}
+          calendarError={calendar.error}
+          calendarSynced={calendar.synced}
+          onCalendarConnect={handleCalendarConnect}
+          onCalendarSkip={() => setCalendarChoice("dismissed")}
+          calendarList={calendar.calendarList}
+          calendarSelectedId={calendar.selectedCalendarId}
+          onCalendarIdChange={calendar.setSelectedCalendarId}
+          onCalendarApply={handleCalendarApply}
+          eventType={eventType}
+          onEventTypeChange={setEventType}
+          stakeId={stakeId}
+          onStakeChange={setStakeId}
+        />
+      </>
     );
   }
 
@@ -186,44 +215,71 @@ export default function EventCreatePage() {
           onTitleChange={setTitle}
           periodMinutes={state.periodMinutes}
           onPeriodChange={setPeriod}
+          eventType={eventType}
+          onEventTypeChange={setEventType}
+          stakeId={stakeId}
+          onStakeChange={setStakeId}
         />
-        <section className="flex flex-col gap-4">
-          {calendarChoice === "pending" && (
-            <CalendarBanner
-              syncing={calendar.loading}
-              error={calendar.error}
-              onConnect={handleCalendarConnect}
-              onSkip={() => setCalendarChoice("dismissed")}
-              disabled={state.selectedDates.length === 0}
-              calendarList={calendar.calendarList}
-              selectedCalendarId={calendar.selectedCalendarId}
-              onCalendarIdChange={calendar.setSelectedCalendarId}
-              onApply={handleCalendarApply}
-            />
-          )}
-          {calendar.synced && (
-            <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <Calendar size={12} /> {t('create.calendarSynced')}
-            </p>
-          )}
-          <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6 items-start">
-            <MultiDateCalendar selectedDates={state.selectedDates} onToggleDate={toggleDate} />
-            <TimePainter
-              selectedDates={state.selectedDates}
-              dailyRange={state.dailyRange}
-              periodMinutes={state.periodMinutes}
-              paintedCells={state.paintedCells}
-              onSetCell={setCellPainted}
-              onChangeRange={setDailyRange}
-              busyCells={busyCells}
-            />
-          </div>
-        </section>
+
+        {eventType === "meeting" && (
+          <section className="flex flex-col gap-4">
+            {calendarChoice === "pending" && (
+              <CalendarBanner
+                syncing={calendar.loading}
+                error={calendar.error}
+                onConnect={handleCalendarConnect}
+                onSkip={() => setCalendarChoice("dismissed")}
+                disabled={state.selectedDates.length === 0}
+                calendarList={calendar.calendarList}
+                selectedCalendarId={calendar.selectedCalendarId}
+                onCalendarIdChange={calendar.setSelectedCalendarId}
+                onApply={handleCalendarApply}
+              />
+            )}
+            {calendar.synced && (
+              <p className="text-xs text-muted-foreground flex items-center gap-1">
+                <Calendar size={12} /> {t('create.calendarSynced')}
+              </p>
+            )}
+            <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6 items-start">
+              <MultiDateCalendar selectedDates={state.selectedDates} onToggleDate={toggleDate} />
+              <TimePainter
+                selectedDates={state.selectedDates}
+                dailyRange={state.dailyRange}
+                periodMinutes={state.periodMinutes}
+                paintedCells={state.paintedCells}
+                onSetCell={setCellPainted}
+                onChangeRange={setDailyRange}
+                busyCells={busyCells}
+              />
+            </div>
+          </section>
+        )}
+
+        {eventType === "ward_visit" && (
+          <section className="flex flex-col gap-4">
+            <div>
+              <p className="text-sm font-medium mb-1">{t('ward.datesLabel')}</p>
+              <p className="text-xs text-muted-foreground mb-3">{t('ward.datesHint')}</p>
+              <div className="max-w-sm">
+                <MultiDateCalendar
+                  selectedDates={state.selectedDates}
+                  onToggleDate={toggleDate}
+                  sundayOnly
+                />
+              </div>
+            </div>
+          </section>
+        )}
       </div>
 
       <footer className="sticky bottom-0 -mx-6 px-6 py-3 bg-muted/80 backdrop-blur border-t flex items-center justify-between text-sm">
         <div>
-          {t('create.slotsPreview', { count: slots.length })}
+          {eventType === "meeting"
+            ? t('create.slotsPreview', { count: slots.length })
+            : state.selectedDates.length > 0
+              ? t('ward.selectedSundays', { count: state.selectedDates.length })
+              : ""}
         </div>
         {error && <div className="text-destructive">{error}</div>}
       </footer>

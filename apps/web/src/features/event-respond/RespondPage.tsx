@@ -11,6 +11,7 @@ import { useRespondState } from "./useRespondState";
 import { slotsToCells } from "./slotsToCells";
 import { RespondDesktop } from "./RespondDesktop";
 import { RespondMobile } from "./RespondMobile";
+import { WardVisitRespond } from "./WardVisitRespond";
 import { SubmitSuccessAnon } from "./SubmitSuccessAnon";
 import { SubmitSuccessAuthed } from "./SubmitSuccessAuthed";
 import { PageSkeleton } from "@/components/ui/PageSkeleton";
@@ -85,6 +86,20 @@ export default function RespondPage() {
   }
 
   const event = eventState.event;
+
+  // Ward visit events use a completely different respond flow
+  if (event.eventType === "ward_visit") {
+    return (
+      <WardVisitRespond
+        event={event}
+        eventId={eventId}
+        user={user}
+        rid={rid}
+        token={token}
+      />
+    );
+  }
+
   const grid = slotsToCells(event.slots, VIEWER_TZ);
 
   const nameOk = state.name.trim().length > 0;
