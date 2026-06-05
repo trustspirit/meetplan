@@ -63,7 +63,7 @@ export const submitResponse = onCall(
       const updateData: Record<string, unknown> = {
         name: input.name,
         phone: normalizedPhone,
-        note: input.note ?? null,
+        note: input.note ?? FieldValue.delete(),
         selectedSlotIds: input.selectedSlotIds,
         updatedAt: now,
       };
@@ -75,10 +75,10 @@ export const submitResponse = onCall(
     const baseFields: Record<string, unknown> = {
       name: input.name,
       phone: normalizedPhone,
-      note: input.note ?? null,
       selectedSlotIds: input.selectedSlotIds,
       createdAt: now,
       updatedAt: now,
+      ...(input.note ? { note: input.note } : {}),
     };
     if (input.wardAssignments) baseFields.wardAssignments = input.wardAssignments;
 

@@ -3,7 +3,8 @@ import { collection, onSnapshot, orderBy, query, Timestamp } from "firebase/fire
 import { db } from "@/lib/firebase";
 import type { ParticipantResponse } from "@meetplan/shared";
 
-type FsResponse = Omit<ParticipantResponse, "createdAt" | "updatedAt"> & {
+type FsResponse = Omit<ParticipantResponse, "createdAt" | "updatedAt" | "note"> & {
+  note?: string | null;
   createdAt: Timestamp | null;
   updatedAt: Timestamp | null;
 };
@@ -36,6 +37,7 @@ export function useResponses(eventId: string | undefined): ResponsesState {
           return {
             ...raw,
             id: d.id,
+            note: raw.note ?? undefined,
             createdAt: raw.createdAt ? raw.createdAt.toDate().toISOString() : "",
             updatedAt: raw.updatedAt ? raw.updatedAt.toDate().toISOString() : "",
           };
