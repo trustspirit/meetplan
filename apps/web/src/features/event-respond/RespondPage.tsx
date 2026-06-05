@@ -14,6 +14,7 @@ import { RespondMobile } from "./RespondMobile";
 import { SubmitSuccessAnon } from "./SubmitSuccessAnon";
 import { SubmitSuccessAuthed } from "./SubmitSuccessAuthed";
 import { PageSkeleton } from "@/components/ui/PageSkeleton";
+import { t } from "@/lib/i18n";
 
 const VIEWER_TZ =
   Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Seoul";
@@ -52,7 +53,7 @@ export default function RespondPage() {
     return (
       <>
         <div className="sm:hidden"><PageSkeleton variant="detail" /></div>
-        <div className="hidden sm:block p-10 text-center text-muted-foreground">불러오는 중…</div>
+        <div className="hidden sm:block p-10 text-center text-muted-foreground">{t('respond.loading')}</div>
       </>
     );
   }
@@ -60,11 +61,11 @@ export default function RespondPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 p-8 text-center">
         <AlertCircle size={36} className="text-destructive" />
-        <div className="font-semibold">이벤트를 찾을 수 없어요</div>
+        <div className="font-semibold">{t('respond.eventNotFound')}</div>
         <p className="text-sm text-muted-foreground max-w-xs">
-          {eventState.error ?? "링크가 잘못되었거나 삭제된 이벤트입니다."}
+          {eventState.error ?? t('respond.eventNotFoundHint')}
         </p>
-        <Link to="/dashboard" className="mt-2 text-sm text-primary hover:underline">← 대시보드로</Link>
+        <Link to="/dashboard" className="mt-2 text-sm text-primary hover:underline">{t('respond.backToDashboard')}</Link>
       </div>
     );
   }
@@ -72,8 +73,8 @@ export default function RespondPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 p-8 text-center">
         <Lock size={36} className="text-muted-foreground" />
-        <div className="font-semibold">마감된 이벤트입니다</div>
-        <p className="text-sm text-muted-foreground">호스트에게 문의해주세요.</p>
+        <div className="font-semibold">{t('respond.eventClosed')}</div>
+        <p className="text-sm text-muted-foreground">{t('respond.eventClosedHint')}</p>
       </div>
     );
   }
@@ -130,7 +131,7 @@ export default function RespondPage() {
         setResult({ kind: "authed", name: state.name.trim(), slotCount: state.selectedSlotIds.size, periodMinutes: event.periodMinutes });
       }
     } catch (e) {
-      setSubmitError(e instanceof Error ? e.message : "저장 실패");
+      setSubmitError(e instanceof Error ? e.message : t('common.saveFailed'));
       setSubmitting(false);
     }
   };

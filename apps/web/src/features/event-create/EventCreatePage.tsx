@@ -1,6 +1,7 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useMemo, useState } from "react";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/features/auth/useAuth";
@@ -18,8 +19,9 @@ import { buildSlotsFromPaintedCells } from "./generateSlots";
 import { buildTimeAxis } from "./timeAxis";
 import { useGoogleCalendarBusy } from "../event-respond/useGoogleCalendarBusy";
 import { slotsToPaintedCells } from "../event-edit/slotsToPaintedCells";
+import { t } from "@/lib/i18n";
+import { LanguageToggle } from "@/components/ui/LanguageToggle";
 
-// 브라우저의 IANA TZ 자동 감지, 폴백 "Asia/Seoul"
 const HOST_TZ =
   Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Seoul";
 
@@ -36,7 +38,6 @@ export default function EventCreatePage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Pre-populate from result page if navigated with source state
   const fromResult = (location.state as FromResultState) ?? null;
   const initialState = fromResult
     ? (() => {
@@ -46,7 +47,7 @@ export default function EventCreatePage() {
           HOST_TZ
         );
         return {
-          title: `${fromResult.sourceTitle} (후속)`,
+          title: `${fromResult.sourceTitle} ${t('create.followUpSuffix')}`,
           periodMinutes: fromResult.sourcePeriod,
           selectedDates,
           paintedCells,
@@ -65,13 +66,11 @@ export default function EventCreatePage() {
   } = useEventCreateState(initialState);
   const isDesktop = useMediaQuery("(min-width: 640px)");
 
-  // Google Calendar busy-time integration (opt-in)
   const calendar = useGoogleCalendarBusy();
   const [calendarChoice, setCalendarChoice] = useState<"pending" | "dismissed">("pending");
 
   const handleCalendarConnect = async () => {
     await calendar.connectCalendar();
-    // On success, calendarList is populated → CalendarBanner shows picker automatically
   };
 
   const handleCalendarApply = async () => {
@@ -83,7 +82,6 @@ export default function EventCreatePage() {
     if (success) setCalendarChoice("dismissed");
   };
 
-  // Compute busy cell keys by checking each grid cell against freeBusy intervals
   const busyCells = useMemo(() => {
     if (!calendar.synced || calendar.busyIntervals.length === 0) return new Set<string>();
     const busy = new Set<string>();
@@ -119,7 +117,7 @@ export default function EventCreatePage() {
       };
       const parsed = eventCreateSchema.safeParse(payload);
       if (!parsed.success) {
-        setError(parsed.error.errors[0]?.message ?? "입력 오류");
+        setError(parsed.error.errors[0]?.message ?? t('common.inputError'));
         setSubmitting(false);
         return;
       }
@@ -132,7 +130,7 @@ export default function EventCreatePage() {
       });
       navigate(`/events/${doc.id}/result`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "저장 실패");
+      setError(e instanceof Error ? e.message : t('common.saveFailed'));
       setSubmitting(false);
     }
   };
@@ -172,11 +170,14 @@ export default function EventCreatePage() {
   return (
     <div className="max-w-6xl mx-auto px-6 py-8">
       <header className="flex items-center justify-between pb-6 border-b">
-        <Link to="/dashboard" className="text-sm hover:underline">← 돌아가기</Link>
-        <h1 className="font-semibold">새 이벤트 만들기</h1>
-        <Button onClick={handleCreate} disabled={!canCreate}>
-          {submitting ? "저장 중…" : "생성"}
-        </Button>
+        <Link to="/dashboard" className="text-sm hover:underline">{t('create.back')}</Link>
+        <h1 className="font-semibold">{t('create.pageTitle')}</h1>
+        <div className="flex items-center gap-3">
+          <LanguageToggle />
+          <Button onClick={handleCreate} disabled={!canCreate}>
+            {submitting ? t('common.saving') : t('create.submit')}
+          </Button>
+        </div>
       </header>
 
       <div className="py-8 flex flex-col gap-10">
@@ -202,7 +203,7 @@ export default function EventCreatePage() {
           )}
           {calendar.synced && (
             <p className="text-xs text-muted-foreground flex items-center gap-1">
-              <span>📅</span> 구글 캘린더 연동됨 — 줄무늬 셀에 기존 일정이 있습니다
+              <Calendar size={12} /> {t('create.calendarSynced')}
             </p>
           )}
           <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6 items-start">
@@ -222,7 +223,7 @@ export default function EventCreatePage() {
 
       <footer className="sticky bottom-0 -mx-6 px-6 py-3 bg-muted/80 backdrop-blur border-t flex items-center justify-between text-sm">
         <div>
-          자동 생성될 슬롯: <span className="font-semibold text-accent">{slots.length}개</span>
+          {t('create.slotsPreview', { count: slots.length })}
         </div>
         {error && <div className="text-destructive">{error}</div>}
       </footer>

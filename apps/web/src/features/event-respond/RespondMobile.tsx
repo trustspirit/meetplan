@@ -7,6 +7,7 @@ import { ParticipantGrid } from "./ParticipantGrid";
 import { ParticipantForm } from "./ParticipantForm";
 import { format, parseISO } from "date-fns";
 import { getFirstSelectedSlot } from "./getFirstSelectedSlot";
+import { t } from "@/lib/i18n";
 
 interface Props {
   event: MeetplanEvent;
@@ -29,7 +30,7 @@ export function RespondMobile(props: Props) {
     <>
       <MobileHeader
         title={props.event.title}
-        subtitle={`${props.event.periodMinutes}분 미팅 · 가능 시간 선택`}
+        subtitle={t('respond.subtitleMobile', { periodMinutes: props.event.periodMinutes })}
       />
       <div className="flex flex-col gap-5 p-4 pb-28">
         <ParticipantGrid
@@ -49,18 +50,18 @@ export function RespondMobile(props: Props) {
           <div className="min-w-0">
             {firstSlot ? (
               <>
-                <div className="text-[11px] text-muted-foreground">선택한 시간</div>
+                <div className="text-[11px] text-muted-foreground">{t('respond.firstSelectedTime')}</div>
                 <div className="text-sm font-semibold text-primary truncate">
                   {firstSlot.time} ({format(parseISO(firstSlot.date), "M/d")})
                 </div>
                 {firstSlot.remaining > 0 && (
                   <div className="text-[11px] text-muted-foreground">
-                    외 {firstSlot.remaining}개 시간대
+                    {t('respond.moreSlots', { count: firstSlot.remaining })}
                   </div>
                 )}
               </>
             ) : (
-              <div className="text-sm text-muted-foreground">시간을 선택해주세요</div>
+              <div className="text-sm text-muted-foreground">{t('respond.chooseTime')}</div>
             )}
           </div>
           <div className="flex items-center gap-3 shrink-0">
@@ -68,7 +69,7 @@ export function RespondMobile(props: Props) {
               <span className="text-[11px] text-destructive">{props.submitError}</span>
             )}
             <Button size="lg" disabled={!props.canSubmit} onClick={props.onSubmit}>
-              {props.submitting ? "저장 중…" : "제출"}
+              {props.submitting ? t('respond.saving') : t('respond.submit')}
             </Button>
           </div>
         </div>

@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
+import { List, CalendarDays } from "lucide-react";
 import type { MatchingResult } from "@meetplan/shared";
 import type { MatrixModel } from "./matrixModel";
 import { cn } from "@/lib/utils";
+import { t } from "@/lib/i18n";
 
 interface Props {
   matching: MatchingResult;
@@ -23,14 +25,13 @@ export function MatchingView({ matching, model, participantNameById, participant
   if (model.rows.length === 0) {
     return (
       <div className="rounded-xl border p-10 text-center text-sm text-muted-foreground bg-background">
-        응답이 모이면 자동 배정 조합이 표시됩니다
+        {t('matching.noResponses')}
       </div>
     );
   }
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Participant legend */}
       <div className="flex flex-wrap gap-2 rounded-xl border bg-muted/20 px-3 py-2.5">
         {model.rows.map((r) => {
           const color = participantColors[r.responseId] ?? "#888";
@@ -66,30 +67,33 @@ export function MatchingView({ matching, model, participantNameById, participant
       {matching.totalParticipants === 0 && (
         <div className="rounded-xl border p-10 text-center text-sm text-muted-foreground bg-background">
           {hiddenCount > 0
-            ? `${hiddenCount}명이 숨겨져 있어 배정 대상이 없습니다. 위 범례에서 참가자를 표시하세요.`
-            : "응답이 모이면 자동 배정 조합이 표시됩니다"}
+            ? t('matching.hiddenEmpty', { count: hiddenCount })
+            : t('matching.noResponses')}
         </div>
       )}
 
       {matching.totalParticipants > 0 && (<>
-      {/* Summary + view toggle */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div className="rounded-lg border bg-muted/20 p-4 text-sm flex-1 min-w-0">
           <div className="font-semibold">
-            최대 {matching.maxSize} / {matching.totalParticipants}명 배정 가능
+            {t('matching.summary', { max: matching.maxSize, total: matching.totalParticipants })}
           </div>
           <div className="text-xs text-muted-foreground mt-1">
-            가능한 조합 {matching.matchings.length}개{matching.truncated ? "+" : ""} 표시
-            {matching.truncated && " (상위 20개)"}
-            {hiddenCount > 0 && <span className="ml-2 text-amber-600">· {hiddenCount}명 숨김 제외</span>}
+            {t('matching.combinations', { count: matching.matchings.length })}
+            {matching.truncated && <span> {t('matching.combinationsTruncated')}</span>}
+            {hiddenCount > 0 && (
+              <span className="ml-2 text-amber-600">
+                · {t('matching.hiddenNote', { count: hiddenCount })}
+              </span>
+            )}
           </div>
         </div>
         <div className="flex gap-1 shrink-0">
           <ViewToggleButton active={view === "list"} onClick={() => setView("list")}>
-            📋 목록
+            <List size={12} className="mr-1" />{t('matching.viewList')}
           </ViewToggleButton>
           <ViewToggleButton active={view === "grid"} onClick={() => setView("grid")}>
-            🗓 그리드
+            <CalendarDays size={12} className="mr-1" />{t('matching.viewGrid')}
           </ViewToggleButton>
         </div>
       </div>
@@ -106,7 +110,7 @@ export function MatchingView({ matching, model, participantNameById, participant
 
 type SubViewProps = Pick<Props, "matching" | "model" | "participantNameById" | "participantColors">;
 
-/* ─── List view (original card layout) ─── */
+/* ─── List view ─── */
 
 function ListView({ matching, model, participantNameById, participantColors }: SubViewProps) {
   const slotLabelById = Object.fromEntries(
@@ -123,7 +127,7 @@ function ListView({ matching, model, participantNameById, participantColors }: S
         return (
           <div key={stableKey} className="rounded-xl border bg-background p-4">
             <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-3">
-              조합 #{idx + 1}
+              {t('matching.comboLabel', { num: idx + 1 })}
             </div>
             <div className="flex flex-col gap-1.5 text-sm">
               {Object.entries(m.assignments).map(([pid, slotId]) => {
@@ -144,7 +148,7 @@ function ListView({ matching, model, participantNameById, participantColors }: S
               })}
               {m.unmatched.length > 0 && (
                 <div className="pt-2 mt-2 border-t text-[11px] text-muted-foreground">
-                  미배정: {m.unmatched.map((id) => participantNameById[id] ?? id).join(", ")}
+                  {t('matching.unmatched')} {m.unmatched.map((id) => participantNameById[id] ?? id).join(", ")}
                 </div>
               )}
             </div>
@@ -155,13 +159,12 @@ function ListView({ matching, model, participantNameById, participantColors }: S
   );
 }
 
-/* ─── Grid view (date columns × time rows, one grid per combination) ─── */
+/* ─── Grid view ─── */
 
 function GridView({ matching, model, participantNameById, participantColors }: SubViewProps) {
   const { dateGroups, timeGroups, groupedCells } = model;
   const [selectedIdx, setSelectedIdx] = useState(0);
 
-  // Clamp selectedIdx when matching recalculates (e.g. hidden participants change)
   useEffect(() => {
     if (selectedIdx >= matching.matchings.length) {
       setSelectedIdx(0);
@@ -171,7 +174,6 @@ function GridView({ matching, model, participantNameById, participantColors }: S
   const m = matching.matchings[selectedIdx];
   if (!m) return null;
 
-  // slotId → assigned participant id for this combination
   const slotToPid: Record<string, string> = {};
   for (const [pid, slotId] of Object.entries(m.assignments)) {
     slotToPid[slotId] = pid;
@@ -179,7 +181,6 @@ function GridView({ matching, model, participantNameById, participantColors }: S
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Combination selector */}
       <div className="flex gap-1.5 flex-wrap">
         {matching.matchings.map((_, idx) => (
           <button
@@ -198,13 +199,12 @@ function GridView({ matching, model, participantNameById, participantColors }: S
         ))}
       </div>
 
-      {/* Grid table */}
       <div className="rounded-xl border bg-background overflow-x-auto">
         <table className="min-w-full text-xs border-collapse">
           <thead>
             <tr className="border-b bg-muted/30">
               <th className="sticky left-0 bg-muted/30 text-left font-semibold px-3 py-2 z-10 min-w-[56px]">
-                시간
+                {t('matching.colTime')}
               </th>
               {dateGroups.map((d) => (
                 <th
@@ -217,13 +217,13 @@ function GridView({ matching, model, participantNameById, participantColors }: S
             </tr>
           </thead>
           <tbody>
-            {timeGroups.map((t) => (
-              <tr key={t.hhmm} className="border-b last:border-0">
+            {timeGroups.map((tm) => (
+              <tr key={tm.hhmm} className="border-b last:border-0">
                 <td className="sticky left-0 bg-background px-3 py-2 font-medium text-muted-foreground border-r border-border/40">
-                  {t.hhmm}
+                  {tm.hhmm}
                 </td>
                 {dateGroups.map((d) => {
-                  const cell = groupedCells[`${d.dateYmd}_${t.hhmm}`];
+                  const cell = groupedCells[`${d.dateYmd}_${tm.hhmm}`];
                   if (!cell) {
                     return (
                       <td key={d.dateYmd} className="px-2 py-2 border-l border-border/40 bg-muted/10" />
@@ -257,10 +257,9 @@ function GridView({ matching, model, participantNameById, participantColors }: S
         </table>
       </div>
 
-      {/* Unmatched note */}
       {m.unmatched.length > 0 && (
         <p className="text-[11px] text-muted-foreground px-1">
-          미배정: {m.unmatched.map((id) => participantNameById[id] ?? id).join(", ")}
+          {t('matching.unmatched')} {m.unmatched.map((id) => participantNameById[id] ?? id).join(", ")}
         </p>
       )}
     </div>
@@ -283,7 +282,7 @@ function ViewToggleButton({
       type="button"
       onClick={onClick}
       className={cn(
-        "px-3 py-1.5 text-xs rounded-md border transition-colors",
+        "px-3 py-1.5 text-xs rounded-md border transition-colors flex items-center",
         active
           ? "bg-foreground text-background border-foreground font-semibold"
           : "bg-background text-muted-foreground border-border hover:text-foreground"

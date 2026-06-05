@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { deleteEventCallable } from "@/lib/callable";
+import { t } from "@/lib/i18n";
 
 interface Props {
   eventId: string;
@@ -35,7 +36,7 @@ export function DeleteEventButton({ eventId, eventTitle, responseCount, autoOpen
       await deleteEventCallable({ eventId });
       navigate("/dashboard", { replace: true });
     } catch (e) {
-      setError(e instanceof Error ? e.message : "삭제 실패");
+      setError(e instanceof Error ? e.message : t('delete.failed'));
       setDeleting(false);
     }
   };
@@ -56,7 +57,7 @@ export function DeleteEventButton({ eventId, eventTitle, responseCount, autoOpen
         onClick={() => setConfirming(true)}
         className="border-destructive text-destructive hover:bg-destructive/10"
       >
-        이벤트 삭제
+        {t('delete.button')}
       </Button>
     );
   }
@@ -72,18 +73,18 @@ export function DeleteEventButton({ eventId, eventTitle, responseCount, autoOpen
     >
       <div className="bg-background rounded-xl border shadow-lg max-w-sm w-full p-5">
         <h2 id="delete-dialog-title" className="text-base font-semibold">
-          이벤트를 삭제하시겠어요?
+          {t('delete.title')}
         </h2>
         <p className="text-sm text-muted-foreground mt-2">
-          "<b>{eventTitle}</b>"와 모든 응답({responseCount}명)이 영구 삭제됩니다. 되돌릴 수 없어요.
+          {t('delete.confirm', { title: eventTitle, count: responseCount })}
         </p>
         {error && <p className="text-sm text-destructive mt-2">{error}</p>}
         <div className="flex justify-end gap-2 mt-5">
           <Button ref={cancelRef} variant="outline" size="sm" onClick={handleCancel} disabled={deleting}>
-            취소
+            {t('common.cancel')}
           </Button>
           <Button variant="destructive" size="sm" onClick={onDelete} disabled={deleting}>
-            {deleting ? "삭제 중…" : "영구 삭제"}
+            {deleting ? t('delete.deleting') : t('delete.permanentDelete')}
           </Button>
         </div>
       </div>

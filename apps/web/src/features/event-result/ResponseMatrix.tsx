@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useState, Fragment } from "react";
+import { BarChart2, User } from "lucide-react";
 import type { MatrixModel } from "./matrixModel";
 import { cn } from "@/lib/utils";
+import { t } from "@/lib/i18n";
 
 type ViewMode = "heatmap" | "participant";
 
@@ -19,14 +21,13 @@ export function ResponseMatrix({ model, totalResponses, participantColors, hidde
   if (model.rows.length === 0) {
     return (
       <div className="rounded-xl border p-10 text-center text-sm text-muted-foreground bg-background">
-        아직 응답이 없습니다
+        {t('matrix.noResponses')}
       </div>
     );
   }
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Participant legend */}
       <div className="flex flex-wrap gap-2 rounded-xl border bg-muted/20 px-3 py-2.5">
         {model.rows.map((r) => {
           const color = participantColors[r.responseId] ?? "#888";
@@ -60,13 +61,12 @@ export function ResponseMatrix({ model, totalResponses, participantColors, hidde
         })}
       </div>
 
-      {/* View toggle */}
       <div className="flex gap-1 self-end">
         <ViewToggleButton active={view === "heatmap"} onClick={() => setView("heatmap")}>
-          🟩 가용 현황
+          <BarChart2 size={12} className="mr-1" />{t('matrix.viewHeatmap')}
         </ViewToggleButton>
         <ViewToggleButton active={view === "participant"} onClick={() => setView("participant")}>
-          👤 참가자별
+          <User size={12} className="mr-1" />{t('matrix.viewParticipant')}
         </ViewToggleButton>
       </div>
 
@@ -110,7 +110,7 @@ function HeatmapView({ model, totalResponses, participantColors, hiddenIds, hove
         <thead>
           <tr className="border-b bg-muted/30">
             <th className="sticky left-0 bg-muted/30 text-left font-semibold px-3 py-2 z-10 min-w-[56px]">
-              시간
+              {t('matrix.colTime')}
             </th>
             {dateGroups.map((d) => (
               <th key={d.dateYmd} className="px-3 py-2 font-semibold text-center min-w-[120px] border-l border-border/40">
@@ -131,7 +131,6 @@ function HeatmapView({ model, totalResponses, participantColors, hiddenIds, hove
                   return <td key={d.dateYmd} className="px-2 py-1.5 border-l border-border/40 bg-muted/10" />;
                 }
 
-                // Spotlight mode: show only hovered (even if hidden); normal mode: exclude hidden
                 const displayed = cell.participants.filter((p) => {
                   if (hoveredId) return hoveredId === p.responseId;
                   return !hiddenIds.has(p.responseId);
@@ -202,7 +201,7 @@ function ParticipantView({ model, participantColors, hiddenIds, hoveredId }: Par
         <thead>
           <tr className="border-b bg-muted/30">
             <th className="sticky left-0 bg-muted/30 text-left font-semibold px-3 py-2 z-10 min-w-[80px]">
-              날짜 / 시간
+              {t('matrix.colDatetime')}
             </th>
             {visibleRows.map((r) => {
               const color = participantColors[r.responseId] ?? "#888";
@@ -226,8 +225,8 @@ function ParticipantView({ model, participantColors, hiddenIds, hoveredId }: Par
         </thead>
         <tbody>
           {dateGroups.map((d) => (
-            <>
-              <tr key={`header_${d.dateYmd}`} className="bg-muted/30 border-b border-t">
+            <Fragment key={d.dateYmd}>
+              <tr className="bg-muted/30 border-b border-t">
                 <td className="sticky left-0 z-10 bg-muted/30 px-3 py-1 font-semibold text-[11px] text-muted-foreground uppercase tracking-wide">
                   {d.dateLabel}
                 </td>
@@ -235,13 +234,13 @@ function ParticipantView({ model, participantColors, hiddenIds, hoveredId }: Par
                   <td key={r.responseId} className="bg-muted/30 border-l border-border/40" />
                 ))}
               </tr>
-              {timeGroups.map((t) => {
-                const cell = groupedCells[`${d.dateYmd}_${t.hhmm}`];
+              {timeGroups.map((tm) => {
+                const cell = groupedCells[`${d.dateYmd}_${tm.hhmm}`];
                 if (!cell) return null;
                 return (
-                  <tr key={`${d.dateYmd}_${t.hhmm}`} className="border-b last:border-0">
+                  <tr key={`${d.dateYmd}_${tm.hhmm}`} className="border-b last:border-0">
                     <td className="sticky left-0 bg-background px-3 py-2 text-muted-foreground border-r border-border/40">
-                      {t.hhmm}
+                      {tm.hhmm}
                     </td>
                     {visibleRows.map((r) => {
                       const available = r.checks[cell.slotId] ?? false;
@@ -258,7 +257,7 @@ function ParticipantView({ model, participantColors, hiddenIds, hoveredId }: Par
                             <span
                               className="inline-flex items-center justify-center w-5 h-5 rounded-sm"
                               style={{ backgroundColor: color + "33", color }}
-                              aria-label="가능"
+                              aria-label={t('matrix.available')}
                             >
                               <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                                 <path d="M1.5 5L4 7.5L8.5 2.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
@@ -273,11 +272,11 @@ function ParticipantView({ model, participantColors, hiddenIds, hoveredId }: Par
                   </tr>
                 );
               })}
-            </>
+            </Fragment>
           ))}
           <tr className="bg-muted/20 border-t font-semibold">
             <td className="sticky left-0 bg-muted/20 px-3 py-2 text-[11px] text-muted-foreground border-r border-border/40">
-              가능 슬롯
+              {t('matrix.rowAvailSlots')}
             </td>
             {visibleRows.map((r) => {
               const count = Object.values(r.checks).filter(Boolean).length;
@@ -305,7 +304,7 @@ function ViewToggleButton({
       type="button"
       onClick={onClick}
       className={cn(
-        "px-3 py-1.5 text-xs rounded-md border transition-colors",
+        "px-3 py-1.5 text-xs rounded-md border transition-colors flex items-center",
         active
           ? "bg-foreground text-background border-foreground font-semibold"
           : "bg-background text-muted-foreground border-border hover:text-foreground"
@@ -323,4 +322,3 @@ function heatBg(ratio: number): string {
   if (ratio <= 0.75) return "bg-muted/65";
   return "bg-muted/80";
 }
-

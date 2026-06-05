@@ -18,4 +18,12 @@ describe("buildTimeAxis", () => {
   it("returns empty when start >= end", () => {
     expect(buildTimeAxis("14:00", "14:00", 30)).toEqual([]);
   });
+
+  it("handles midnight crossing: 23:00 to 00:00 with 60-min period", () => {
+    expect(buildTimeAxis("23:00", "00:00", 60)).toEqual(["23:00"]);
+  });
+
+  it("handles midnight crossing: 22:00 to 00:00 with 60-min period", () => {
+    expect(buildTimeAxis("22:00", "00:00", 60)).toEqual(["22:00", "23:00"]);
+  });
 });

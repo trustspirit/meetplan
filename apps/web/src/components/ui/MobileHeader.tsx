@@ -39,7 +39,7 @@ export function MobileHeader({ title, subtitle, logo, onBack, actions, menuItems
   }, [menuOpen]);
 
   return (
-    <header className="sm:hidden flex items-center gap-2 px-3 py-2.5 bg-zinc-900 text-white sticky top-0 z-30">
+    <header className="sm:hidden flex items-center gap-2 px-3 py-2.5 bg-primary text-white sticky top-0 z-30">
       {logo ? (
         <span className="font-bold text-base mr-1">MeetPlan</span>
       ) : onBack ? (

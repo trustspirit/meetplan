@@ -5,6 +5,8 @@ import type { CellGridModel } from "./slotsToCells";
 import type { RespondState } from "./useRespondState";
 import { ParticipantGrid } from "./ParticipantGrid";
 import { ParticipantForm } from "./ParticipantForm";
+import { LanguageToggle } from "@/components/ui/LanguageToggle";
+import { t } from "@/lib/i18n";
 
 interface Props {
   event: MeetplanEvent;
@@ -29,17 +31,20 @@ export function RespondDesktop(props: Props) {
         <div>
           <h1 className="text-xl font-semibold">{props.event.title}</h1>
           <p className="text-xs text-muted-foreground mt-1">
-            {props.event.periodMinutes}분 미팅 · 가능한 시간을 선택해주세요
+            {t('respond.subtitle', { periodMinutes: props.event.periodMinutes })}
           </p>
         </div>
-        {!user && (
-          <button onClick={signInWithGoogle} className="text-xs text-muted-foreground hover:underline">
-            Google 로그인
-          </button>
-        )}
-        {user && (
-          <span className="text-xs text-muted-foreground">{user.email}</span>
-        )}
+        <div className="flex items-center gap-3">
+          {!user && (
+            <button onClick={signInWithGoogle} className="text-xs text-muted-foreground hover:underline">
+              {t('respond.googleSignIn')}
+            </button>
+          )}
+          {user && (
+            <span className="text-xs text-muted-foreground">{user.email}</span>
+          )}
+          <LanguageToggle />
+        </div>
       </header>
 
       <div className="py-8 flex flex-col gap-8">
@@ -59,12 +64,12 @@ export function RespondDesktop(props: Props) {
 
       <footer className="sticky bottom-0 -mx-6 px-6 py-3 bg-muted/80 backdrop-blur border-t flex items-center justify-between">
         <div className="text-sm">
-          선택: <span className="font-semibold text-accent">{props.state.selectedSlotIds.size}개</span>
+          {t('respond.selectedCount', { count: props.state.selectedSlotIds.size })}
         </div>
         <div className="flex items-center gap-3">
           {props.submitError && <span className="text-xs text-destructive">{props.submitError}</span>}
           <Button disabled={!props.canSubmit} onClick={props.onSubmit}>
-            {props.submitting ? "저장 중…" : "제출"}
+            {props.submitting ? t('respond.saving') : t('respond.submit')}
           </Button>
         </div>
       </footer>

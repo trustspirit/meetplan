@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PRESETS, clampPeriod, isPreset, nearestPreset } from "./periodPickerUtils";
+import { t } from "@/lib/i18n";
 
 interface Props {
   value: number;
@@ -57,7 +58,7 @@ export function PeriodPicker({ value, onChange }: Props) {
           onClick={() => handlePreset(p)}
           className={cn(btnBase, !isCustom && value === p ? btnActive : btnIdle)}
         >
-          {p}분
+          {p}{t('period.suffix')}
         </button>
       ))}
 
@@ -72,7 +73,7 @@ export function PeriodPicker({ value, onChange }: Props) {
             value={customRaw}
             onChange={(e) => setCustomRaw(e.target.value)}
             onBlur={handleCustomBlur}
-            placeholder="분"
+            placeholder={t('period.placeholder')}
             className={cn(
               "w-16 px-2 py-2 rounded-md text-sm border text-center",
               "border-primary bg-primary/5",
@@ -81,13 +82,13 @@ export function PeriodPicker({ value, onChange }: Props) {
               "[&::-webkit-inner-spin-button]:appearance-none"
             )}
           />
-          <span className="text-sm text-muted-foreground">분</span>
+          <span className="text-sm text-muted-foreground">{t('period.suffix')}</span>
           <button
             type="button"
             onMouseDown={(e) => e.preventDefault()}
             onClick={handleCustomClose}
             className="text-muted-foreground hover:text-foreground p-1"
-            aria-label="직접 입력 닫기"
+            aria-label={t('period.customClose')}
           >
             <X size={14} />
           </button>
@@ -98,7 +99,7 @@ export function PeriodPicker({ value, onChange }: Props) {
           onClick={handleCustomOpen}
           className={cn(btnBase, btnIdle)}
         >
-          직접 입력
+          {t('period.custom')}
         </button>
       )}
     </div>

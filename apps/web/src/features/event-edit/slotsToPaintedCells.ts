@@ -36,7 +36,8 @@ export function slotsToPaintedCells(
     paintedCells.add(`${date}_${startHHmm}`);
 
     const startMin = toMinutes(startHHmm);
-    const endMin = toMinutes(endHHmm);
+    // "00:00" end means next-day midnight; treat as 1440 so range covers it
+    const endMin = endHHmm === "00:00" ? 1440 : toMinutes(endHHmm);
     if (startMin < minStartMin) minStartMin = startMin;
     if (endMin > maxEndMin) maxEndMin = endMin;
   }

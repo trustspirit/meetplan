@@ -1,9 +1,10 @@
 import { Fragment, useRef, type PointerEvent } from "react";
 import { formatInTimeZone } from "date-fns-tz";
-import { Info } from "lucide-react";
+import { Info, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useOnce } from "@/lib/useOnce";
 import { ScrollIndicator } from "@/components/ui/ScrollIndicator";
+import { t } from "@/lib/i18n";
 import type { CellGridModel } from "./slotsToCells";
 
 interface Props {
@@ -61,15 +62,15 @@ export function ParticipantGrid({ grid, selectedSlotIds, onSetSlot, viewerTz }: 
           <div className="mb-3 flex items-start gap-2 rounded-md bg-accent/10 border border-accent/30 p-2.5 text-[11px] text-accent">
             <Info size={13} className="shrink-0 mt-0.5" />
             <div className="flex-1">
-              <b>처음이신가요?</b> 셀을 <b>클릭</b>하거나 <b>드래그</b>해서 여러 시간을 한번에 선택하세요.
+              <b>{t('grid.paintHintLabel')}</b> {t('grid.paintHint')}
             </div>
             <button
               type="button"
               onClick={dismissHint}
               className="text-accent/70 hover:text-accent px-1"
-              aria-label="닫기"
+              aria-label={t('grid.paintHintClose')}
             >
-              ✕
+              <X size={12} />
             </button>
           </div>
         )}
@@ -125,7 +126,7 @@ export function ParticipantGrid({ grid, selectedSlotIds, onSetSlot, viewerTz }: 
         </div>
 
         <p className="text-[11px] text-muted-foreground mt-3">
-          흐린 셀은 호스트가 제공한 시간이 아닙니다.
+          {t('grid.dimmedCellHint')}
         </p>
       </div>
       <ScrollIndicator containerRef={scrollRef} columnWidth={COLUMN_WIDTH} total={grid.dates.length} />

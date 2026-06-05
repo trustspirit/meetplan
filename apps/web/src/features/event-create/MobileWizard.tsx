@@ -1,5 +1,6 @@
 import { Fragment, useState, useRef, type PointerEvent } from "react";
 import { format, parseISO } from "date-fns";
+import { Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +10,7 @@ import { CalendarBanner } from "./CalendarBanner";
 import { buildTimeAxis } from "./timeAxis";
 import { cellKey } from "./useEventCreateState";
 import { PeriodPicker } from "./PeriodPicker";
+import { t } from "@/lib/i18n";
 import type { CalendarListItem } from "../event-respond/useGoogleCalendarBusy";
 
 interface Props {
@@ -42,8 +44,6 @@ interface Props {
 export function MobileWizard(props: Props) {
   const [step, setStep] = useState<1 | 2>(1);
   const [activeDate, setActiveDate] = useState<string | null>(null);
-  // painting.current === null: not dragging
-  // visited: keys already set this drag (prevents redundant setState)
   const painting = useRef<{ targetState: boolean; visited: Set<string> } | null>(null);
 
   const canGoNext = props.title.trim().length > 0 && props.selectedDates.length > 0;
@@ -60,8 +60,6 @@ export function MobileWizard(props: Props) {
     props.onSetCell(key, !on);
   };
 
-  // Unified drag tracker — works for mouse and touch via elementFromPoint
-  // (sidesteps touch implicit pointer capture on the start cell).
   const handleRootPointerMove = (e: PointerEvent<HTMLDivElement>) => {
     if (!painting.current) return;
     const el = document.elementFromPoint(e.clientX, e.clientY);
@@ -77,20 +75,20 @@ export function MobileWizard(props: Props) {
     return (
       <div className="flex flex-col gap-6 p-4">
         <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">
-          Step 1 of 2 · 기본 정보 + 날짜
+          {t('wizard.step1')}
         </div>
         <div>
-          <Label htmlFor="ev-title-m">이벤트 이름</Label>
+          <Label htmlFor="ev-title-m">{t('form.eventTitle')}</Label>
           <Input
             id="ev-title-m"
             className="mt-2"
             value={props.title}
             onChange={(e) => props.onTitleChange(e.target.value)}
-            placeholder="예: 2분기 1:1 미팅"
+            placeholder={t('form.eventTitlePlaceholder')}
           />
         </div>
         <div>
-          <Label>미팅 길이</Label>
+          <Label>{t('form.meetingLength')}</Label>
           <div className="mt-2">
             <PeriodPicker value={props.periodMinutes} onChange={props.onPeriodChange} />
           </div>
@@ -104,13 +102,12 @@ export function MobileWizard(props: Props) {
             if (!activeDate && props.selectedDates.length > 0) setActiveDate(props.selectedDates[0]!);
           }}
         >
-          다음 →
+          {t('wizard.next')} →
         </Button>
       </div>
     );
   }
 
-  // Step 2: paint one day
   const currentDate = activeDate ?? props.selectedDates[0]!;
   const axis = buildTimeAxis(props.dailyRange[0], props.dailyRange[1], props.periodMinutes);
 
@@ -123,11 +120,15 @@ export function MobileWizard(props: Props) {
       onPointerLeave={handleUp}
     >
       <div className="flex items-center justify-between">
-        <button type="button" onClick={() => setStep(1)} className="text-sm hover:underline">← 이전</button>
+        <button type="button" onClick={() => setStep(1)} className="text-sm hover:underline">
+          ← {t('wizard.prev')}
+        </button>
         <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">
-          Step 2 · 시간 페인팅
+          {t('wizard.step2')}
         </div>
-        <div className="text-xs text-muted-foreground">{props.slotCount} 슬롯</div>
+        <div className="text-xs text-muted-foreground">
+          {t('wizard.slotCount', { count: props.slotCount })}
+        </div>
       </div>
 
       {props.calendarChoice === "pending" && props.onCalendarConnect && (
@@ -144,7 +145,7 @@ export function MobileWizard(props: Props) {
       )}
       {props.calendarSynced && (
         <p className="text-[11px] text-muted-foreground flex items-center gap-1">
-          <span>📅</span> 구글 캘린더 연동됨
+          <Calendar size={11} /> {t('wizard.calendarSynced')}
         </p>
       )}
 
@@ -207,16 +208,16 @@ export function MobileWizard(props: Props) {
       {props.busyCells && props.busyCells.size > 0 && (
         <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
           <span className="inline-block w-3 h-3 rounded-sm bg-muted cell-busy shrink-0" />
-          줄무늬 = 캘린더 일정 있음
+          {t('wizard.busyCellHint')}
         </div>
       )}
 
       <div className="text-[10px] text-muted-foreground text-center p-2 bg-muted rounded">
-        👆 꾹 눌러 드래그해서 연속된 시간을 한번에 칠하세요
+        {t('wizard.dragHint')}
       </div>
 
       <Button size="lg" disabled={!props.canSubmit} onClick={props.onSubmit}>
-        {props.submitting ? "저장 중…" : "생성하기"}
+        {props.submitting ? t('common.saving') : t('create.submitMobile')}
       </Button>
     </div>
   );
