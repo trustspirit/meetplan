@@ -130,19 +130,23 @@ GitHub repo → **Settings → Secrets and variables → Actions → New reposit
    - `pnpm -r typecheck` (전 워크스페이스)
    - shared / web / functions 단위 테스트 실행
 
-2. **deploy job** (test 통과 후만)
+2. **deploy job** (test 통과 후, 배포 대상 변경이 있을 때만)
    - `environment: production` 적용 (approval 설정 가능)
    - pnpm install
-   - `apps/web/.env.production`을 secrets로 런타임 생성
-   - web build (`pnpm --filter web build`)
-   - functions build (`pnpm --filter functions build`)
+   - 변경 파일 기준으로 배포 대상 계산
+     - `apps/web/src/**`, web 설정 파일 → Hosting
+     - `functions/src/**`, functions 설정 파일 → Functions
+     - `packages/shared/src/**`, workspace 의존성 파일 → Hosting + Functions
+     - `firestore.rules`, `firestore.indexes.json` → Firestore
+     - `firebase.json` → Hosting + Functions + Firestore
+   - Hosting 배포 시에만 `apps/web/.env.production`을 secrets로 런타임 생성
+   - Hosting 배포 시에만 web build (`pnpm --filter web build`)
+   - Functions 배포 시에만 functions build (`pnpm --filter functions build`)
    - GCP 인증 (`google-github-actions/auth@v2` + 서비스 계정 JSON)
    - Firebase CLI 설치
-   - `firebase deploy --project $FIREBASE_PROJECT_ID --force --non-interactive`
-     - Hosting (apps/web/dist)
-     - Firestore Rules
-     - Firestore Indexes
-     - Functions (functions/lib)
+   - `firebase deploy --only "$TARGETS" --project $FIREBASE_PROJECT_ID --force --non-interactive`
+     - 필요한 target만 콤마로 묶어 배포 (`hosting`, `functions`, `firestore`)
+     - Functions target이 포함되면 Cloud Functions update operation 충돌(HTTP 409)에 대비해 최대 4회 재시도
 
 ### 4-3. PR 워크플로
 
@@ -156,7 +160,19 @@ GitHub repo → **Settings → Secrets and variables → Actions → New reposit
 
 ### 4-5. 배포 범위 제한
 
-특정 영역만 배포하고 싶으면 `deploy.yml`의 마지막 `firebase deploy` 커맨드를 다음 중 하나로 교체:
+`deploy.yml`은 변경 파일을 기준으로 자동 제한한다. 로컬에서도 같은 기준을 쓰려면:
+
+```bash
+pnpm run deploy -- --project $FIREBASE_PROJECT_ID
+```
+
+Functions 배포가 포함되면 `firebase deploy`를 기본 4회 재시도한다. 로컬에서 조정하려면:
+
+```bash
+DEPLOY_RETRY_ATTEMPTS=2 DEPLOY_RETRY_DELAY_SECONDS=60 pnpm run deploy -- --project $FIREBASE_PROJECT_ID
+```
+
+특정 영역만 수동 배포하고 싶으면:
 
 ```bash
 firebase deploy --only hosting --project $FIREBASE_PROJECT_ID
@@ -255,8 +271,8 @@ cp apps/web/.env.example apps/web/.env.production
 # .env.production 편집: VITE_USE_EMULATOR=false, 나머지 프로덕션 값
 
 # 3. 배포
-pnpm deploy
-# 내부적으로: web build → functions build → firebase deploy
+pnpm run deploy
+# 내부적으로: 변경 파일 감지 → 필요한 build만 실행 → 필요한 Firebase target만 deploy
 ```
 
 **주의**: 가능하면 로컬 배포는 피하고 Actions를 쓸 것. 팀원 간 동기화 문제, 인증 정보 유출 위험이 높음.

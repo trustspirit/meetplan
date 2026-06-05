@@ -28,18 +28,36 @@ jobs:
         with:
           filters: |
             functions:
-              - 'functions/**'
-              - 'packages/shared/**'
+              - 'functions/src/**'
+              - 'functions/package.json'
+              - 'functions/tsconfig.json'
+              - 'functions/tsconfig.build.json'
+              - 'packages/shared/src/**'
+              - 'packages/shared/package.json'
+              - 'packages/shared/tsconfig.json'
+              - 'packages/shared/tsconfig.esm.json'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
+              - 'tsconfig.base.json'
               - 'firebase.json'
             web:
-              - 'apps/web/**'
-              - 'packages/shared/**'
+              - 'apps/web/src/**'
+              - 'apps/web/public/**'
+              - 'apps/web/index.html'
+              - 'apps/web/package.json'
+              - 'apps/web/postcss.config.js'
+              - 'apps/web/tailwind.config.ts'
+              - 'apps/web/tsconfig.json'
+              - 'apps/web/vite.config.ts'
+              - 'packages/shared/src/**'
+              - 'packages/shared/package.json'
+              - 'packages/shared/tsconfig.json'
+              - 'packages/shared/tsconfig.esm.json'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
+              - 'tsconfig.base.json'
               - 'firebase.json'
             firestore:
               - 'firestore.rules'
@@ -67,7 +85,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
 
       - name: Install dependencies
@@ -94,11 +112,15 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: pnpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Build shared
+        if: needs.changes.outputs.web == 'true' || needs.changes.outputs.functions == 'true'
+        run: pnpm --filter @meetplan/shared build
 
       - name: Write apps/web/.env.production
         if: needs.changes.outputs.web == 'true'
@@ -147,7 +169,23 @@ jobs:
           if [ "${{ needs.changes.outputs.firestore }}" = "true" ]; then
             TARGETS="${TARGETS:+$TARGETS,}firestore"
           fi
-          firebase deploy --only "$TARGETS" --project "$FIREBASE_PROJECT_ID" --force --non-interactive
+
+          attempts=1
+          if [ "${{ needs.changes.outputs.functions }}" = "true" ]; then
+            attempts=4
+          fi
+
+          for attempt in $(seq 1 "$attempts"); do
+            if firebase deploy --only "$TARGETS" --project "$FIREBASE_PROJECT_ID" --force --non-interactive; then
+              exit 0
+            fi
+            if [ "$attempt" = "$attempts" ]; then
+              exit 1
+            fi
+            delay=$((attempt * 90))
+            echo "Firebase deploy attempt $attempt failed, retrying in ${delay}s..."
+            sleep "$delay"
+          done
 
       # invoker: "public" 이 update 시 IAM 재설정을 보장하지 않으므로 명시적으로 설정
       # 새로운 public callable function 추가 시 이 목록에도 추가 필요

@@ -20,7 +20,7 @@ A scheduling tool for 1:1 meetings. The host publishes their available time slot
 | Layer | Technology |
 |---|---|
 | Frontend | React 18 + TypeScript + Vite + Tailwind CSS |
-| Backend | Firebase Cloud Functions (Node 20) |
+| Backend | Firebase Cloud Functions (Node 22) |
 | Database | Cloud Firestore |
 | Auth | Firebase Authentication (Google) |
 | Build / Packages | pnpm workspaces (monorepo) |
@@ -110,11 +110,24 @@ pnpm --filter functions test
 ### Deploy
 
 ```bash
-pnpm deploy
+pnpm run deploy
 ```
 
-Runs `web build → functions build → firebase deploy` in sequence.
-For partial deploys:
+Deploys only Firebase targets affected by changed files:
+
+- `apps/web/src/**` and web config files → Hosting
+- `functions/src/**` and functions config files → Functions
+- `packages/shared/src/**` or workspace dependency files → Hosting + Functions
+- `firestore.rules` / `firestore.indexes.json` → Firestore
+- `firebase.json` → Hosting + Functions + Firestore
+
+To force a full deploy:
+
+```bash
+pnpm run deploy:all
+```
+
+For manual partial deploys:
 
 ```bash
 firebase deploy --only hosting
