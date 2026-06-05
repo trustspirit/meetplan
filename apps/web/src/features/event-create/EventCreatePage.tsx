@@ -64,6 +64,7 @@ export default function EventCreatePage() {
   const {
     state,
     setTitle,
+    setNotes,
     setPeriod,
     toggleDate,
     setDailyRange,
@@ -120,9 +121,11 @@ export default function EventCreatePage() {
     setError(null);
     setSubmitting(true);
     try {
+      const notesValue = state.notes.trim() || undefined;
       const payload = eventType === "ward_visit"
         ? {
             title: state.title.trim(),
+            description: notesValue,
             periodMinutes: 0,
             timezone: HOST_TZ,
             slots: [],
@@ -132,6 +135,7 @@ export default function EventCreatePage() {
           }
         : {
             title: state.title.trim(),
+            description: notesValue,
             periodMinutes: state.periodMinutes,
             timezone: HOST_TZ,
             slots,
@@ -164,6 +168,8 @@ export default function EventCreatePage() {
         <MobileWizard
           title={state.title}
           onTitleChange={setTitle}
+          notes={state.notes}
+          onNotesChange={setNotes}
           periodMinutes={state.periodMinutes}
           onPeriodChange={setPeriod}
           selectedDates={state.selectedDates}
@@ -213,6 +219,8 @@ export default function EventCreatePage() {
         <BasicInfoForm
           title={state.title}
           onTitleChange={setTitle}
+          notes={state.notes}
+          onNotesChange={setNotes}
           periodMinutes={state.periodMinutes}
           onPeriodChange={setPeriod}
           eventType={eventType}

@@ -9,11 +9,13 @@ import { t } from "@/lib/i18n";
 interface Props {
   name: string;
   phone: string;
+  note: string;
   onNameChange: (v: string) => void;
   onPhoneChange: (v: string) => void;
+  onNoteChange: (v: string) => void;
 }
 
-export function ParticipantForm({ name, phone, onNameChange, onPhoneChange }: Props) {
+export function ParticipantForm({ name, phone, note, onNameChange, onPhoneChange, onNoteChange }: Props) {
   const [phoneTouched, setPhoneTouched] = useState(false);
   const phoneInvalid = phoneTouched && phone.length > 0 && !phoneRegex.test(phone);
 
@@ -55,6 +57,18 @@ export function ParticipantForm({ name, phone, onNameChange, onPhoneChange }: Pr
         ) : (
           <p className="text-[11px] text-muted-foreground mt-1">{t('form.phoneHint')}</p>
         )}
+      </div>
+      <div>
+        <Label htmlFor="resp-note">{t('form.respondentNote')}</Label>
+        <textarea
+          id="resp-note"
+          className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+          rows={3}
+          maxLength={300}
+          placeholder={t('form.respondentNotePlaceholder')}
+          value={note}
+          onChange={(e) => onNoteChange(e.target.value)}
+        />
       </div>
     </section>
   );

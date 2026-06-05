@@ -125,9 +125,16 @@ export function ParticipantGrid({ grid, selectedSlotIds, onSetSlot, viewerTz }: 
           ))}
         </div>
 
-        <p className="text-[11px] text-muted-foreground mt-3">
-          {t('grid.dimmedCellHint')}
-        </p>
+        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground">
+          <span className="flex items-center gap-1">
+            <span className="inline-block w-3 h-3 rounded-sm bg-accent/70 shrink-0" />
+            {t('grid.usageHint')}
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="inline-block w-3 h-3 rounded-sm bg-muted/30 shrink-0" />
+            {t('grid.dimmedCellHint')}
+          </span>
+        </div>
       </div>
       <ScrollIndicator containerRef={scrollRef} columnWidth={COLUMN_WIDTH} total={grid.dates.length} />
     </div>

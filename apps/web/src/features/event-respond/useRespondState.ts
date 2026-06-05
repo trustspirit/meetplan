@@ -3,18 +3,21 @@ import { useCallback, useEffect, useRef, useState } from "react";
 export interface RespondState {
   name: string;
   phone: string;
+  note: string;
   selectedSlotIds: Set<string>;
 }
 
 const initial: RespondState = {
   name: "",
   phone: "",
+  note: "",
   selectedSlotIds: new Set(),
 };
 
 export function useRespondState(prefill?: {
   name: string;
   phone: string;
+  note?: string;
   selectedSlotIds: string[];
 }) {
   const [state, setState] = useState<RespondState>(initial);
@@ -27,6 +30,7 @@ export function useRespondState(prefill?: {
       setState({
         name: prefill.name,
         phone: prefill.phone,
+        note: prefill.note ?? "",
         selectedSlotIds: new Set(prefill.selectedSlotIds),
       });
     }
@@ -34,6 +38,7 @@ export function useRespondState(prefill?: {
 
   const setName = useCallback((name: string) => setState((s) => ({ ...s, name })), []);
   const setPhone = useCallback((phone: string) => setState((s) => ({ ...s, phone })), []);
+  const setNote = useCallback((note: string) => setState((s) => ({ ...s, note })), []);
   const toggleSlot = useCallback((slotId: string) => {
     setState((s) => {
       const next = new Set(s.selectedSlotIds);
@@ -51,5 +56,5 @@ export function useRespondState(prefill?: {
     });
   }, []);
 
-  return { state, setName, setPhone, toggleSlot, setSlotChecked };
+  return { state, setName, setPhone, setNote, toggleSlot, setSlotChecked };
 }

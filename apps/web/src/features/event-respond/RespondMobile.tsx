@@ -15,6 +15,7 @@ interface Props {
   state: RespondState;
   onNameChange: (v: string) => void;
   onPhoneChange: (v: string) => void;
+  onNoteChange: (v: string) => void;
   onSetSlot: (slotId: string, on: boolean) => void;
   viewerTz: string;
   canSubmit: boolean;
@@ -33,6 +34,9 @@ export function RespondMobile(props: Props) {
         subtitle={t('respond.subtitleMobile', { periodMinutes: props.event.periodMinutes })}
       />
       <div className="flex flex-col gap-5 p-4 pb-28">
+        {props.event.description && (
+          <p className="text-sm text-foreground/80 whitespace-pre-wrap bg-muted/50 rounded-lg px-3 py-2.5">{props.event.description}</p>
+        )}
         <ParticipantGrid
           grid={props.grid}
           selectedSlotIds={props.state.selectedSlotIds}
@@ -42,8 +46,10 @@ export function RespondMobile(props: Props) {
         <ParticipantForm
           name={props.state.name}
           phone={props.state.phone}
+          note={props.state.note}
           onNameChange={props.onNameChange}
           onPhoneChange={props.onPhoneChange}
+          onNoteChange={props.onNoteChange}
         />
 
         <div className="fixed left-0 right-0 bottom-0 bg-background border-t px-4 py-3 flex items-center justify-between gap-3">

@@ -48,6 +48,8 @@ const ko = {
   'create.calendarSynced': '구글 캘린더 연동됨 — 줄무늬 셀에 기존 일정이 있습니다',
   'form.eventTitle': '이벤트 이름',
   'form.eventTitlePlaceholder': '예: 2분기 1:1 미팅',
+  'form.notes': '노트',
+  'form.notesPlaceholder': '공유 링크를 받는 대상에게 전달할 내용 (선택)',
   'form.meetingLength': '미팅 길이',
   'period.suffix': '분',
   'period.custom': '직접 입력',
@@ -105,6 +107,7 @@ const ko = {
 
   // ── ParticipantGrid ──────────────────────────────────────────────────
   'grid.dimmedCellHint': '흐린 셀은 선택 불가한 시간입니다',
+  'grid.usageHint': '클릭 또는 드래그해서 가능한 시간을 선택하세요',
   'grid.paintHintLabel': '처음이신가요?',
   'grid.paintHintClose': '닫기',
   'grid.paintHint': '셀을 클릭하거나 드래그해서 여러 시간을 한번에 선택하세요.',
@@ -118,6 +121,8 @@ const ko = {
   'form.phonePlaceholder': '010-1234-5678',
   'form.phoneHint': '일정이 확정되면 문자 연락에 사용됩니다',
   'form.phoneError': '010-1234-5678 형식으로 입력해주세요',
+  'form.respondentNote': '기타 사항',
+  'form.respondentNotePlaceholder': '전달할 내용이 있으면 적어주세요 (선택)',
 
   // ── Submit success ───────────────────────────────────────────────────
   'success.title': '응답 완료',
@@ -160,6 +165,7 @@ const ko = {
   'result.copyTitle': '이 이벤트의 시간대를 그대로 가져와 새 이벤트 생성',
   'result.notFound': '이벤트를 찾을 수 없어요',
   'result.notFoundHint': '링크가 잘못되었거나 삭제된 이벤트입니다.',
+  'result.participantNotes': '참가자 노트',
 
   // ── ResponseMatrix ───────────────────────────────────────────────────
   'matrix.noResponses': '아직 응답이 없습니다',
@@ -287,6 +293,8 @@ const en: TranslationMap = {
   'create.calendarSynced': 'Google Calendar synced — striped cells have existing events',
   'form.eventTitle': 'Event name',
   'form.eventTitlePlaceholder': 'e.g. Q2 1:1 meeting',
+  'form.notes': 'Notes',
+  'form.notesPlaceholder': 'A message for recipients of the share link (optional)',
   'form.meetingLength': 'Meeting length',
   'period.suffix': ' min',
   'period.custom': 'Custom',
@@ -339,6 +347,7 @@ const en: TranslationMap = {
   'respond.backToDashboard': '← Back to dashboard',
 
   'grid.dimmedCellHint': 'Dimmed cells are not selectable',
+  'grid.usageHint': 'Click or drag to select available times',
   'grid.paintHintLabel': 'First time?',
   'grid.paintHintClose': 'Close',
   'grid.paintHint': 'Click or drag cells to select multiple times at once.',
@@ -351,6 +360,8 @@ const en: TranslationMap = {
   'form.phonePlaceholder': '010-1234-5678',
   'form.phoneHint': 'Used to contact you when the time is confirmed',
   'form.phoneError': 'Please enter in 010-1234-5678 format',
+  'form.respondentNote': 'Notes',
+  'form.respondentNotePlaceholder': 'Any message for the organizer (optional)',
 
   'success.title': 'Response Submitted',
   'success.thanks': 'Thank you, {name}!',
@@ -390,6 +401,7 @@ const en: TranslationMap = {
   'result.copyTitle': 'Create a new event with the same time slots',
   'result.notFound': 'Event not found',
   'result.notFoundHint': 'The link may be invalid or the event has been deleted.',
+  'result.participantNotes': 'Participant notes',
 
   'matrix.noResponses': 'No responses yet',
   'matrix.viewHeatmap': 'Availability',

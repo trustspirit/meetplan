@@ -9,6 +9,8 @@ import type { EventType } from "@meetplan/shared";
 interface Props {
   title: string;
   onTitleChange: (v: string) => void;
+  notes: string;
+  onNotesChange: (v: string) => void;
   periodMinutes: number;
   onPeriodChange: (v: number) => void;
   eventType: EventType;
@@ -19,6 +21,7 @@ interface Props {
 
 export function BasicInfoForm({
   title, onTitleChange,
+  notes, onNotesChange,
   periodMinutes, onPeriodChange,
   eventType, onEventTypeChange,
   stakeId, onStakeChange,
@@ -59,6 +62,20 @@ export function BasicInfoForm({
           placeholder={t('form.eventTitlePlaceholder')}
           value={title}
           onChange={(e) => onTitleChange(e.target.value)}
+        />
+      </div>
+
+      {/* Notes */}
+      <div>
+        <Label htmlFor="ev-notes">{t('form.notes')}</Label>
+        <textarea
+          id="ev-notes"
+          className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+          rows={3}
+          maxLength={500}
+          placeholder={t('form.notesPlaceholder')}
+          value={notes}
+          onChange={(e) => onNotesChange(e.target.value)}
         />
       </div>
 

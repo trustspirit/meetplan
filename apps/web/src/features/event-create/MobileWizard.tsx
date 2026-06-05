@@ -18,6 +18,8 @@ import type { CalendarListItem } from "../event-respond/useGoogleCalendarBusy";
 interface Props {
   title: string;
   onTitleChange: (v: string) => void;
+  notes: string;
+  onNotesChange: (v: string) => void;
   periodMinutes: number;
   onPeriodChange: (v: number) => void;
   selectedDates: string[];
@@ -120,6 +122,20 @@ export function MobileWizard(props: Props) {
             value={props.title}
             onChange={(e) => props.onTitleChange(e.target.value)}
             placeholder={t('form.eventTitlePlaceholder')}
+          />
+        </div>
+
+        {/* Notes */}
+        <div>
+          <Label htmlFor="ev-notes-m">{t('form.notes')}</Label>
+          <textarea
+            id="ev-notes-m"
+            className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+            rows={3}
+            maxLength={500}
+            placeholder={t('form.notesPlaceholder')}
+            value={props.notes}
+            onChange={(e) => props.onNotesChange(e.target.value)}
           />
         </div>
 

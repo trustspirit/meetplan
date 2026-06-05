@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 
 export interface EventCreateState {
   title: string;
+  notes: string;
   periodMinutes: number;
   selectedDates: string[];
   dailyRange: [string, string];
@@ -10,6 +11,7 @@ export interface EventCreateState {
 
 const defaultInitialState: EventCreateState = {
   title: "",
+  notes: "",
   periodMinutes: 30,
   selectedDates: [],
   dailyRange: ["09:00", "18:00"],
@@ -40,6 +42,7 @@ export function useEventCreateState(initial?: Partial<EventCreateState>) {
   });
 
   const setTitle = useCallback((title: string) => setState((s) => ({ ...s, title })), []);
+  const setNotes = useCallback((notes: string) => setState((s) => ({ ...s, notes })), []);
   const setPeriod = useCallback(
     (periodMinutes: number) => setState((s) => ({ ...s, periodMinutes })),
     []
@@ -77,6 +80,7 @@ export function useEventCreateState(initial?: Partial<EventCreateState>) {
   return {
     state,
     setTitle,
+    setNotes,
     setPeriod,
     toggleDate,
     setDailyRange,

@@ -43,6 +43,7 @@ export function WardVisitRespond({ event, eventId, user, rid, token }: Props) {
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [note, setNote] = useState("");
   const [assignments, setAssignments] = useState<Record<string, string | null>>(
     () => Object.fromEntries(wards.map((w) => [w.id, null]))
   );
@@ -125,6 +126,7 @@ export function WardVisitRespond({ event, eventId, user, rid, token }: Props) {
         eventId,
         name: name.trim(),
         phone: normalizePhone(phone),
+        note: note.trim() || undefined,
         selectedSlotIds: [],
         wardAssignments: final,
         ...editArgs,
@@ -170,6 +172,11 @@ export function WardVisitRespond({ event, eventId, user, rid, token }: Props) {
       />
 
       <div className="max-w-2xl mx-auto px-4 py-6 flex flex-col gap-6 pb-32 sm:pb-6">
+        {/* Notes from organizer */}
+        {event.description && (
+          <p className="text-sm text-foreground/80 whitespace-pre-wrap bg-muted/50 rounded-lg px-3 py-2.5">{event.description}</p>
+        )}
+
         {/* Respondent info */}
         <section className="flex flex-col gap-4">
           <div>
@@ -195,6 +202,18 @@ export function WardVisitRespond({ event, eventId, user, rid, token }: Props) {
             {phone && !phoneOk && (
               <p className="mt-1 text-xs text-destructive">{t('form.phoneError')}</p>
             )}
+          </div>
+          <div>
+            <Label htmlFor="wv-note">{t('form.respondentNote')}</Label>
+            <textarea
+              id="wv-note"
+              className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+              rows={3}
+              maxLength={300}
+              placeholder={t('form.respondentNotePlaceholder')}
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+            />
           </div>
         </section>
 

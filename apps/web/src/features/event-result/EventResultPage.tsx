@@ -226,6 +226,7 @@ export default function EventResultPage() {
               </div>
             )}
           </div>
+          <ParticipantNotes responses={responsesState.responses} />
         </div>
 
         {confirmingDelete && (
@@ -370,6 +371,7 @@ export default function EventResultPage() {
               onToggleHidden={toggleHidden}
             />
           )}
+          <ParticipantNotes responses={responsesState.responses} />
         </div>
       </div>
 
@@ -402,6 +404,7 @@ export default function EventResultPage() {
             onToggleHidden={toggleHidden}
           />
         )}
+        <ParticipantNotes responses={responsesState.responses} />
       </div>
 
       {confirmingDelete && (
@@ -437,6 +440,24 @@ function TabButton({
     >
       {children}
     </button>
+  );
+}
+
+function ParticipantNotes({ responses }: { responses: import("@meetplan/shared").ParticipantResponse[] }) {
+  const withNotes = responses.filter((r) => r.note);
+  if (withNotes.length === 0) return null;
+  return (
+    <div className="mt-6 flex flex-col gap-2">
+      <h3 className="text-sm font-semibold">{t('result.participantNotes')}</h3>
+      <ul className="flex flex-col gap-2">
+        {withNotes.map((r) => (
+          <li key={r.id} className="rounded-lg border bg-muted/30 px-3 py-2.5 text-sm">
+            <span className="font-medium text-foreground/70 mr-2">{r.name}</span>
+            <span className="whitespace-pre-wrap">{r.note}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 

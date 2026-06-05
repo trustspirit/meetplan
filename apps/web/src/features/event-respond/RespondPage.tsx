@@ -35,11 +35,12 @@ export default function RespondPage() {
     () => existing.response ? {
       name: existing.response.name,
       phone: existing.response.phone,
+      ...(existing.response.note ? { note: existing.response.note } : {}),
       selectedSlotIds: existing.response.selectedSlotIds,
     } : undefined,
     [existing.response]
   );
-  const { state, setName, setPhone, setSlotChecked } = useRespondState(prefill);
+  const { state, setName, setPhone, setNote, setSlotChecked } = useRespondState(prefill);
 
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -126,6 +127,7 @@ export default function RespondPage() {
         eventId,
         name: state.name.trim(),
         phone: normalizePhone(state.phone),
+        note: state.note.trim() || undefined,
         selectedSlotIds: [...state.selectedSlotIds],
         ...editArgs,
       });
@@ -157,6 +159,7 @@ export default function RespondPage() {
     state,
     onNameChange: setName,
     onPhoneChange: setPhone,
+    onNoteChange: setNote,
     onSetSlot: setSlotChecked,
     viewerTz: VIEWER_TZ,
     canSubmit,

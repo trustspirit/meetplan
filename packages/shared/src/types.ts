@@ -34,6 +34,7 @@ export interface ParticipantResponse {
   id: string;
   name: string;
   phone: string;
+  note?: string;
   selectedSlotIds: string[];
   ownerUid: string | null;
   editTokenHash: string | null;

@@ -14,6 +14,7 @@ interface Props {
   state: RespondState;
   onNameChange: (v: string) => void;
   onPhoneChange: (v: string) => void;
+  onNoteChange: (v: string) => void;
   onSetSlot: (slotId: string, on: boolean) => void;
   viewerTz: string;
   canSubmit: boolean;
@@ -33,6 +34,9 @@ export function RespondDesktop(props: Props) {
           <p className="text-xs text-muted-foreground mt-1">
             {t('respond.subtitle', { periodMinutes: props.event.periodMinutes })}
           </p>
+          {props.event.description && (
+            <p className="mt-2 text-sm text-foreground/80 whitespace-pre-wrap max-w-lg">{props.event.description}</p>
+          )}
         </div>
         <div className="flex items-center gap-3">
           {!user && (
@@ -57,8 +61,10 @@ export function RespondDesktop(props: Props) {
         <ParticipantForm
           name={props.state.name}
           phone={props.state.phone}
+          note={props.state.note}
           onNameChange={props.onNameChange}
           onPhoneChange={props.onPhoneChange}
+          onNoteChange={props.onNoteChange}
         />
       </div>
 
