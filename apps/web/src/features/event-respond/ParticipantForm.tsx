@@ -69,6 +69,9 @@ export function ParticipantForm({ name, phone, note, onNameChange, onPhoneChange
           value={note}
           onChange={(e) => onNoteChange(e.target.value)}
         />
+        <p className="text-[11px] text-muted-foreground mt-1 text-right">
+          {note.length}/300
+        </p>
       </div>
     </section>
   );

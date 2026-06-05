@@ -81,7 +81,7 @@ export function ParticipantGrid({ grid, selectedSlotIds, onSetSlot, viewerTz }: 
             minWidth: `${40 + grid.dates.length * 56}px`,
           }}
         >
-          <div />
+          <div className="sticky left-0 z-10 bg-background" />
           {grid.dates.map((ymd) => {
             const anchor = new Date(`${ymd}T12:00:00Z`);
             const weekday = formatInTimeZone(anchor, viewerTz, "EEE");
@@ -96,7 +96,7 @@ export function ParticipantGrid({ grid, selectedSlotIds, onSetSlot, viewerTz }: 
 
           {grid.times.map((hhmm) => (
             <Fragment key={hhmm}>
-              <div className="text-right pr-1 text-[10px] text-muted-foreground leading-[22px] tabular-nums">{hhmm}</div>
+              <div className="sticky left-0 z-10 bg-background text-right pr-1 text-[10px] text-muted-foreground leading-[22px] tabular-nums">{hhmm}</div>
               {grid.dates.map((ymd) => {
                 const cellKey = `${ymd}_${hhmm}`;
                 const available = grid.availableCells.has(cellKey);

@@ -16,7 +16,7 @@ export function SubmitSuccessAnon({ name, editUrl, slotCount, periodMinutes }: P
     try {
       await navigator.clipboard.writeText(editUrl);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setTimeout(() => setCopied(false), 3000);
     } catch {
       // clipboard 차단 환경 — 사용자가 수동 복사
     }
@@ -24,7 +24,7 @@ export function SubmitSuccessAnon({ name, editUrl, slotCount, periodMinutes }: P
 
   return (
     <div className="max-w-xl mx-auto min-h-screen bg-background">
-      <div className="bg-zinc-900 text-white px-6 py-8 text-center">
+      <div className="bg-primary text-primary-foreground px-6 py-8 text-center">
         <Check size={28} className="mx-auto mb-2" />
         <div className="font-semibold text-base">{t('success.title')}</div>
       </div>
@@ -46,7 +46,7 @@ export function SubmitSuccessAnon({ name, editUrl, slotCount, periodMinutes }: P
             <button
               type="button"
               onClick={onCopy}
-              className="flex items-center gap-1.5 bg-zinc-900 text-white rounded-lg px-3 py-1.5 text-xs font-medium shrink-0 hover:bg-zinc-800 transition-colors"
+              className="flex items-center gap-1.5 bg-foreground text-background rounded-lg px-3 py-1.5 text-xs font-medium shrink-0 hover:bg-foreground/90 transition-colors"
             >
               {copied ? <Check size={12} /> : <Copy size={12} />}
               {copied ? t('success.copied') : t('success.copy')}

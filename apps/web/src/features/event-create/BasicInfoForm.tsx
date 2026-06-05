@@ -77,6 +77,9 @@ export function BasicInfoForm({
           value={notes}
           onChange={(e) => onNotesChange(e.target.value)}
         />
+        <p className="text-[11px] text-muted-foreground mt-1 text-right">
+          {notes.length}/500
+        </p>
       </div>
 
       {/* Stake selector — ward_visit only */}

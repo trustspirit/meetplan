@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { addMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, format, isBefore, isSameMonth, startOfToday } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { t } from "@/lib/i18n";
 
 interface Props {
   selectedDates: string[];
@@ -70,7 +71,7 @@ export function MultiDateCalendar({ selectedDates, onToggleDate, sundayOnly = fa
       </div>
       {selectedDates.length > 0 && (
         <div className="mt-3 pt-3 border-t text-[11px] text-muted-foreground">
-          선택: <span className="text-foreground font-medium">{selectedDates.length}일</span>
+          {t('calendar.selectedDates', { count: selectedDates.length })}
         </div>
       )}
     </div>

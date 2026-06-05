@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { ChevronLeft, MoreVertical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LanguageToggle } from "@/components/ui/LanguageToggle";
+import { t } from "@/lib/i18n";
 
 export interface MenuItem {
   icon: ReactNode;
@@ -67,7 +68,7 @@ export function MobileHeader({ title, subtitle, logo, onBack, actions, menuItems
             type="button"
             onClick={() => setMenuOpen((v) => !v)}
             className="p-1.5 rounded-md hover:bg-white/10"
-            aria-label="더보기"
+            aria-label={t('common.more')}
           >
             <MoreVertical size={18} />
           </button>

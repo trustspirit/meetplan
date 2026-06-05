@@ -122,7 +122,7 @@ export function TimePainter({
             minWidth: `${40 + selectedDates.length * 56}px`,
           }}
         >
-          <div />
+          <div className="sticky left-0 z-10 bg-background" />
           {selectedDates.map((ymd) => (
             <div key={ymd} className="text-center text-[11px] font-semibold text-foreground py-1">
               <span className="block text-[9px] text-muted-foreground uppercase mb-0.5">
@@ -134,7 +134,7 @@ export function TimePainter({
 
           {axis.map((hhmm) => (
             <Fragment key={hhmm}>
-              <div className="text-right pr-1 text-[10px] text-muted-foreground leading-[22px] tabular-nums">
+              <div className="sticky left-0 z-10 bg-background text-right pr-1 text-[10px] text-muted-foreground leading-[22px] tabular-nums">
                 {hhmm}
               </div>
               {selectedDates.map((ymd) => {

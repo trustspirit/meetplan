@@ -16,7 +16,7 @@ export function ShareLinkButton({ eventId, compact }: Props) {
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setTimeout(() => setCopied(false), 3000);
     } catch {
       // Clipboard blocked — silent
     }

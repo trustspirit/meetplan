@@ -105,6 +105,7 @@ function HeatmapView({ model, totalResponses, participantColors, hiddenIds, hove
   const visibleTotal = totalResponses - hiddenIds.size;
 
   return (
+    <>
     <div className="rounded-xl border bg-background overflow-x-auto">
       <table className="min-w-full text-xs border-collapse">
         <thead>
@@ -179,6 +180,19 @@ function HeatmapView({ model, totalResponses, participantColors, hiddenIds, hove
         </tbody>
       </table>
     </div>
+    <div className="flex items-center gap-3 text-[11px] text-muted-foreground mt-2 px-1">
+      <span className="shrink-0">{t('matrix.availabilityLegend')}</span>
+      <div className="flex items-center gap-1">
+        <span className="inline-block w-4 h-4 rounded-sm bg-muted/10 border border-border/30" />
+        <span>0%</span>
+      </div>
+      <span className="text-border">→</span>
+      <div className="flex items-center gap-1">
+        <span className="inline-block w-4 h-4 rounded-sm bg-muted/80" />
+        <span>100%</span>
+      </div>
+    </div>
+    </>
   );
 }
 

@@ -11,6 +11,7 @@ const ko = {
   'common.saveFailed': '저장 실패',
   'common.inputError': '입력 오류',
   'common.close': '닫기',
+  'common.more': '더보기',
   'common.cancel': '취소',
   'common.backToDashboard': '← 대시보드로',
   'common.backToDashboardShort': '← 대시보드',
@@ -68,6 +69,7 @@ const ko = {
   'calendar.apply': '적용',
   'calendar.loading': '불러오는 중…',
   'calendar.primary': '(기본)',
+  'calendar.selectedDates': '선택: {count}일',
 
   // ── Mobile Wizard ────────────────────────────────────────────────────
   'wizard.step1': '1/2단계 · 기본 정보 + 날짜',
@@ -175,6 +177,7 @@ const ko = {
   'matrix.colDatetime': '날짜 / 시간',
   'matrix.rowAvailSlots': '가능 슬롯',
   'matrix.available': '가능',
+  'matrix.availabilityLegend': '가용률:',
 
   // ── MatchingView ─────────────────────────────────────────────────────
   'matching.noResponses': '응답이 모이면 자동 배정 조합이 표시됩니다',
@@ -261,6 +264,7 @@ const en: TranslationMap = {
   'common.saveFailed': 'Save failed',
   'common.inputError': 'Input error',
   'common.close': 'Close',
+  'common.more': 'More',
   'common.cancel': 'Cancel',
   'common.backToDashboard': '← Back to dashboard',
   'common.backToDashboardShort': '← Dashboard',
@@ -312,6 +316,7 @@ const en: TranslationMap = {
   'calendar.apply': 'Apply',
   'calendar.loading': 'Loading…',
   'calendar.primary': '(primary)',
+  'calendar.selectedDates': 'Selected: {count} days',
 
   'wizard.step1': 'Step 1/2 · Info + dates',
   'wizard.step2': 'Step 2/2 · Paint times',
@@ -410,6 +415,7 @@ const en: TranslationMap = {
   'matrix.colDatetime': 'Date / Time',
   'matrix.rowAvailSlots': 'Available',
   'matrix.available': 'Available',
+  'matrix.availabilityLegend': 'Availability:',
 
   'matching.noResponses': 'Combinations will appear once responses come in',
   'matching.hiddenEmpty': '{count} participants hidden — no one left to match. Show them in the legend above.',
