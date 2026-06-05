@@ -369,6 +369,9 @@ export default function EventResultPage() {
               participantColors={participantColors}
               hiddenIds={hiddenIds}
               onToggleHidden={toggleHidden}
+              slots={event.slots}
+              eventTitle={event.title}
+              eventDescription={event.description}
             />
           )}
           <ParticipantNotes responses={responsesState.responses} />
@@ -402,6 +405,9 @@ export default function EventResultPage() {
             participantColors={participantColors}
             hiddenIds={hiddenIds}
             onToggleHidden={toggleHidden}
+            slots={event.slots}
+            eventTitle={event.title}
+            eventDescription={event.description}
           />
         )}
         <ParticipantNotes responses={responsesState.responses} />

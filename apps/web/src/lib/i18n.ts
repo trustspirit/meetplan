@@ -261,6 +261,16 @@ const ko = {
   'ward.resultColDate': '방문 날짜',
   'ward.resultUnassigned': '미배정',
   'ward.respondedBy': '{name}님이 배정',
+
+  // ── Google Calendar sync ──────────────────────────────────────────────
+  'gcal.addToCalendar':  '캘린더에 추가',
+  'gcal.settings':       '캘린더 설정',
+  'gcal.connectAccount': '구글 계정 연결',
+  'gcal.selectCalendar': '캘린더 선택',
+  'gcal.adding':         '추가 중…',
+  'gcal.added':          '{n}개 이벤트 추가됨',
+  'gcal.addFailed':      '추가 실패',
+  'gcal.tokenExpired':   '인증이 만료되었습니다. 다시 연결해주세요.',
 } as const;
 
 type Dict = typeof ko;
@@ -500,6 +510,16 @@ const en: TranslationMap = {
   'ward.resultColDate': 'Visit date',
   'ward.resultUnassigned': 'Unassigned',
   'ward.respondedBy': 'Assigned by {name}',
+
+  // ── Google Calendar sync ──────────────────────────────────────────────
+  'gcal.addToCalendar':  'Add to Calendar',
+  'gcal.settings':       'Calendar settings',
+  'gcal.connectAccount': 'Connect Google account',
+  'gcal.selectCalendar': 'Select calendar',
+  'gcal.adding':         'Adding…',
+  'gcal.added':          '{n} events added',
+  'gcal.addFailed':      'Failed to add',
+  'gcal.tokenExpired':   'Session expired. Reconnect.',
 };
 
 const dicts: Record<Locale, TranslationMap> = { ko, en };
