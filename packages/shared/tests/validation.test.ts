@@ -94,6 +94,11 @@ describe("responseSubmitSchema", () => {
   it("accepts valid", () => {
     expect(responseSubmitSchema.safeParse(valid).success).toBe(true);
   });
+  it("treats null note as omitted", () => {
+    const parsed = responseSubmitSchema.parse({ ...valid, note: null });
+
+    expect(parsed.note).toBeUndefined();
+  });
   it("rejects bad phone", () => {
     expect(responseSubmitSchema.safeParse({ ...valid, phone: "xyz" }).success).toBe(false);
   });

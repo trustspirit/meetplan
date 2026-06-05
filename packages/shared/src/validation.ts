@@ -57,7 +57,10 @@ export const responseSubmitSchema = z.object({
   eventId: z.string().min(1),
   name: z.string().min(1).max(40),
   phone: z.string().regex(phoneRegex, "010-1234-5678 형식으로 입력해주세요"),
-  note: z.string().max(300).optional(),
+  note: z.preprocess(
+    (value) => value === null ? undefined : value,
+    z.string().max(300).optional()
+  ),
   selectedSlotIds: z.array(z.string()),
   wardAssignments: z.array(wardAssignmentSchema).optional(),
   rid: z.string().optional(),

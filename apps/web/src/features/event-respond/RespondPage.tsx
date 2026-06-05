@@ -135,6 +135,7 @@ export default function RespondPage() {
       //  - 익명: URL 쿼리의 rid + token
       //  - 로그인: 기존 응답이 있으면 그 id를 rid로 전달 (중복 doc 방지)
       //  - 둘 다 아니면 신규 생성
+      const note = state.note.trim();
       const editArgs =
         rid && token
           ? { rid, token }
@@ -145,7 +146,7 @@ export default function RespondPage() {
         eventId,
         name: state.name.trim(),
         phone: normalizePhone(state.phone),
-        note: state.note.trim() || undefined,
+        ...(note ? { note } : {}),
         selectedSlotIds: [...state.selectedSlotIds],
         ...editArgs,
       });

@@ -116,6 +116,7 @@ export function WardVisitRespond({ event, eventId, user, rid, token }: Props) {
     setSubmitError(null);
     setSubmitting(true);
     try {
+      const trimmedNote = note.trim();
       const editArgs =
         rid && token
           ? { rid, token }
@@ -126,7 +127,7 @@ export function WardVisitRespond({ event, eventId, user, rid, token }: Props) {
         eventId,
         name: name.trim(),
         phone: normalizePhone(phone),
-        note: note.trim() || undefined,
+        ...(trimmedNote ? { note: trimmedNote } : {}),
         selectedSlotIds: [],
         wardAssignments: final,
         ...editArgs,
