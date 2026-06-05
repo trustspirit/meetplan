@@ -57,9 +57,21 @@ export function SubmitSuccessAnon({ name, editUrl, slotCount, periodMinutes }: P
           </p>
         </div>
 
-        <p className="text-[11px] text-muted-foreground mt-5">
-          {t('success.organizerWillNotify')}
-        </p>
+        <div className="mt-5 text-left">
+          <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+            {t('success.nextStepsTitle')}
+          </div>
+          <ol className="flex flex-col gap-2">
+            {([t('success.nextStep1'), t('success.nextStep2')] as string[]).map((step, i) => (
+              <li key={i} className="flex items-start gap-2.5 text-[12px] text-muted-foreground">
+                <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-bold text-foreground">
+                  {i + 1}
+                </span>
+                {step}
+              </li>
+            ))}
+          </ol>
+        </div>
       </div>
     </div>
   );

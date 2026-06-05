@@ -87,6 +87,9 @@ export function MatchingView({ matching, model, participantNameById, participant
               </span>
             )}
           </div>
+          <div className="text-[11px] text-muted-foreground/70 mt-2 border-t border-border/40 pt-2">
+            {t('matching.description')}
+          </div>
         </div>
         <div className="flex gap-1 shrink-0">
           <ViewToggleButton active={view === "list"} onClick={() => setView("list")}>

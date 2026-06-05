@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Navigate, useParams, useSearchParams, Link } from "react-router-dom";
 import { AlertCircle, Lock } from "lucide-react";
 import { phoneRegex, normalizePhone } from "@meetplan/shared";
@@ -50,6 +50,17 @@ export default function RespondPage() {
     | null
   >(null);
 
+  useEffect(() => {
+    if (result) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      if (state.selectedSlotIds.size === 0 && !state.name.trim()) return;
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [state.selectedSlotIds.size, state.name, result]);
+
   if (!eventId) return <Navigate to="/" replace />;
   if (eventState.loading || existing.loading) {
     return (
@@ -67,7 +78,14 @@ export default function RespondPage() {
         <p className="text-sm text-muted-foreground max-w-xs">
           {eventState.error ?? t('respond.eventNotFoundHint')}
         </p>
-        <Link to="/dashboard" className="mt-2 text-sm text-primary hover:underline">{t('respond.backToDashboard')}</Link>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="mt-2 text-sm text-primary hover:underline"
+        >
+          {t('respond.retry')}
+        </button>
+        <Link to="/dashboard" className="text-sm text-muted-foreground hover:underline">{t('respond.backToDashboard')}</Link>
       </div>
     );
   }

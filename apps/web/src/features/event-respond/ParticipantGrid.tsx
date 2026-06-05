@@ -1,4 +1,4 @@
-import { Fragment, useRef, type PointerEvent } from "react";
+import { Fragment, useEffect, useRef, useState, type PointerEvent } from "react";
 import { formatInTimeZone } from "date-fns-tz";
 import { Info, X } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -21,6 +21,24 @@ export function ParticipantGrid({ grid, selectedSlotIds, onSetSlot, viewerTz }: 
   const scrollRef = useRef<HTMLDivElement>(null);
   const COLUMN_WIDTH = 56;
   const { shouldShow: showHint, dismiss: dismissHint } = useOnce("respond-paint-hint");
+  const [hasMoreRight, setHasMoreRight] = useState(false);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const update = () => {
+      const { scrollLeft, clientWidth, scrollWidth } = el;
+      setHasMoreRight(scrollLeft + clientWidth < scrollWidth - 2);
+    };
+    update();
+    el.addEventListener("scroll", update, { passive: true });
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => {
+      el.removeEventListener("scroll", update);
+      ro.disconnect();
+    };
+  }, []);
 
   const applyToSlot = (slotId: string) => {
     const p = painting.current;
@@ -49,7 +67,10 @@ export function ParticipantGrid({ grid, selectedSlotIds, onSetSlot, viewerTz }: 
   const handleUp = () => { painting.current = null; };
 
   return (
-    <div className="rounded-xl border bg-background">
+    <div className="rounded-xl border bg-background relative">
+      {hasMoreRight && (
+        <div className="absolute right-0 top-0 bottom-0 w-14 bg-gradient-to-l from-background to-transparent pointer-events-none z-20 rounded-r-xl" />
+      )}
       <div
         ref={scrollRef}
         className="overflow-x-auto p-4"

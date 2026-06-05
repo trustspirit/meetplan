@@ -107,12 +107,23 @@ const ko = {
   'respond.eventClosedHint': '이 이벤트는 더 이상 응답을 받지 않습니다.',
   'respond.backToDashboard': '← 대시보드로',
 
+  // ── Respond — error/retry ────────────────────────────────────────────
+  'respond.retry': '다시 시도',
+
+  // ── Submit success — next steps ──────────────────────────────────────
+  'success.nextStepsTitle': '다음에는',
+  'success.nextStep1': '주최자가 응답을 확인하고 미팅 일정을 확정합니다',
+  'success.nextStep2': '확정되면 등록하신 번호로 문자 알림이 갑니다',
+
+  // ── Matching ─────────────────────────────────────────────────────────
+  'matching.description': '각 참가자가 서로 겹치지 않는 시간에 1:1 미팅을 할 수 있는 최적 배정 조합입니다.',
+
   // ── ParticipantGrid ──────────────────────────────────────────────────
   'grid.dimmedCellHint': '흐린 셀은 선택 불가한 시간입니다',
-  'grid.usageHint': '클릭 또는 드래그해서 가능한 시간을 선택하세요',
+  'grid.usageHint': '클릭·드래그로 선택 · 다시 클릭하면 취소',
   'grid.paintHintLabel': '처음이신가요?',
   'grid.paintHintClose': '닫기',
-  'grid.paintHint': '셀을 클릭하거나 드래그해서 여러 시간을 한번에 선택하세요.',
+  'grid.paintHint': '셀을 클릭하거나 드래그해서 선택하세요. 선택된 셀을 다시 클릭하면 취소됩니다.',
   'grid.available': '가능',
 
   // ── ParticipantForm ──────────────────────────────────────────────────
@@ -351,11 +362,19 @@ const en: TranslationMap = {
   'respond.eventClosedHint': 'This event is no longer accepting responses.',
   'respond.backToDashboard': '← Back to dashboard',
 
+  'respond.retry': 'Try again',
+
+  'success.nextStepsTitle': "What's next",
+  'success.nextStep1': 'The organizer reviews responses and confirms a meeting time',
+  'success.nextStep2': "You'll receive a text notification when the time is confirmed",
+
+  'matching.description': 'Optimal 1:1 schedule where each participant gets a unique, non-overlapping time slot.',
+
   'grid.dimmedCellHint': 'Dimmed cells are not selectable',
-  'grid.usageHint': 'Click or drag to select available times',
+  'grid.usageHint': 'Click or drag to select · click again to deselect',
   'grid.paintHintLabel': 'First time?',
   'grid.paintHintClose': 'Close',
-  'grid.paintHint': 'Click or drag cells to select multiple times at once.',
+  'grid.paintHint': 'Click or drag to select times. Click a selected cell again to deselect.',
   'grid.available': 'Available',
 
   'form.nameLabel': 'Name',
