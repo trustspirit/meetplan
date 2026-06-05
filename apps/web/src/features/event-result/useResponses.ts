@@ -34,12 +34,13 @@ export function useResponses(eventId: string | undefined): ResponsesState {
       (snap) => {
         const out: ParticipantResponse[] = snap.docs.map((d) => {
           const raw = d.data() as FsResponse;
+          const { note: rawNote, createdAt, updatedAt, ...rest } = raw;
           return {
-            ...raw,
+            ...rest,
             id: d.id,
-            note: raw.note ?? undefined,
-            createdAt: raw.createdAt ? raw.createdAt.toDate().toISOString() : "",
-            updatedAt: raw.updatedAt ? raw.updatedAt.toDate().toISOString() : "",
+            ...(rawNote ? { note: rawNote } : {}),
+            createdAt: createdAt ? createdAt.toDate().toISOString() : "",
+            updatedAt: updatedAt ? updatedAt.toDate().toISOString() : "",
           };
         });
         setState({ loading: false, responses: out, error: null });
