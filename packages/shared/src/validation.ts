@@ -48,7 +48,7 @@ export const eventCreateSchema = z.object({
   if (data.eventType === "ward_visit") {
     return !!data.stakeId && (data.wardVisitDates?.length ?? 0) > 0;
   }
-  return data.slots.length > 0;
+  return data.slots.length > 0 && data.periodMinutes >= 1;
 }, { message: "필수 정보가 누락되었습니다" });
 
 export type EventCreateInput = z.infer<typeof eventCreateSchema>;
