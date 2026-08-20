@@ -126,12 +126,21 @@ export default function RespondPage() {
   const collectPhone = eventCollectsPhone(event);
   const fields = eventResponseFields(event);
 
+  // 저장된 답변 중 현재 이벤트에 남아 있는 항목만 남긴다.
+  // 호스트가 항목을 지운 뒤 참가자가 수정하러 오면, 사라진 키가 서버의 unknown_field에
+  // 걸려 제출이 영구히 막힌다 — 그 키는 렌더되지도 않아 지울 방법이 없다.
+  const answers: Record<string, string> = {};
+  for (const field of fields) {
+    const value = state.answers[field.id];
+    if (value !== undefined) answers[field.id] = value;
+  }
+
   const violation = validateResponseInput(
     { collectPhone, fields, requireSlots: true },
     {
       name: state.name,
       phone: state.phone,
-      answers: state.answers,
+      answers,
       selectedSlotCount: state.selectedSlotIds.size,
     }
   );
@@ -161,7 +170,7 @@ export default function RespondPage() {
         phone: normalizePhone(state.phone),
         ...(note ? { note } : {}),
         selectedSlotIds: [...state.selectedSlotIds],
-        answers: state.answers,
+        answers,
         ...editArgs,
       });
 
