@@ -21,16 +21,16 @@ export function MultiDateCalendar({ selectedDates, onToggleDate, sundayOnly = fa
   }, [viewMonth]);
 
   return (
-    <div className="rounded-xl border p-4 bg-background">
+    <div className="rounded-xl border p-4 bg-surface">
       <div className="flex items-center justify-between mb-3">
         <div className="font-semibold text-sm">{format(viewMonth, "yyyy년 M월")}</div>
         <div className="flex gap-1">
           <button type="button" onClick={() => setViewMonth((m) => addMonths(m, -1))}
-            className="w-7 h-7 rounded border inline-flex items-center justify-center hover:bg-muted">
+            className="w-7 h-7 rounded border inline-flex items-center justify-center hover:bg-surface-subtle">
             <ChevronLeft className="w-4 h-4" />
           </button>
           <button type="button" onClick={() => setViewMonth((m) => addMonths(m, 1))}
-            className="w-7 h-7 rounded border inline-flex items-center justify-center hover:bg-muted">
+            className="w-7 h-7 rounded border inline-flex items-center justify-center hover:bg-surface-subtle">
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
@@ -38,8 +38,8 @@ export function MultiDateCalendar({ selectedDates, onToggleDate, sundayOnly = fa
       <div className="grid grid-cols-7 gap-0.5">
         {["일","월","화","수","목","금","토"].map((d, i) => (
           <div key={d} className={cn(
-            "text-[10px] text-center py-1 font-medium",
-            sundayOnly && i === 0 ? "text-primary font-bold" : "text-muted-foreground"
+            "text-2xs text-center py-1 font-medium",
+            sundayOnly && i === 0 ? "text-primary font-bold" : "text-text-muted"
           )}>{d}</div>
         ))}
         {days.map((day) => {
@@ -57,11 +57,11 @@ export function MultiDateCalendar({ selectedDates, onToggleDate, sundayOnly = fa
               onClick={() => !disabled && onToggleDate(ymd)}
               className={cn(
                 "aspect-square rounded-md text-xs inline-flex items-center justify-center transition-colors",
-                !inMonth && "text-muted-foreground/40",
-                disabled && "text-muted-foreground/30 cursor-not-allowed",
-                !disabled && !selected && "hover:bg-muted",
+                !inMonth && "text-text-muted/40",
+                disabled && "text-text-muted/30 cursor-not-allowed",
+                !disabled && !selected && "hover:bg-surface-subtle",
                 !disabled && sundayOnly && isSunday && !selected && "text-primary font-medium",
-                selected && "bg-accent text-accent-foreground font-semibold"
+                selected && "bg-primary text-primary-foreground font-semibold"
               )}
             >
               {format(day, "d")}
@@ -70,7 +70,7 @@ export function MultiDateCalendar({ selectedDates, onToggleDate, sundayOnly = fa
         })}
       </div>
       {selectedDates.length > 0 && (
-        <div className="mt-3 pt-3 border-t text-[11px] text-muted-foreground">
+        <div className="mt-3 pt-3 border-t text-2xs text-text-muted">
           {t('calendar.selectedDates', { count: selectedDates.length })}
         </div>
       )}

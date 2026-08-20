@@ -93,13 +93,13 @@ export function CalendarSyncPanel({
   return (
     <div className="flex items-center gap-1.5 shrink-0">
       {status === "success" && resultMsg && (
-        <span className="flex items-center gap-1 text-xs text-emerald-600 whitespace-nowrap">
+        <span className="flex items-center gap-1 text-xs text-success whitespace-nowrap">
           <Check size={12} />
           {resultMsg}
         </span>
       )}
       {status === "error" && resultMsg && (
-        <span className="flex items-center gap-1 text-xs text-destructive whitespace-nowrap">
+        <span className="flex items-center gap-1 text-xs text-danger whitespace-nowrap">
           <AlertCircle size={12} />
           {resultMsg}
         </span>
@@ -107,7 +107,7 @@ export function CalendarSyncPanel({
 
       <Button
         size="sm"
-        variant="outline"
+        variant="secondary"
         className="text-xs h-8 px-2.5 gap-1.5"
         onClick={handleAdd}
         disabled={isLoading || assignmentCount === 0}
@@ -123,21 +123,21 @@ export function CalendarSyncPanel({
           onClick={() => setSettingsOpen((v) => !v)}
           className={cn(
             "h-8 w-8 flex items-center justify-center rounded-md border border-border",
-            "text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors",
-            settingsOpen && "bg-muted/50 text-foreground"
+            "text-text-muted hover:text-text hover:bg-surface-subtle/50 transition-colors",
+            settingsOpen && "bg-surface-subtle text-text"
           )}
         >
           <Settings size={13} />
         </button>
 
         {settingsOpen && (
-          <div className="absolute right-0 top-full mt-1.5 z-50 w-64 rounded-lg border bg-background shadow-md p-3 flex flex-col gap-2.5">
-            <div className="text-xs font-semibold text-muted-foreground">{t("gcal.settings")}</div>
+          <div className="absolute right-0 top-full mt-1.5 z-50 w-64 rounded-lg border bg-surface shadow-md p-3 flex flex-col gap-2.5">
+            <div className="text-xs font-semibold text-text-muted">{t("gcal.settings")}</div>
 
             {!connected ? (
               <Button
                 size="sm"
-                variant="outline"
+                variant="secondary"
                 className="w-full text-xs h-8"
                 onClick={async () => { await connect(); }}
                 disabled={connecting}
@@ -146,9 +146,9 @@ export function CalendarSyncPanel({
               </Button>
             ) : (
               <div className="flex flex-col gap-1.5">
-                <label className="text-xs text-muted-foreground">{t("gcal.selectCalendar")}</label>
+                <label className="text-xs text-text-muted">{t("gcal.selectCalendar")}</label>
                 <select
-                  className="w-full rounded-md border border-border bg-background text-sm px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary"
+                  className="w-full rounded-md border border-border bg-surface text-sm px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary"
                   value={selectedCalendarId ?? ""}
                   onChange={(e) => setSelectedCalendarId(e.target.value)}
                 >
@@ -162,7 +162,7 @@ export function CalendarSyncPanel({
             )}
 
             {connectError && (
-              <p className="text-xs text-destructive">{connectError}</p>
+              <p className="text-xs text-danger">{connectError}</p>
             )}
           </div>
         )}

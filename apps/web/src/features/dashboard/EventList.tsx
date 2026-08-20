@@ -1,6 +1,9 @@
 import { Link } from "react-router-dom";
-import type { MeetplanEvent } from "@meetplan/shared";
 import { format, parseISO } from "date-fns";
+import { ChevronRight } from "lucide-react";
+import type { MeetplanEvent } from "@meetplan/shared";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { t } from "@/lib/i18n";
 
 export function EventList({ events }: { events: MeetplanEvent[] }) {
@@ -8,33 +11,29 @@ export function EventList({ events }: { events: MeetplanEvent[] }) {
     <ul className="flex flex-col gap-2">
       {events.map((ev) => (
         <li key={ev.id}>
-          <Link
-            to={`/events/${ev.id}/result`}
-            className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/30 transition-colors"
-          >
-            <div>
-              <div className="font-medium">{ev.title}</div>
-              <div className="text-xs text-muted-foreground mt-1">
-                {t('list.slotInfo', { slots: ev.slots.length, minutes: ev.periodMinutes })} ·{" "}
-                {format(parseISO(ev.createdAt), "yyyy-MM-dd")}
+          <Card className="transition-colors hover:border-border-strong hover:bg-surface-subtle">
+            <Link
+              to={`/events/${ev.id}/result`}
+              className="flex min-h-touch items-center gap-3 p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:rounded-lg"
+            >
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-medium text-text">{ev.title}</div>
+                <div className="mt-1 text-2xs text-text-muted">
+                  {ev.eventType === "ward_visit"
+                    ? t('eventType.wardVisit')
+                    : t('list.slotInfo', { slots: ev.slots.length, minutes: ev.periodMinutes })}
+                  {" · "}
+                  {format(parseISO(ev.createdAt), "yyyy-MM-dd")}
+                </div>
               </div>
-            </div>
-            <StatusBadge status={ev.status} />
-          </Link>
+              <Badge tone={ev.status === "open" ? "success" : "neutral"} dot>
+                {ev.status === "open" ? t('list.statusOpen') : t('list.statusClosed')}
+              </Badge>
+              <ChevronRight size={16} className="shrink-0 text-text-subtle" aria-hidden />
+            </Link>
+          </Card>
         </li>
       ))}
     </ul>
-  );
-}
-
-function StatusBadge({ status }: { status: "open" | "closed" }) {
-  const classes =
-    status === "open"
-      ? "bg-emerald-100 text-emerald-800"
-      : "bg-zinc-200 text-zinc-600";
-  return (
-    <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${classes}`}>
-      {status === "open" ? t('list.statusOpen') : t('list.statusClosed')}
-    </span>
   );
 }

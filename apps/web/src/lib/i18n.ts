@@ -6,12 +6,17 @@ const ko = {
 
   // ── App / Common ─────────────────────────────────────────────────────
   'app.name': 'MeetPlan',
+  'nav.myEvents': '내 이벤트',
+  'nav.newEvent': '새 이벤트',
+  'nav.account': '계정 메뉴',
+  'nav.language': '언어',
   'common.loading': '불러오는 중…',
   'common.saving': '저장 중…',
   'common.saveFailed': '저장 실패',
   'common.inputError': '입력 오류',
   'common.close': '닫기',
   'common.more': '더보기',
+  'common.scrollMore': '↓ 더 있음',
   'common.cancel': '취소',
   'common.backToDashboard': '← 대시보드로',
   'common.backToDashboardShort': '← 대시보드',
@@ -38,6 +43,9 @@ const ko = {
   'list.statusOpen': '진행 중',
   'list.statusClosed': '마감됨',
   'list.slotInfo': '{slots}개 슬롯 · {minutes}분',
+  'list.responseCount': '응답 {count}명',
+  'list.noResponses': '아직 응답 없음',
+  'dashboard.subtitle': '내가 만든 이벤트와 응답 현황',
 
   // ── Event Create / BasicInfoForm ─────────────────────────────────────
   'create.back': '← 돌아가기',
@@ -74,6 +82,7 @@ const ko = {
   // ── Mobile Wizard ────────────────────────────────────────────────────
   'wizard.step1': '1/2단계 · 기본 정보 + 날짜',
   'wizard.step2': '2/2단계 · 시간 페인팅',
+  'wizard.progress': '{current}/{total} 단계',
   'wizard.next': '다음',
   'wizard.prev': '이전',
   'wizard.slotCount': '{count}개 슬롯',
@@ -87,6 +96,8 @@ const ko = {
   'painter.hintLabel': '팁:',
   'painter.hintClose': '닫기',
   'painter.busyCellHint': '줄무늬 = 구글 캘린더에 기존 일정 있음 (페인팅 가능)',
+  'painter.rangeLabel': '표시 구간 (모든 날짜 공통)',
+  'painter.expandedNotice': '표시 구간 밖에 선택된 시간이 있어 함께 표시합니다 ({times})',
   'painter.selectDatesFirst': '왼쪽 캘린더에서 날짜를 먼저 선택하세요',
 
   // ── Respond page ─────────────────────────────────────────────────────
@@ -106,6 +117,19 @@ const ko = {
   'respond.eventClosed': '마감된 이벤트입니다',
   'respond.eventClosedHint': '이 이벤트는 더 이상 응답을 받지 않습니다.',
   'respond.backToDashboard': '← 대시보드로',
+  'respond.summaryTitle': '선택한 시간',
+  'respond.summaryEmpty': '아직 고른 시간이 없습니다',
+  'respond.summaryCount': '{count}개',
+  'respond.stepDates': '가능한 날짜를 모두 골라주세요',
+  'respond.stepTimes': '가능한 시간을 모두 골라주세요',
+  'respond.dateSlotInfo': '{range} · {count}칸',
+  'respond.selectedDays': '{count}일',
+  'respond.next': '다음',
+  'respond.backToDates': '날짜 다시 고르기',
+  'respond.emptyDateWarning': '{date}에 고른 시간이 없습니다',
+  'respond.missingName': '이름을 입력해주세요',
+  'respond.missingPhone': '연락처를 확인해주세요',
+  'respond.missingSlots': '가능한 시간을 골라주세요',
 
   // ── Respond — error/retry ────────────────────────────────────────────
   'respond.retry': '다시 시도',
@@ -189,6 +213,8 @@ const ko = {
   'matrix.rowAvailSlots': '가능 슬롯',
   'matrix.available': '가능',
   'matrix.availabilityLegend': '가용률:',
+  'matrix.selectAll': '전체 선택',
+  'matrix.deselectAll': '전체 해제',
 
   // ── MatchingView ─────────────────────────────────────────────────────
   'matching.noResponses': '응답이 모이면 자동 배정 조합이 표시됩니다',
@@ -213,7 +239,6 @@ const ko = {
 
   // ── Share ────────────────────────────────────────────────────────────
   'share.button': '공유 링크 복사',
-  'share.compact': '공유',
   'share.copied': '복사됨',
   'share.ariaLabel': '공유 링크 복사',
 
@@ -280,12 +305,17 @@ const en: TranslationMap = {
   'organizer': 'Organizer',
 
   'app.name': 'MeetPlan',
+  'nav.myEvents': 'My Events',
+  'nav.newEvent': 'New Event',
+  'nav.account': 'Account menu',
+  'nav.language': 'Language',
   'common.loading': 'Loading…',
   'common.saving': 'Saving…',
   'common.saveFailed': 'Save failed',
   'common.inputError': 'Input error',
   'common.close': 'Close',
   'common.more': 'More',
+  'common.scrollMore': '↓ More',
   'common.cancel': 'Cancel',
   'common.backToDashboard': '← Back to dashboard',
   'common.backToDashboardShort': '← Dashboard',
@@ -308,6 +338,9 @@ const en: TranslationMap = {
   'list.statusOpen': 'Open',
   'list.statusClosed': 'Closed',
   'list.slotInfo': '{slots} slots · {minutes} min',
+  'list.responseCount': '{count} responses',
+  'list.noResponses': 'No responses yet',
+  'dashboard.subtitle': 'Your events and their responses',
 
   'create.back': '← Back',
   'create.pageTitle': 'New Event',
@@ -341,6 +374,7 @@ const en: TranslationMap = {
 
   'wizard.step1': 'Step 1/2 · Info + dates',
   'wizard.step2': 'Step 2/2 · Paint times',
+  'wizard.progress': 'Step {current} of {total}',
   'wizard.next': 'Next',
   'wizard.prev': 'Back',
   'wizard.slotCount': '{count} slots',
@@ -353,6 +387,8 @@ const en: TranslationMap = {
   'painter.hintLabel': 'Tip:',
   'painter.hintClose': 'Close',
   'painter.busyCellHint': 'Striped = existing Google Calendar event (can still paint)',
+  'painter.rangeLabel': 'Display window (all dates)',
+  'painter.expandedNotice': 'Showing times selected outside the display window ({times})',
   'painter.selectDatesFirst': 'Select dates from the calendar on the left',
 
   'respond.loading': 'Loading…',
@@ -371,6 +407,19 @@ const en: TranslationMap = {
   'respond.eventClosed': 'This event is closed',
   'respond.eventClosedHint': 'This event is no longer accepting responses.',
   'respond.backToDashboard': '← Back to dashboard',
+  'respond.summaryTitle': 'Selected times',
+  'respond.summaryEmpty': 'No times selected yet',
+  'respond.summaryCount': '{count}',
+  'respond.stepDates': 'Select all the dates that work for you',
+  'respond.stepTimes': 'Select all the times that work for you',
+  'respond.dateSlotInfo': '{range} · {count} slots',
+  'respond.selectedDays': '{count} days',
+  'respond.next': 'Next',
+  'respond.backToDates': 'Change dates',
+  'respond.emptyDateWarning': 'No times selected for {date}',
+  'respond.missingName': 'Please enter your name',
+  'respond.missingPhone': 'Please check your phone number',
+  'respond.missingSlots': 'Please select your available times',
 
   'respond.retry': 'Try again',
 
@@ -445,6 +494,8 @@ const en: TranslationMap = {
   'matrix.rowAvailSlots': 'Available',
   'matrix.available': 'Available',
   'matrix.availabilityLegend': 'Availability:',
+  'matrix.selectAll': 'Select all',
+  'matrix.deselectAll': 'Deselect all',
 
   'matching.noResponses': 'Combinations will appear once responses come in',
   'matching.hiddenEmpty': '{count} participants hidden — no one left to match. Show them in the legend above.',
@@ -466,7 +517,6 @@ const en: TranslationMap = {
   'delete.failed': 'Delete failed',
 
   'share.button': 'Copy share link',
-  'share.compact': 'Share',
   'share.copied': 'Copied',
   'share.ariaLabel': 'Copy share link',
 

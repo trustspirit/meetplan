@@ -4,8 +4,9 @@ import { Info, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { cellKey } from "./useEventCreateState";
 import { useOnce } from "@/lib/useOnce";
-import { buildTimeAxis, toMin } from "./timeAxis";
+import { buildDisplayAxis, timesOutsideRange, toMin } from "./timeAxis";
 import { t } from "@/lib/i18n";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Props {
   selectedDates: string[];
@@ -26,7 +27,8 @@ export function TimePainter({
   onChangeRange,
   busyCells,
 }: Props) {
-  const axis = buildTimeAxis(dailyRange[0], dailyRange[1], periodMinutes);
+  const axis = buildDisplayAxis(dailyRange, periodMinutes, paintedCells);
+  const outsideTimes = timesOutsideRange(dailyRange, periodMinutes, paintedCells);
   const { shouldShow: showHint, dismiss: dismissHint } = useOnce("create-paint-hint");
   const painting = useRef<{ targetState: boolean; visited: Set<string> } | null>(null);
 
@@ -58,7 +60,7 @@ export function TimePainter({
 
   if (selectedDates.length === 0) {
     return (
-      <div className="rounded-xl border p-10 text-center text-sm text-muted-foreground bg-background">
+      <div className="rounded-xl border p-10 text-center text-sm text-text-muted bg-surface">
         {t('painter.selectDatesFirst')}
       </div>
     );
@@ -66,14 +68,14 @@ export function TimePainter({
 
   return (
     <div
-      className="rounded-xl border p-4 bg-background"
+      className="rounded-xl border p-4 bg-surface"
       onPointerMove={handleRootPointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
       onPointerLeave={handlePointerUp}
     >
       {showHint && (
-        <div className="mb-3 flex items-start gap-2 rounded-md bg-accent/10 border border-accent/30 p-2.5 text-[11px] text-accent">
+        <div className="mb-3 flex items-start gap-2 rounded-md bg-primary-subtle border border-primary/30 p-2.5 text-2xs text-primary">
           <Info size={13} className="shrink-0 mt-0.5" />
           <div className="flex-1">
             <b>{t('painter.hintLabel')}</b> {t('painter.hint')}
@@ -81,40 +83,51 @@ export function TimePainter({
           <button
             type="button"
             onClick={dismissHint}
-            className="text-accent/70 hover:text-accent px-1"
+            className="text-primary/70 hover:text-primary px-1"
             aria-label={t('painter.hintClose')}
           >
             <X size={12} />
           </button>
         </div>
       )}
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between gap-4 mb-3">
         <div className="text-sm font-semibold">{t('painter.title')}</div>
-        <div className="flex items-center gap-2 text-xs">
+        <div className="flex items-center gap-2">
+          <span className="text-2xs text-text-muted whitespace-nowrap">
+            {t('painter.rangeLabel')}
+          </span>
           <input
             type="time"
+            aria-label={t('painter.rangeLabel')}
             value={dailyRange[0]}
             onChange={(e) => {
               const newStart = e.target.value;
               onChangeRange([newStart, dailyRange[1] > newStart ? dailyRange[1] : newStart]);
             }}
-            className="border rounded px-2 py-1 w-24"
+            className="h-9 rounded-md border border-border-strong bg-surface px-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
-          <span>–</span>
+          <span className="text-text-muted">–</span>
           <input
             type="time"
+            aria-label={t('painter.rangeLabel')}
             value={dailyRange[1]}
             onChange={(e) => {
               const newEnd = e.target.value;
               const newEndMin = newEnd === "00:00" ? 1440 : toMin(newEnd);
               if (newEndMin > toMin(dailyRange[0])) onChangeRange([dailyRange[0], newEnd]);
             }}
-            className="border rounded px-2 py-1 w-24"
+            className="h-9 rounded-md border border-border-strong bg-surface px-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      {outsideTimes.length > 0 && (
+        <div className="mb-3 rounded-md border border-warning/30 bg-warning/10 px-3 py-2 text-2xs text-warning">
+          {t('painter.expandedNotice', { times: outsideTimes.join(', ') })}
+        </div>
+      )}
+
+      <ScrollArea orientation="both" contentClassName="max-h-[60vh]">
         <div
           className="grid gap-0.5"
           style={{
@@ -122,10 +135,10 @@ export function TimePainter({
             minWidth: `${40 + selectedDates.length * 56}px`,
           }}
         >
-          <div className="sticky left-0 z-10 bg-background" />
+          <div className="sticky left-0 z-10 bg-surface" />
           {selectedDates.map((ymd) => (
-            <div key={ymd} className="text-center text-[11px] font-semibold text-foreground py-1">
-              <span className="block text-[9px] text-muted-foreground uppercase mb-0.5">
+            <div key={ymd} className="text-center text-2xs font-semibold text-text py-1">
+              <span className="block text-2xs text-text-muted uppercase mb-0.5">
                 {format(parseISO(ymd), "EEE")}
               </span>
               {format(parseISO(ymd), "M/d")}
@@ -134,7 +147,7 @@ export function TimePainter({
 
           {axis.map((hhmm) => (
             <Fragment key={hhmm}>
-              <div className="sticky left-0 z-10 bg-background text-right pr-1 text-[10px] text-muted-foreground leading-[22px] tabular-nums">
+              <div className="sticky left-0 z-10 bg-surface text-right pr-1 text-2xs text-text-muted leading-[22px] tabular-nums">
                 {hhmm}
               </div>
               {selectedDates.map((ymd) => {
@@ -151,10 +164,10 @@ export function TimePainter({
                     onPointerDown={() => handlePointerDown(key, on)}
                     className={cn(
                       "h-[22px] rounded-sm cursor-pointer select-none transition-colors touch-none",
-                      on && !isBusy && "bg-accent",
-                      on && isBusy && "bg-accent cell-busy",
-                      !on && !isBusy && "bg-muted hover:bg-muted-foreground/20",
-                      !on && isBusy && "bg-muted cell-busy hover:bg-muted-foreground/10",
+                      on && !isBusy && "bg-primary",
+                      on && isBusy && "bg-primary cell-busy",
+                      !on && !isBusy && "bg-surface-subtle hover:bg-border-strong/50",
+                      !on && isBusy && "bg-surface-subtle cell-busy hover:bg-border-strong/30",
                     )}
                   />
                 );
@@ -162,10 +175,10 @@ export function TimePainter({
             </Fragment>
           ))}
         </div>
-      </div>
+      </ScrollArea>
       {busyCells && busyCells.size > 0 && (
-        <div className="flex items-center gap-1.5 mt-3 text-[11px] text-muted-foreground">
-          <span className="inline-block w-3 h-3 rounded-sm bg-muted cell-busy shrink-0" />
+        <div className="flex items-center gap-1.5 mt-3 text-2xs text-text-muted">
+          <span className="inline-block w-3 h-3 rounded-sm bg-surface-subtle cell-busy shrink-0" />
           {t('painter.busyCellHint')}
         </div>
       )}

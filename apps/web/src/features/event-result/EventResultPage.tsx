@@ -4,6 +4,13 @@ import { doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import { format, parseISO } from "date-fns";
 import { db } from "@/lib/firebase";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs } from "@/components/ui/tabs";
+import { EmptyState } from "@/components/ui/empty-state";
+import type { MenuItem } from "@/components/ui/menu";
+import { AppShell } from "@/components/layout/AppShell";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { useAuth } from "@/features/auth/useAuth";
 import { useEventData } from "@/features/event-respond/useEventData";
 import { findMatchings, getWardsByStake, getStakeName } from "@meetplan/shared";
@@ -15,9 +22,7 @@ import { ShareLinkButton } from "./ShareLinkButton";
 import { DeleteEventButton } from "./DeleteEventButton";
 import { cn } from "@/lib/utils";
 import { Copy, Pencil, CircleSlash, RotateCcw, Trash2, AlertCircle } from "lucide-react";
-import { MobileHeader } from "@/components/ui/MobileHeader";
 import { PageSkeleton } from "@/components/ui/PageSkeleton";
-import { LanguageToggle } from "@/components/ui/LanguageToggle";
 import { t, getLocale } from "@/lib/i18n";
 
 const VIEWER_TZ =
@@ -56,6 +61,9 @@ export default function EventResultPage() {
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
   const toggleHidden = (id: string) =>
     setHiddenIds((prev) => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
+
+  const toggleAll = (show: boolean) =>
+    setHiddenIds(show ? new Set() : new Set(responsesState.responses.map((r) => r.id)));
 
   const visibleResponses = useMemo(
     () => responsesState.responses.filter((r) => !hiddenIds.has(r.id)),
@@ -107,26 +115,22 @@ export default function EventResultPage() {
 
   if (!eventId) return <Navigate to="/dashboard" replace />;
   if (authLoading || eventState.loading) {
-    return (
-      <>
-        <MobileHeader title={t('result.loading')} onBack={() => navigate("/dashboard")} />
-        <div className="sm:hidden"><PageSkeleton variant="detail" /></div>
-        <div className="hidden sm:block p-10 text-center text-muted-foreground">{t('common.loading')}</div>
-      </>
-    );
+    return <AppShell><PageSkeleton variant="detail" /></AppShell>;
   }
   if (eventState.error || !event) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 p-8 text-center">
-        <AlertCircle size={36} className="text-destructive" />
-        <div className="font-semibold">{t('result.notFound')}</div>
-        <p className="text-sm text-muted-foreground max-w-xs">
-          {eventState.error ?? t('result.notFoundHint')}
-        </p>
-        <Link to="/dashboard" className="mt-2 text-sm text-primary hover:underline">
-          {t('common.backToDashboard')}
-        </Link>
-      </div>
+      <AppShell>
+        <EmptyState
+          icon={<AlertCircle size={36} className="text-danger" aria-hidden />}
+          title={t('result.notFound')}
+          description={eventState.error ?? t('result.notFoundHint')}
+          action={
+            <Link to="/dashboard">
+              <Button variant="secondary">{t('common.backToDashboard')}</Button>
+            </Link>
+          }
+        />
+      </AppShell>
     );
   }
   if (!user || event.ownerUid !== user.uid) {
@@ -144,90 +148,77 @@ export default function EventResultPage() {
       new Intl.DateTimeFormat(getLocale() === 'ko' ? 'ko-KR' : 'en-US', { weekday: 'short' }).format(d);
 
     return (
-      <div>
-        <MobileHeader
+      <AppShell>
+        <PageHeader
           title={event.title}
-          subtitle={stakeName}
-          onBack={() => navigate("/dashboard")}
-          actions={<ShareLinkButton eventId={eventId} compact />}
-          menuItems={[
+          subtitle={`${stakeName} · ${t('eventType.wardVisit')}`}
+          backTo="/dashboard"
+          backLabel={t('nav.myEvents')}
+          primaryAction={<ShareLinkButton eventId={eventId} />}
+          overflowActions={[
             {
-              icon: <Trash2 size={14} />,
+              icon: <Trash2 size={14} aria-hidden />,
               label: t('result.delete'),
               onClick: () => setConfirmingDelete(true),
-              variant: "danger" as const,
+              tone: "danger",
             },
           ]}
         />
 
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 flex flex-col gap-6">
-          <div className="hidden sm:flex items-center justify-between pb-4 border-b">
-            <div>
-              <Link to="/dashboard" className="text-xs text-muted-foreground hover:underline">
-                {t('common.backToDashboardShort')}
-              </Link>
-              <h1 className="text-xl font-semibold mt-1">{event.title}</h1>
-              <div className="text-sm text-muted-foreground mt-0.5">{stakeName} · {t('eventType.wardVisit')}</div>
-            </div>
-            <div className="flex items-center gap-2">
-              <LanguageToggle />
-              <ShareLinkButton eventId={eventId} />
-              <DeleteEventButton eventId={eventId} eventTitle={event.title} responseCount={responsesState.responses.length} />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <h2 className="font-semibold text-sm">{t('ward.resultTitle')}</h2>
-              {latestResponse && (
-                <span className="text-xs text-muted-foreground">
-                  {t('ward.respondedBy', { name: latestResponse.name })}
-                </span>
-              )}
-            </div>
-
-            {!latestResponse || wardAssignments.length === 0 ? (
-              <div className="rounded-xl border p-6 text-center flex flex-col gap-2">
-                <p className="font-medium text-sm">{t('ward.resultNoResponse')}</p>
-                <p className="text-xs text-muted-foreground">{t('ward.resultNoResponseHint')}</p>
-                <div className="mt-2">
-                  <ShareLinkButton eventId={eventId} />
-                </div>
-              </div>
-            ) : (
-              <div className="rounded-xl border overflow-hidden">
-                <div className="grid grid-cols-2 bg-muted/50 border-b">
-                  <div className="p-3 text-xs font-semibold text-muted-foreground">{t('ward.resultColWard')}</div>
-                  <div className="p-3 text-xs font-semibold text-muted-foreground border-l">{t('ward.resultColDate')}</div>
-                </div>
-                {wards.map((ward, i) => {
-                  const date = assignmentByWardId[ward.id];
-                  return (
-                    <div
-                      key={ward.id}
-                      className={cn(
-                        "grid grid-cols-2 border-t",
-                        date ? "bg-background" : "bg-muted/10"
-                      )}
-                    >
-                      <div className="p-3 text-sm font-medium">{ward.name}</div>
-                      <div className={cn(
-                        "p-3 text-sm border-l",
-                        date ? "text-foreground font-semibold" : "text-muted-foreground"
-                      )}>
-                        {date ? (() => {
-                          const d = parseISO(date);
-                          return `${format(d, "M/d")}(${dayShort(d)})`;
-                        })() : t('ward.resultUnassigned')}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-text">{t('ward.resultTitle')}</h2>
+            {latestResponse && (
+              <span className="text-xs text-text-muted">
+                {t('ward.respondedBy', { name: latestResponse.name })}
+              </span>
             )}
           </div>
-          <ParticipantNotes responses={responsesState.responses} />
+
+          {!latestResponse || wardAssignments.length === 0 ? (
+            <Card>
+              <EmptyState
+                title={t('ward.resultNoResponse')}
+                description={t('ward.resultNoResponseHint')}
+                action={<ShareLinkButton eventId={eventId} />}
+              />
+            </Card>
+          ) : (
+            <Card className="overflow-hidden">
+              <div className="grid grid-cols-2 border-b border-border bg-surface-subtle">
+                <div className="p-3 text-2xs font-semibold text-text-muted">{t('ward.resultColWard')}</div>
+                <div className="border-l border-border p-3 text-2xs font-semibold text-text-muted">
+                  {t('ward.resultColDate')}
+                </div>
+              </div>
+              {wards.map((ward) => {
+                const date = assignmentByWardId[ward.id];
+                return (
+                  <div
+                    key={ward.id}
+                    className={cn(
+                      "grid grid-cols-2 border-t border-border",
+                      date ? "bg-surface" : "bg-surface-subtle/50"
+                    )}
+                  >
+                    <div className="p-3 text-sm font-medium text-text">{ward.name}</div>
+                    <div className={cn(
+                      "border-l border-border p-3 text-sm",
+                      date ? "font-semibold text-text" : "text-text-muted"
+                    )}>
+                      {date ? (() => {
+                        const d = parseISO(date);
+                        return `${format(d, "M/d")}(${dayShort(d)})`;
+                      })() : t('ward.resultUnassigned')}
+                    </div>
+                  </div>
+                );
+              })}
+            </Card>
+          )}
         </div>
+
+        <ParticipantNotes responses={responsesState.responses} />
 
         {confirmingDelete && (
           <DeleteEventButton
@@ -238,180 +229,103 @@ export default function EventResultPage() {
             onClose={() => setConfirmingDelete(false)}
           />
         )}
-      </div>
+      </AppShell>
     );
   }
 
   const isClosed = event.status === "closed";
 
+  const overflowActions: MenuItem[] = [
+    {
+      icon: <Copy size={14} aria-hidden />,
+      label: t('result.copyEvent'),
+      onClick: () =>
+        navigate("/events/new", {
+          state: {
+            sourceTitle: event.title,
+            sourceSlots: event.slots,
+            sourcePeriod: event.periodMinutes,
+          },
+        }),
+    },
+    {
+      icon: <Pencil size={14} aria-hidden />,
+      label: t('result.edit'),
+      onClick: () => navigate(`/events/${eventId}/edit`),
+    },
+    {
+      icon: isClosed ? <RotateCcw size={14} aria-hidden /> : <CircleSlash size={14} aria-hidden />,
+      label: statusUpdating ? "…" : isClosed ? t('result.reopen') : t('result.close'),
+      onClick: toggleStatus,
+      tone: "warning",
+    },
+    {
+      icon: <Trash2 size={14} aria-hidden />,
+      label: t('result.delete'),
+      onClick: () => setConfirmingDelete(true),
+      tone: "danger",
+    },
+  ];
+
   return (
-    <div>
-      <MobileHeader
+    <AppShell>
+      <PageHeader
         title={event.title}
-        subtitle={t('result.subtitle', { periodMinutes: event.periodMinutes, count: responsesState.responses.length })}
-        onBack={() => navigate("/dashboard")}
-        actions={<ShareLinkButton eventId={eventId} compact />}
-        menuItems={[
-          {
-            icon: <Copy size={14} />,
-            label: t('result.copyEvent'),
-            onClick: () =>
-              navigate("/events/new", {
-                state: {
-                  sourceTitle: event.title,
-                  sourceSlots: event.slots,
-                  sourcePeriod: event.periodMinutes,
-                },
-              }),
-          },
-          {
-            icon: <Pencil size={14} />,
-            label: t('result.edit'),
-            onClick: () => navigate(`/events/${eventId}/edit`),
-          },
-          {
-            icon: isClosed ? <RotateCcw size={14} /> : <CircleSlash size={14} />,
-            label: isClosed ? t('result.reopen') : t('result.close'),
-            onClick: toggleStatus,
-            variant: "warning" as const,
-          },
-          {
-            icon: <Trash2 size={14} />,
-            label: t('result.delete'),
-            onClick: () => setConfirmingDelete(true),
-            variant: "danger" as const,
-          },
-        ]}
+        subtitle={t('result.headerInfo', {
+          periodMinutes: event.periodMinutes,
+          responses: responsesState.responses.length,
+          slots: event.slots.length,
+        })}
+        badge={
+          <Badge tone={isClosed ? "neutral" : "success"} dot>
+            {isClosed ? t('result.statusClosed') : t('result.statusOpen')}
+          </Badge>
+        }
+        backTo="/dashboard"
+        backLabel={t('nav.myEvents')}
+        primaryAction={<ShareLinkButton eventId={eventId} />}
+        overflowActions={overflowActions}
       />
 
-      <div className="hidden sm:block max-w-5xl mx-auto px-6 py-8">
-        <header className="flex items-start justify-between pb-5 border-b gap-4 flex-wrap">
-          <div className="flex-1 min-w-0">
-            <Link to="/dashboard" className="text-xs text-muted-foreground hover:underline">
-              {t('common.backToDashboardShort')}
-            </Link>
-            <h1 className="text-xl font-semibold mt-1 flex items-center gap-3">
-              {event.title}
-              <StatusDot closed={isClosed} />
-            </h1>
-            <div className="text-xs text-muted-foreground mt-1">
-              {t('result.headerInfo', {
-                periodMinutes: event.periodMinutes,
-                responses: responsesState.responses.length,
-                slots: event.slots.length,
-              })}
-            </div>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <LanguageToggle />
-            <ShareLinkButton eventId={eventId} />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                navigate("/events/new", {
-                  state: {
-                    sourceTitle: event.title,
-                    sourceSlots: event.slots,
-                    sourcePeriod: event.periodMinutes,
-                  },
-                })
-              }
-              title={t('result.copyTitle')}
-            >
-              <Copy size={13} className="mr-1.5" />{t('result.copyEvent')}
-            </Button>
-            <Link to={`/events/${eventId}/edit`}>
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-blue-400 text-blue-600 hover:bg-blue-50"
-              >
-                {t('result.edit')}
-              </Button>
-            </Link>
-            <Button
-              variant={isClosed ? "default" : "outline"}
-              size="sm"
-              onClick={toggleStatus}
-              disabled={statusUpdating}
-              className={!isClosed ? "border-amber-400 text-amber-700 hover:bg-amber-50" : ""}
-            >
-              {statusUpdating ? "…" : isClosed ? t('result.reopen') : t('result.close')}
-            </Button>
-            <DeleteEventButton eventId={eventId} eventTitle={event.title} responseCount={responsesState.responses.length} />
-          </div>
-        </header>
+      {statusError && <p className="mb-4 text-sm text-danger">{statusError}</p>}
 
-        {statusError && <div className="mt-3 text-sm text-destructive">{statusError}</div>}
+      <Tabs
+        items={[
+          { value: "matrix", label: t('result.tabMatrix') },
+          { value: "matching", label: t('result.tabMatching') },
+        ] as const}
+        value={tab}
+        onChange={setTab}
+        className="mb-6"
+      />
 
-        <div className="mt-6 flex gap-1 border-b">
-          <TabButton active={tab === "matrix"} onClick={() => setTab("matrix")}>{t('result.tabMatrix')}</TabButton>
-          <TabButton active={tab === "matching"} onClick={() => setTab("matching")}>{t('result.tabMatching')}</TabButton>
-        </div>
+      {responsesState.loading ? (
+        <PageSkeleton variant="detail" />
+      ) : tab === "matrix" ? (
+        <ResponseMatrix
+          model={matrixModel}
+          totalResponses={responsesState.responses.length}
+          participantColors={participantColors}
+          hiddenIds={hiddenIds}
+          onToggleHidden={toggleHidden}
+          onToggleAll={toggleAll}
+        />
+      ) : (
+        <MatchingView
+          matching={matching}
+          model={matrixModel}
+          participantNameById={participantNameById}
+          participantColors={participantColors}
+          hiddenIds={hiddenIds}
+          onToggleHidden={toggleHidden}
+          onToggleAll={toggleAll}
+          slots={event.slots}
+          eventTitle={event.title}
+          eventDescription={event.description}
+        />
+      )}
 
-        <div className="py-6">
-          {responsesState.loading ? (
-            <div className="text-center text-sm text-muted-foreground py-10">{t('result.loadingResponses')}</div>
-          ) : tab === "matrix" ? (
-            <ResponseMatrix
-              model={matrixModel}
-              totalResponses={responsesState.responses.length}
-              participantColors={participantColors}
-              hiddenIds={hiddenIds}
-              onToggleHidden={toggleHidden}
-            />
-          ) : (
-            <MatchingView
-              matching={matching}
-              model={matrixModel}
-              participantNameById={participantNameById}
-              participantColors={participantColors}
-              hiddenIds={hiddenIds}
-              onToggleHidden={toggleHidden}
-              slots={event.slots}
-              eventTitle={event.title}
-              eventDescription={event.description}
-            />
-          )}
-          <ParticipantNotes responses={responsesState.responses} />
-        </div>
-      </div>
-
-      <div className="sm:hidden px-4 py-4">
-        <div className="flex items-center gap-2 mb-4">
-          <StatusDot closed={isClosed} />
-          {statusError && <span className="text-xs text-destructive">{statusError}</span>}
-        </div>
-        <div className="flex gap-1 border-b mb-4">
-          <TabButton active={tab === "matrix"} onClick={() => setTab("matrix")}>{t('result.tabMatrix')}</TabButton>
-          <TabButton active={tab === "matching"} onClick={() => setTab("matching")}>{t('result.tabMatching')}</TabButton>
-        </div>
-        {responsesState.loading ? (
-          <PageSkeleton variant="detail" />
-        ) : tab === "matrix" ? (
-          <ResponseMatrix
-            model={matrixModel}
-            totalResponses={responsesState.responses.length}
-            participantColors={participantColors}
-            hiddenIds={hiddenIds}
-            onToggleHidden={toggleHidden}
-          />
-        ) : (
-          <MatchingView
-            matching={matching}
-            model={matrixModel}
-            participantNameById={participantNameById}
-            participantColors={participantColors}
-            hiddenIds={hiddenIds}
-            onToggleHidden={toggleHidden}
-            slots={event.slots}
-            eventTitle={event.title}
-            eventDescription={event.description}
-          />
-        )}
-        <ParticipantNotes responses={responsesState.responses} />
-      </div>
+      <ParticipantNotes responses={responsesState.responses} />
 
       {confirmingDelete && (
         <DeleteEventButton
@@ -422,30 +336,7 @@ export default function EventResultPage() {
           onClose={() => setConfirmingDelete(false)}
         />
       )}
-    </div>
-  );
-}
-
-function TabButton({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "px-4 py-2 text-sm",
-        active ? "border-b-2 border-foreground font-semibold" : "text-muted-foreground hover:text-foreground"
-      )}
-    >
-      {children}
-    </button>
+    </AppShell>
   );
 }
 
@@ -457,27 +348,12 @@ function ParticipantNotes({ responses }: { responses: import("@meetplan/shared")
       <h3 className="text-sm font-semibold">{t('result.participantNotes')}</h3>
       <ul className="flex flex-col gap-2">
         {withNotes.map((r) => (
-          <li key={r.id} className="rounded-lg border bg-muted/30 px-3 py-2.5 text-sm">
-            <span className="font-medium text-foreground/70 mr-2">{r.name}</span>
-            <span className="whitespace-pre-wrap">{r.note}</span>
+          <li key={r.id} className="rounded-lg border border-border bg-surface-subtle/60 px-3 py-2.5 text-sm">
+            <span className="mr-2 font-medium text-text-muted">{r.name}</span>
+            <span className="whitespace-pre-wrap text-text">{r.note}</span>
           </li>
         ))}
       </ul>
     </div>
-  );
-}
-
-function StatusDot({ closed }: { closed: boolean }) {
-  return (
-    <span className={cn(
-      "inline-flex items-center gap-1.5 text-xs font-medium",
-      closed ? "text-zinc-500" : "text-emerald-600"
-    )}>
-      <span className={cn(
-        "w-1.5 h-1.5 rounded-full",
-        closed ? "bg-zinc-400" : "bg-emerald-500"
-      )} />
-      {closed ? t('result.statusClosed') : t('result.statusOpen')}
-    </span>
   );
 }

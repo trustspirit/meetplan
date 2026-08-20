@@ -1,5 +1,8 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Field } from "@/components/ui/field";
+import { Textarea } from "@/components/ui/textarea";
+import { Select } from "@/components/ui/select";
 import { PeriodPicker } from "./PeriodPicker";
 import { t } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -31,20 +34,22 @@ export function BasicInfoForm({
   return (
     <section className="flex flex-col gap-5">
       {/* Event type toggle */}
-      <div>
+      <div className="flex flex-col gap-2">
         <Label>{t('eventType.label')}</Label>
-        <div className="mt-2 flex rounded-lg border border-border overflow-hidden w-fit">
+        <div className="flex w-fit overflow-hidden rounded-lg border border-border">
           {(["meeting", "ward_visit"] as EventType[]).map((type) => (
             <button
               key={type}
               type="button"
               onClick={() => onEventTypeChange(type)}
+              aria-pressed={eventType === type}
               className={cn(
-                "px-4 py-2 text-sm font-medium transition-colors",
+                "h-11 px-4 text-sm font-medium transition-colors",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 type !== "meeting" && "border-l border-border",
                 eventType === type
                   ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                  : "text-text-muted hover:bg-surface-subtle hover:text-text"
               )}
             >
               {type === "meeting" ? t('eventType.meeting') : t('eventType.wardVisit')}
@@ -53,60 +58,51 @@ export function BasicInfoForm({
         </div>
       </div>
 
-      {/* Title */}
-      <div>
-        <Label htmlFor="ev-title">{t('form.eventTitle')}</Label>
+      <Field label={t('form.eventTitle')} htmlFor="ev-title">
         <Input
           id="ev-title"
-          className="mt-2"
           placeholder={t('form.eventTitlePlaceholder')}
           value={title}
           onChange={(e) => onTitleChange(e.target.value)}
         />
-      </div>
+      </Field>
 
-      {/* Notes */}
-      <div>
-        <Label htmlFor="ev-notes">{t('form.notes')}</Label>
-        <textarea
+      <Field
+        label={t('form.notes')}
+        htmlFor="ev-notes"
+        aside={<span className="text-2xs text-text-muted tabular-nums">{notes.length}/500</span>}
+      >
+        <Textarea
           id="ev-notes"
-          className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
           rows={3}
           maxLength={500}
           placeholder={t('form.notesPlaceholder')}
           value={notes}
           onChange={(e) => onNotesChange(e.target.value)}
         />
-        <p className="text-[11px] text-muted-foreground mt-1 text-right">
-          {notes.length}/500
-        </p>
-      </div>
+      </Field>
 
       {/* Stake selector — ward_visit only */}
       {isWardVisit && (
-        <div>
-          <Label htmlFor="ev-stake">{t('ward.stakeLabel')}</Label>
-          <select
+        <Field label={t('ward.stakeLabel')} htmlFor="ev-stake">
+          <Select
             id="ev-stake"
             value={stakeId}
             onChange={(e) => onStakeChange(e.target.value)}
-            className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
           >
             <option value="">{t('ward.stakePlaceholder')}</option>
             {STAKES.map((s) => (
               <option key={s.id} value={s.id}>{s.name}</option>
             ))}
-          </select>
-        </div>
+          </Select>
+        </Field>
       )}
 
       {/* Meeting length — meeting only */}
       {!isWardVisit && (
-        <div>
+        <div className="flex flex-col gap-2">
           <Label>{t('form.meetingLength')}</Label>
-          <div className="mt-2">
-            <PeriodPicker value={periodMinutes} onChange={onPeriodChange} />
-          </div>
+          <PeriodPicker value={periodMinutes} onChange={onPeriodChange} />
         </div>
       )}
     </section>

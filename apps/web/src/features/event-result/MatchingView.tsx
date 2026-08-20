@@ -3,6 +3,8 @@ import { List, CalendarDays } from "lucide-react";
 import type { MatchingResult, Slot } from "@meetplan/shared";
 import type { MatrixModel } from "./matrixModel";
 import { CalendarSyncPanel } from "./CalendarSyncPanel";
+import { ParticipantFilterBar } from "./ParticipantFilterBar";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { t } from "@/lib/i18n";
 
@@ -13,6 +15,7 @@ interface Props {
   participantColors: Record<string, string>;
   hiddenIds: Set<string>;
   onToggleHidden: (id: string) => void;
+  onToggleAll: (show: boolean) => void;
   slots: Slot[];
   eventTitle: string;
   eventDescription?: string | undefined;
@@ -27,6 +30,7 @@ export function MatchingView({
   participantColors,
   hiddenIds,
   onToggleHidden,
+  onToggleAll,
   slots,
   eventTitle,
   eventDescription,
@@ -43,7 +47,7 @@ export function MatchingView({
 
   if (model.rows.length === 0) {
     return (
-      <div className="rounded-xl border p-10 text-center text-sm text-muted-foreground bg-background">
+      <div className="rounded-lg border border-border p-10 text-center text-sm text-text-muted bg-surface">
         {t("matching.noResponses")}
       </div>
     );
@@ -51,42 +55,18 @@ export function MatchingView({
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Participant legend */}
-      <div className="flex flex-wrap gap-2 rounded-xl border bg-muted/20 px-3 py-2.5">
-        {model.rows.map((r) => {
-          const color = participantColors[r.responseId] ?? "#888";
-          const hidden = hiddenIds.has(r.responseId);
-          const hovered = hoveredId === r.responseId;
-          return (
-            <label
-              key={r.responseId}
-              className={cn(
-                "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs cursor-pointer select-none border-2 transition-all",
-                hidden ? "opacity-40" : "opacity-100"
-              )}
-              style={{
-                borderColor: hovered ? color : "transparent",
-                backgroundColor: hovered ? color + "22" : "transparent",
-              }}
-              onMouseEnter={() => setHoveredId(r.responseId)}
-              onMouseLeave={() => setHoveredId(null)}
-            >
-              <input
-                type="checkbox"
-                checked={!hidden}
-                onChange={() => onToggleHidden(r.responseId)}
-                className="w-3 h-3 cursor-pointer"
-                style={{ accentColor: color }}
-              />
-              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
-              <span className={hidden ? "line-through" : ""}>{r.name}</span>
-            </label>
-          );
-        })}
-      </div>
+      <ParticipantFilterBar
+        rows={model.rows}
+        participantColors={participantColors}
+        hiddenIds={hiddenIds}
+        onToggleHidden={onToggleHidden}
+        onToggleAll={onToggleAll}
+        hoveredId={hoveredId}
+        onHover={setHoveredId}
+      />
 
       {matching.totalParticipants === 0 && (
-        <div className="rounded-xl border p-10 text-center text-sm text-muted-foreground bg-background">
+        <div className="rounded-lg border border-border p-10 text-center text-sm text-text-muted bg-surface">
           {hiddenCount > 0
             ? t("matching.hiddenEmpty", { count: hiddenCount })
             : t("matching.noResponses")}
@@ -97,20 +77,20 @@ export function MatchingView({
         <>
           {/* Summary + controls row */}
           <div className="flex items-start justify-between gap-4 flex-wrap">
-            <div className="rounded-lg border bg-muted/20 p-4 text-sm flex-1 min-w-0">
+            <div className="rounded-lg border bg-surface-subtle/60 p-4 text-sm flex-1 min-w-0">
               <div className="font-semibold">
                 {t("matching.summary", { max: matching.maxSize, total: matching.totalParticipants })}
               </div>
-              <div className="text-xs text-muted-foreground mt-1">
+              <div className="text-xs text-text-muted mt-1">
                 {t("matching.combinations", { count: matching.matchings.length })}
                 {matching.truncated && <span> {t("matching.combinationsTruncated")}</span>}
                 {hiddenCount > 0 && (
-                  <span className="ml-2 text-amber-600">
+                  <span className="ml-2 text-warning">
                     · {t("matching.hiddenNote", { count: hiddenCount })}
                   </span>
                 )}
               </div>
-              <div className="text-[11px] text-muted-foreground/70 mt-2 border-t border-border/40 pt-2">
+              <div className="text-2xs text-text-subtle mt-2 border-t border-border pt-2">
                 {t("matching.description")}
               </div>
             </div>
@@ -188,7 +168,7 @@ function ListView({ matching, model, participantNameById, participantColors, sel
           <div
             key={stableKey}
             className={cn(
-              "rounded-xl border bg-background p-4 cursor-pointer transition-colors",
+              "rounded-xl border bg-surface p-4 cursor-pointer transition-colors",
               isSelected
                 ? "border-primary/60 ring-1 ring-primary/30"
                 : "hover:border-border/80"
@@ -196,7 +176,7 @@ function ListView({ matching, model, participantNameById, participantColors, sel
             onClick={() => onSelectIdx(idx)}
           >
             <div className="flex items-center justify-between mb-3">
-              <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+              <div className="text-2xs font-semibold uppercase tracking-wide text-text-muted">
                 {t("matching.comboLabel", { num: idx + 1 })}
               </div>
               {/* Radio indicator */}
@@ -205,7 +185,7 @@ function ListView({ matching, model, participantNameById, participantColors, sel
                   "w-3.5 h-3.5 rounded-full border-2 flex-shrink-0 transition-colors",
                   isSelected
                     ? "border-primary bg-primary"
-                    : "border-muted-foreground/40"
+                    : "border-border-strong"
                 )}
               />
             </div>
@@ -220,14 +200,14 @@ function ListView({ matching, model, participantNameById, participantColors, sel
                       )}
                       <span className="truncate">{participantNameById[pid] ?? pid}</span>
                     </span>
-                    <span className="text-accent font-medium tabular-nums whitespace-nowrap">
+                    <span className="text-primary font-medium tabular-nums whitespace-nowrap">
                       {slotLabelById[slotId] ?? slotId}
                     </span>
                   </div>
                 );
               })}
               {m.unmatched.length > 0 && (
-                <div className="pt-2 mt-2 border-t text-[11px] text-muted-foreground">
+                <div className="pt-2 mt-2 border-t text-2xs text-text-muted">
                   {t("matching.unmatched")}{" "}
                   {m.unmatched.map((id) => participantNameById[id] ?? id).join(", ")}
                 </div>
@@ -264,8 +244,8 @@ function GridView({ matching, model, participantNameById, participantColors, sel
             className={cn(
               "px-2.5 py-1 text-xs rounded-md border transition-colors",
               idx === selectedIdx
-                ? "bg-foreground text-background border-foreground font-semibold"
-                : "bg-background text-muted-foreground border-border hover:text-foreground"
+                ? "bg-primary text-primary-foreground border-primary font-semibold"
+                : "bg-surface text-text-muted border-border hover:text-text"
             )}
           >
             #{idx + 1}
@@ -273,17 +253,17 @@ function GridView({ matching, model, participantNameById, participantColors, sel
         ))}
       </div>
 
-      <div className="rounded-xl border bg-background overflow-x-auto">
+      <ScrollArea className="rounded-lg border border-border bg-surface">
         <table className="min-w-full text-xs border-collapse">
           <thead>
-            <tr className="border-b bg-muted/30">
-              <th className="sticky left-0 bg-muted/30 text-left font-semibold px-3 py-2 z-10 min-w-[56px]">
+            <tr className="border-b bg-surface-subtle">
+              <th className="sticky left-0 bg-surface-subtle text-left font-semibold px-3 py-2 z-10 min-w-[56px]">
                 {t("matching.colTime")}
               </th>
               {dateGroups.map((d) => (
                 <th
                   key={d.dateYmd}
-                  className="px-3 py-2 font-semibold text-center min-w-[110px] border-l border-border/40"
+                  className="px-3 py-2 font-semibold text-center min-w-[110px] border-l border-border"
                 >
                   {d.dateLabel}
                 </th>
@@ -293,13 +273,13 @@ function GridView({ matching, model, participantNameById, participantColors, sel
           <tbody>
             {timeGroups.map((tm) => (
               <tr key={tm.hhmm} className="border-b last:border-0">
-                <td className="sticky left-0 bg-background px-3 py-2 font-medium text-muted-foreground border-r border-border/40">
+                <td className="sticky left-0 bg-surface px-3 py-2 font-medium text-text-muted border-r border-border">
                   {tm.hhmm}
                 </td>
                 {dateGroups.map((d) => {
                   const cell = groupedCells[`${d.dateYmd}_${tm.hhmm}`];
                   if (!cell) {
-                    return <td key={d.dateYmd} className="px-2 py-2 border-l border-border/40 bg-muted/10" />;
+                    return <td key={d.dateYmd} className="px-2 py-2 border-l border-border bg-surface-subtle/50" />;
                   }
                   const assignedPid = slotToPid[cell.slotId];
                   const assignedName = assignedPid
@@ -309,18 +289,18 @@ function GridView({ matching, model, participantNameById, participantColors, sel
                   return (
                     <td
                       key={d.dateYmd}
-                      className="px-2 py-2 border-l border-border/40 text-center"
+                      className="px-2 py-2 border-l border-border text-center"
                       style={assignedColor ? { backgroundColor: assignedColor + "22" } : undefined}
                     >
                       {assignedName ? (
                         <span
-                          className="inline-block text-[11px] font-semibold truncate max-w-[90px]"
+                          className="inline-block text-2xs font-semibold truncate max-w-[90px]"
                           style={{ color: assignedColor }}
                         >
                           {assignedName}
                         </span>
                       ) : (
-                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-muted-foreground/25 align-middle" />
+                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-border-strong align-middle" />
                       )}
                     </td>
                   );
@@ -329,10 +309,10 @@ function GridView({ matching, model, participantNameById, participantColors, sel
             ))}
           </tbody>
         </table>
-      </div>
+      </ScrollArea>
 
       {m.unmatched.length > 0 && (
-        <p className="text-[11px] text-muted-foreground px-1">
+        <p className="text-2xs text-text-muted px-1">
           {t("matching.unmatched")}{" "}
           {m.unmatched.map((id) => participantNameById[id] ?? id).join(", ")}
         </p>
@@ -359,8 +339,8 @@ function ViewToggleButton({
       className={cn(
         "px-3 py-1.5 text-xs rounded-md border transition-colors flex items-center",
         active
-          ? "bg-foreground text-background border-foreground font-semibold"
-          : "bg-background text-muted-foreground border-border hover:text-foreground"
+          ? "bg-primary text-primary-foreground border-primary font-semibold"
+          : "bg-surface text-text-muted border-border hover:text-text"
       )}
     >
       {children}

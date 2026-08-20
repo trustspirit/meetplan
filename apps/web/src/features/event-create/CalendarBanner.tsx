@@ -21,12 +21,12 @@ export function CalendarBanner({
   const showPicker = calendarList.length > 0;
 
   return (
-    <div className="rounded-xl border border-border bg-muted/40 px-4 py-3 flex flex-col gap-3">
+    <div className="rounded-xl border border-border bg-surface-subtle/40 px-4 py-3 flex flex-col gap-3">
       <div className="flex items-start gap-2">
-        <Calendar size={16} className="text-muted-foreground shrink-0 mt-0.5" />
+        <Calendar size={16} className="text-text-muted shrink-0 mt-0.5" />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium">{t('calendar.title')}</p>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <p className="text-xs text-text-muted mt-0.5">
             {showPicker
               ? t('calendar.hintPicker')
               : disabled
@@ -34,7 +34,7 @@ export function CalendarBanner({
               : t('calendar.hint')}
           </p>
           {error && (
-            <p className="text-xs text-destructive mt-1">
+            <p className="text-xs text-danger mt-1">
               {error} {t('calendar.errorSuffix')}
             </p>
           )}
@@ -43,7 +43,7 @@ export function CalendarBanner({
           type="button"
           onClick={onSkip}
           disabled={syncing}
-          className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-50 px-2 py-1 shrink-0"
+          className="text-xs text-text-muted hover:text-text disabled:opacity-50 px-2 py-1 shrink-0"
         >
           {t('calendar.skip')}
         </button>
@@ -54,7 +54,7 @@ export function CalendarBanner({
           <select
             value={selectedCalendarId ?? ""}
             onChange={(e) => onCalendarIdChange?.(e.target.value)}
-            className="flex-1 text-xs rounded-md border border-border bg-background px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary"
+            className="flex-1 text-xs rounded-md border border-border bg-surface px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary"
           >
             {calendarList.map((c) => (
               <option key={c.id} value={c.id}>
@@ -66,7 +66,7 @@ export function CalendarBanner({
             type="button"
             onClick={onApply}
             disabled={syncing || !selectedCalendarId}
-            className="text-xs font-medium bg-accent text-accent-foreground rounded-md px-3 py-1.5 hover:opacity-90 disabled:opacity-40 transition-opacity shrink-0"
+            className="text-xs font-medium bg-primary text-primary-foreground rounded-md px-3 py-1.5 hover:opacity-90 disabled:opacity-40 transition-opacity shrink-0"
           >
             {syncing ? t('calendar.loading') : t('calendar.apply')}
           </button>
@@ -77,7 +77,7 @@ export function CalendarBanner({
             type="button"
             onClick={onConnect}
             disabled={syncing || disabled}
-            className="text-xs font-medium bg-accent text-accent-foreground rounded-md px-3 py-1.5 hover:opacity-90 disabled:opacity-40 transition-opacity"
+            className="text-xs font-medium bg-primary text-primary-foreground rounded-md px-3 py-1.5 hover:opacity-90 disabled:opacity-40 transition-opacity"
           >
             {syncing ? t('calendar.connecting') : t('calendar.connect')}
           </button>

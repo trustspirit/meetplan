@@ -52,10 +52,10 @@ export function DeleteEventButton({ eventId, eventTitle, responseCount, autoOpen
     if (autoOpen) return null;
     return (
       <Button
-        variant="outline"
+        variant="secondary"
         size="sm"
         onClick={() => setConfirming(true)}
-        className="border-destructive text-destructive hover:bg-destructive/10"
+        className="border-danger text-danger hover:bg-danger/10"
       >
         {t('delete.button')}
       </Button>
@@ -68,22 +68,22 @@ export function DeleteEventButton({ eventId, eventTitle, responseCount, autoOpen
       aria-modal="true"
       aria-labelledby="delete-dialog-title"
       onKeyDown={onKeyDown}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-text/40 p-4"
       onClick={(e) => { if (e.target === e.currentTarget) handleCancel(); }}
     >
-      <div className="bg-background rounded-xl border shadow-lg max-w-sm w-full p-5">
+      <div className="w-full max-w-sm rounded-xl border border-border bg-surface p-5 shadow-md">
         <h2 id="delete-dialog-title" className="text-base font-semibold">
           {t('delete.title')}
         </h2>
-        <p className="text-sm text-muted-foreground mt-2">
+        <p className="mt-2 text-sm text-text-muted">
           {t('delete.confirm', { title: eventTitle, count: responseCount })}
         </p>
-        {error && <p className="text-sm text-destructive mt-2">{error}</p>}
+        {error && <p className="mt-2 text-sm text-danger">{error}</p>}
         <div className="flex justify-end gap-2 mt-5">
-          <Button ref={cancelRef} variant="outline" size="sm" onClick={handleCancel} disabled={deleting}>
+          <Button ref={cancelRef} variant="secondary" size="sm" onClick={handleCancel} disabled={deleting}>
             {t('common.cancel')}
           </Button>
-          <Button variant="destructive" size="sm" onClick={onDelete} disabled={deleting}>
+          <Button variant="danger" size="sm" onClick={onDelete} disabled={deleting}>
             {deleting ? t('delete.deleting') : t('delete.permanentDelete')}
           </Button>
         </div>

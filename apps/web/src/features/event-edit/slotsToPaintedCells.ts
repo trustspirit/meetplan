@@ -42,6 +42,8 @@ export function slotsToPaintedCells(
     if (endMin > maxEndMin) maxEndMin = endMin;
   }
 
+  // dailyRange는 날짜별 값이 아니라 "표시 창"이다 (스펙 §7).
+  // 모든 슬롯을 덮는 최소 구간을 돌려주며, 날짜별 가용 시간대는 paintedCells가 표현한다.
   return {
     selectedDates: [...datesSet].sort(),
     paintedCells,
