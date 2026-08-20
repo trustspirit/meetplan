@@ -53,6 +53,16 @@ describe("ResponseFieldsEditor", () => {
     expect(screen.getByDisplayValue("소속")).toBeInTheDocument();
   });
 
+  it("필수 체크박스를 누르면 그 항목의 required가 반전된다", async () => {
+    const { onFieldsChange } = setup([
+      { id: "f1", label: "소속", required: false },
+    ]);
+    await userEvent.click(screen.getByRole("checkbox", { name: "필수" }));
+    expect(onFieldsChange).toHaveBeenCalledWith([
+      { id: "f1", label: "소속", required: true },
+    ]);
+  });
+
   it("삭제 버튼을 누르면 그 항목이 빠진다", async () => {
     const { onFieldsChange } = setup([
       { id: "f1", label: "소속", required: false },

@@ -87,6 +87,7 @@ export function ResponseFieldsEditor({
 
         {fields.map((field) => {
           const labelMissing = field.label.trim().length === 0;
+          const errorId = `field-${field.id}-error`;
           return (
             <div key={field.id} className="flex flex-col gap-1.5 px-4 py-3">
               <div className="flex items-center gap-2">
@@ -94,7 +95,9 @@ export function ResponseFieldsEditor({
                   value={field.label}
                   maxLength={MAX_FIELD_LABEL_LENGTH}
                   placeholder={t('fields.labelPlaceholder')}
+                  aria-label={t('fields.labelAria')}
                   aria-invalid={labelMissing ? true : undefined}
+                  aria-describedby={labelMissing ? errorId : undefined}
                   onChange={(e) => patchField(field.id, { label: e.target.value })}
                   className="flex-1"
                 />
@@ -110,12 +113,13 @@ export function ResponseFieldsEditor({
                 <IconButton
                   aria-label={t('fields.remove')}
                   onClick={() => removeField(field.id)}
+                  className="min-h-touch min-w-touch"
                 >
                   <Trash2 size={16} aria-hidden />
                 </IconButton>
               </div>
               {labelMissing && (
-                <p className="text-2xs text-danger">{t('fields.labelMissing')}</p>
+                <p id={errorId} className="text-2xs text-danger">{t('fields.labelMissing')}</p>
               )}
             </div>
           );
