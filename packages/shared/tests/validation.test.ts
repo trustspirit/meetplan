@@ -106,3 +106,97 @@ describe("responseSubmitSchema", () => {
     expect(responseSubmitSchema.safeParse({ ...valid, selectedSlotIds: [] }).success).toBe(false);
   });
 });
+
+const BASE_EVENT = {
+  title: "테스트",
+  periodMinutes: 30,
+  timezone: "Asia/Seoul",
+  slots: [{ id: "s1", start: "2026-06-02T00:00:00.000Z", end: "2026-06-02T00:30:00.000Z" }],
+};
+
+describe("eventCreateSchema — 수집 항목", () => {
+  it("collectPhone과 responseFields는 지정하지 않으면 기본값이 채워진다", () => {
+    const parsed = eventCreateSchema.parse(BASE_EVENT);
+    expect(parsed.collectPhone).toBe(true);
+    expect(parsed.responseFields).toEqual([]);
+  });
+
+  it("collectPhone을 false로 지정할 수 있다", () => {
+    const parsed = eventCreateSchema.parse({ ...BASE_EVENT, collectPhone: false });
+    expect(parsed.collectPhone).toBe(false);
+  });
+
+  it("커스텀 항목을 받는다", () => {
+    const parsed = eventCreateSchema.parse({
+      ...BASE_EVENT,
+      responseFields: [{ id: "abc-1", label: "소속", required: true }],
+    });
+    expect(parsed.responseFields).toEqual([{ id: "abc-1", label: "소속", required: true }]);
+  });
+
+  it("항목이 10개를 넘으면 거부한다", () => {
+    const fields = Array.from({ length: 11 }, (_, i) => ({
+      id: `f${i}`, label: `항목${i}`, required: false,
+    }));
+    expect(eventCreateSchema.safeParse({ ...BASE_EVENT, responseFields: fields }).success).toBe(false);
+  });
+
+  it("항목 ID가 중복되면 거부한다", () => {
+    const fields = [
+      { id: "same", label: "A", required: false },
+      { id: "same", label: "B", required: false },
+    ];
+    expect(eventCreateSchema.safeParse({ ...BASE_EVENT, responseFields: fields }).success).toBe(false);
+  });
+
+  it("라벨이 공백만이면 거부한다", () => {
+    const fields = [{ id: "f1", label: "   ", required: false }];
+    expect(eventCreateSchema.safeParse({ ...BASE_EVENT, responseFields: fields }).success).toBe(false);
+  });
+
+  it("라벨이 40자를 넘으면 거부한다", () => {
+    const fields = [{ id: "f1", label: "가".repeat(41), required: false }];
+    expect(eventCreateSchema.safeParse({ ...BASE_EVENT, responseFields: fields }).success).toBe(false);
+  });
+});
+
+const BASE_RESPONSE = {
+  eventId: "e1",
+  name: "김민수",
+  selectedSlotIds: ["s1"],
+};
+
+describe("responseSubmitSchema — 전화번호와 답변", () => {
+  it("전화번호 없이도 통과한다 (이벤트 설정은 서버가 교차 검증)", () => {
+    const parsed = responseSubmitSchema.parse(BASE_RESPONSE);
+    expect(parsed.phone).toBeUndefined();
+  });
+
+  it("빈 문자열 전화번호는 undefined로 정규화한다", () => {
+    const parsed = responseSubmitSchema.parse({ ...BASE_RESPONSE, phone: "  " });
+    expect(parsed.phone).toBeUndefined();
+  });
+
+  it("형식이 틀린 전화번호는 거부한다", () => {
+    expect(responseSubmitSchema.safeParse({ ...BASE_RESPONSE, phone: "123" }).success).toBe(false);
+  });
+
+  it("올바른 전화번호를 받는다", () => {
+    const parsed = responseSubmitSchema.parse({ ...BASE_RESPONSE, phone: "010-1234-5678" });
+    expect(parsed.phone).toBe("010-1234-5678");
+  });
+
+  it("answers는 지정하지 않으면 빈 객체다", () => {
+    expect(responseSubmitSchema.parse(BASE_RESPONSE).answers).toEqual({});
+  });
+
+  it("answers를 받는다", () => {
+    const parsed = responseSubmitSchema.parse({ ...BASE_RESPONSE, answers: { "abc-1": "1팀" } });
+    expect(parsed.answers).toEqual({ "abc-1": "1팀" });
+  });
+
+  it("200자를 넘는 답변은 거부한다", () => {
+    const long = { ...BASE_RESPONSE, answers: { "abc-1": "가".repeat(201) } };
+    expect(responseSubmitSchema.safeParse(long).success).toBe(false);
+  });
+});

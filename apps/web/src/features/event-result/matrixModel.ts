@@ -12,7 +12,7 @@ export interface SlotColumn {
 export interface MatrixRow {
   responseId: string;
   name: string;
-  phone: string;
+  phone?: string;
   checks: Record<string, boolean>; // slotId -> checked
 }
 

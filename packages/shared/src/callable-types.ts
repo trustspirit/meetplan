@@ -23,7 +23,8 @@ export interface GetResponseOutput {
   response?: {
     id: string;
     name: string;
-    phone: string;
+    phone?: string;
+    answers?: Record<string, string>;
     note?: string;
     selectedSlotIds: string[];
     wardAssignments?: { wardId: string; wardName: string; date: string }[];
