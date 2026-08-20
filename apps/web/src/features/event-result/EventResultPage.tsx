@@ -13,11 +13,12 @@ import { AppShell } from "@/components/layout/AppShell";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { useAuth } from "@/features/auth/useAuth";
 import { useEventData } from "@/features/event-respond/useEventData";
-import { findMatchings, getWardsByStake, getStakeName } from "@meetplan/shared";
+import { findMatchings, getWardsByStake, getStakeName, eventCollectsPhone, eventResponseFields } from "@meetplan/shared";
 import { useResponses } from "./useResponses";
 import { buildMatrixModel } from "./matrixModel";
 import { ResponseMatrix } from "./ResponseMatrix";
 import { MatchingView } from "./MatchingView";
+import { ParticipantResponsesTable } from "./ParticipantResponsesTable";
 import { ShareLinkButton } from "./ShareLinkButton";
 import { DeleteEventButton } from "./DeleteEventButton";
 import { cn } from "@/lib/utils";
@@ -218,7 +219,11 @@ export default function EventResultPage() {
           )}
         </div>
 
-        <ParticipantNotes responses={responsesState.responses} />
+        <ParticipantResponsesTable
+          responses={responsesState.responses}
+          collectPhone={eventCollectsPhone(event)}
+          fields={eventResponseFields(event)}
+        />
 
         {confirmingDelete && (
           <DeleteEventButton
@@ -325,7 +330,11 @@ export default function EventResultPage() {
         />
       )}
 
-      <ParticipantNotes responses={responsesState.responses} />
+      <ParticipantResponsesTable
+        responses={responsesState.responses}
+        collectPhone={eventCollectsPhone(event)}
+        fields={eventResponseFields(event)}
+      />
 
       {confirmingDelete && (
         <DeleteEventButton
@@ -337,23 +346,5 @@ export default function EventResultPage() {
         />
       )}
     </AppShell>
-  );
-}
-
-function ParticipantNotes({ responses }: { responses: import("@meetplan/shared").ParticipantResponse[] }) {
-  const withNotes = responses.filter((r) => r.note);
-  if (withNotes.length === 0) return null;
-  return (
-    <div className="mt-6 flex flex-col gap-2">
-      <h3 className="text-sm font-semibold">{t('result.participantNotes')}</h3>
-      <ul className="flex flex-col gap-2">
-        {withNotes.map((r) => (
-          <li key={r.id} className="rounded-lg border border-border bg-surface-subtle/60 px-3 py-2.5 text-sm">
-            <span className="mr-2 font-medium text-text-muted">{r.name}</span>
-            <span className="whitespace-pre-wrap text-text">{r.note}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
   );
 }

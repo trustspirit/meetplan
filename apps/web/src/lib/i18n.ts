@@ -220,6 +220,10 @@ const ko = {
   'result.notFound': '이벤트를 찾을 수 없어요',
   'result.notFoundHint': '링크가 잘못되었거나 삭제된 이벤트입니다.',
   'result.participantNotes': '참가자 노트',
+  'result.responsesTitle': '참가자 응답',
+  'result.colName': '이름',
+  'result.colPhone': '전화번호',
+  'result.colNote': '기타 사항',
 
   // ── ResponseMatrix ───────────────────────────────────────────────────
   'matrix.noResponses': '아직 응답이 없습니다',
@@ -519,6 +523,10 @@ const en: TranslationMap = {
   'result.notFound': 'Event not found',
   'result.notFoundHint': 'The link may be invalid or the event has been deleted.',
   'result.participantNotes': 'Participant notes',
+  'result.responsesTitle': 'Participant responses',
+  'result.colName': 'Name',
+  'result.colPhone': 'Phone',
+  'result.colNote': 'Notes',
 
   'matrix.noResponses': 'No responses yet',
   'matrix.viewHeatmap': 'Availability',
