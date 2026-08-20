@@ -239,7 +239,6 @@ const ko = {
 
   // ── Share ────────────────────────────────────────────────────────────
   'share.button': '공유 링크 복사',
-  'share.compact': '공유',
   'share.copied': '복사됨',
   'share.ariaLabel': '공유 링크 복사',
 
@@ -518,7 +517,6 @@ const en: TranslationMap = {
   'delete.failed': 'Delete failed',
 
   'share.button': 'Copy share link',
-  'share.compact': 'Share',
   'share.copied': 'Copied',
   'share.ariaLabel': 'Copy share link',
 
