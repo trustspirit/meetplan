@@ -6,9 +6,10 @@ interface Props {
   name: string;
   slotCount: number;
   periodMinutes: number;
+  collectPhone: boolean;
 }
 
-export function SubmitSuccessAuthed({ name, slotCount, periodMinutes }: Props) {
+export function SubmitSuccessAuthed({ name, slotCount, periodMinutes, collectPhone }: Props) {
   return (
     <PublicShell>
      <div className="mx-auto max-w-xl overflow-hidden rounded-lg border border-border bg-surface">
@@ -29,7 +30,10 @@ export function SubmitSuccessAuthed({ name, slotCount, periodMinutes }: Props) {
             {t('success.nextStepsTitle')}
           </div>
           <ol className="flex flex-col gap-2">
-            {([t('success.nextStep1'), t('success.nextStep2')] as string[]).map((step, i) => (
+            {([
+              t('success.nextStep1'),
+              collectPhone ? t('success.nextStep2') : t('success.nextStep2NoPhone'),
+            ] as string[]).map((step, i) => (
               <li key={i} className="flex items-start gap-2.5 text-xs text-text-muted">
                 <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-surface-subtle text-2xs font-bold text-text">
                   {i + 1}

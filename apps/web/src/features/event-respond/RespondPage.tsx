@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { Navigate, useParams, useSearchParams } from "react-router-dom";
 import { AlertCircle, Lock } from "lucide-react";
-import { phoneRegex, normalizePhone } from "@meetplan/shared";
+import {
+  normalizePhone,
+  eventCollectsPhone, eventResponseFields, validateResponseInput,
+} from "@meetplan/shared";
+import { resolveMissingReason } from "./missingReason";
 import { useMediaQuery } from "@/lib/useMediaQuery";
 import { submitResponseCallable } from "@/lib/callable";
 import { useAuth } from "@/features/auth/useAuth";
@@ -37,19 +41,20 @@ export default function RespondPage() {
   const prefill = useMemo(
     () => existing.response ? {
       name: existing.response.name,
-      phone: existing.response.phone,
+      phone: existing.response.phone ?? "",
       ...(existing.response.note ? { note: existing.response.note } : {}),
       selectedSlotIds: existing.response.selectedSlotIds,
+      ...(existing.response.answers ? { answers: existing.response.answers } : {}),
     } : undefined,
     [existing.response]
   );
-  const { state, setName, setPhone, setNote, setSlotChecked, clearSlotsForDate } = useRespondState(prefill);
+  const { state, setName, setPhone, setNote, setSlotChecked, clearSlotsForDate, setAnswer } = useRespondState(prefill);
 
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [result, setResult] = useState<
-    | { kind: "anon"; editUrl: string; name: string; slotCount: number; periodMinutes: number }
-    | { kind: "authed"; name: string; slotCount: number; periodMinutes: number }
+    | { kind: "anon"; editUrl: string; name: string; slotCount: number; periodMinutes: number; collectPhone: boolean }
+    | { kind: "authed"; name: string; slotCount: number; periodMinutes: number; collectPhone: boolean }
     | null
   >(null);
 
@@ -97,8 +102,8 @@ export default function RespondPage() {
   }
   if (result) {
     return result.kind === "anon"
-      ? <SubmitSuccessAnon name={result.name} editUrl={result.editUrl} slotCount={result.slotCount} periodMinutes={result.periodMinutes} />
-      : <SubmitSuccessAuthed name={result.name} slotCount={result.slotCount} periodMinutes={result.periodMinutes} />;
+      ? <SubmitSuccessAnon name={result.name} editUrl={result.editUrl} slotCount={result.slotCount} periodMinutes={result.periodMinutes} collectPhone={result.collectPhone} />
+      : <SubmitSuccessAuthed name={result.name} slotCount={result.slotCount} periodMinutes={result.periodMinutes} collectPhone={result.collectPhone} />;
   }
 
   const event = eventState.event;
@@ -118,10 +123,30 @@ export default function RespondPage() {
 
   const grid = slotsToCells(event.slots, VIEWER_TZ);
 
-  const nameOk = state.name.trim().length > 0;
-  const phoneOk = phoneRegex.test(state.phone);
-  const slotsOk = state.selectedSlotIds.size > 0;
-  const canSubmit = nameOk && phoneOk && slotsOk && !submitting;
+  const collectPhone = eventCollectsPhone(event);
+  const fields = eventResponseFields(event);
+
+  // 저장된 답변 중 현재 이벤트에 남아 있는 항목만 남긴다.
+  // 호스트가 항목을 지운 뒤 참가자가 수정하러 오면, 사라진 키가 서버의 unknown_field에
+  // 걸려 제출이 영구히 막힌다 — 그 키는 렌더되지도 않아 지울 방법이 없다.
+  const answers: Record<string, string> = {};
+  for (const field of fields) {
+    const value = state.answers[field.id];
+    if (value !== undefined) answers[field.id] = value;
+  }
+
+  const violation = validateResponseInput(
+    { collectPhone, fields, requireSlots: true },
+    {
+      name: state.name,
+      phone: state.phone,
+      answers,
+      selectedSlotCount: state.selectedSlotIds.size,
+    }
+  );
+  const canSubmit = violation === null && !submitting;
+
+  const missingReason = resolveMissingReason({ submitting, violation });
 
   const handleSubmit = async () => {
     if (!eventId) return;
@@ -145,23 +170,24 @@ export default function RespondPage() {
         phone: normalizePhone(state.phone),
         ...(note ? { note } : {}),
         selectedSlotIds: [...state.selectedSlotIds],
+        answers,
         ...editArgs,
       });
 
       if (data.rawToken) {
         // 신규 익명 제출 — 서버가 새 토큰 발급
         const url = `${window.location.origin}/e/${eventId}?rid=${data.responseId}&t=${data.rawToken}`;
-        setResult({ kind: "anon", editUrl: url, name: state.name.trim(), slotCount: state.selectedSlotIds.size, periodMinutes: event.periodMinutes });
+        setResult({ kind: "anon", editUrl: url, name: state.name.trim(), slotCount: state.selectedSlotIds.size, periodMinutes: event.periodMinutes, collectPhone });
       } else if (user) {
         // 로그인 제출 (신규 또는 수정) — 토큰 개념 없음
-        setResult({ kind: "authed", name: state.name.trim(), slotCount: state.selectedSlotIds.size, periodMinutes: event.periodMinutes });
+        setResult({ kind: "authed", name: state.name.trim(), slotCount: state.selectedSlotIds.size, periodMinutes: event.periodMinutes, collectPhone });
       } else if (rid && token) {
         // 익명 편집 — 기존 rid/token 재사용해 동일 편집 URL 유지
         const url = `${window.location.origin}/e/${eventId}?rid=${rid}&t=${token}`;
-        setResult({ kind: "anon", editUrl: url, name: state.name.trim(), slotCount: state.selectedSlotIds.size, periodMinutes: event.periodMinutes });
+        setResult({ kind: "anon", editUrl: url, name: state.name.trim(), slotCount: state.selectedSlotIds.size, periodMinutes: event.periodMinutes, collectPhone });
       } else {
         // 이 분기는 원칙적으로 도달 불가 (익명 + 신규인데 rawToken 없음은 서버 응답 계약 위반).
-        setResult({ kind: "authed", name: state.name.trim(), slotCount: state.selectedSlotIds.size, periodMinutes: event.periodMinutes });
+        setResult({ kind: "authed", name: state.name.trim(), slotCount: state.selectedSlotIds.size, periodMinutes: event.periodMinutes, collectPhone });
       }
     } catch (e) {
       setSubmitError(e instanceof Error ? e.message : t('common.saveFailed'));
@@ -183,6 +209,10 @@ export default function RespondPage() {
     submitting,
     onSubmit: handleSubmit,
     submitError,
+    missingReason,
+    collectPhone,
+    fields,
+    onAnswerChange: setAnswer,
   };
 
   return (

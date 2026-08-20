@@ -6,6 +6,7 @@ export interface RespondState {
   phone: string;
   note: string;
   selectedSlotIds: Set<string>;
+  answers: Record<string, string>;
 }
 
 const initial: RespondState = {
@@ -13,6 +14,7 @@ const initial: RespondState = {
   phone: "",
   note: "",
   selectedSlotIds: new Set(),
+  answers: {},
 };
 
 export function useRespondState(prefill?: {
@@ -20,6 +22,7 @@ export function useRespondState(prefill?: {
   phone: string;
   note?: string;
   selectedSlotIds: string[];
+  answers?: Record<string, string>;
 }) {
   const [state, setState] = useState<RespondState>(initial);
   const hasPrefilled = useRef(false);
@@ -33,6 +36,7 @@ export function useRespondState(prefill?: {
         phone: prefill.phone,
         note: prefill.note ?? "",
         selectedSlotIds: new Set(prefill.selectedSlotIds),
+        answers: prefill.answers ?? {},
       });
     }
   }, [prefill]);
@@ -68,5 +72,9 @@ export function useRespondState(prefill?: {
     });
   }, []);
 
-  return { state, setName, setPhone, setNote, toggleSlot, setSlotChecked, clearSlotsForDate };
+  const setAnswer = useCallback((fieldId: string, value: string) => {
+    setState((s) => ({ ...s, answers: { ...s.answers, [fieldId]: value } }));
+  }, []);
+
+  return { state, setName, setPhone, setNote, toggleSlot, setSlotChecked, clearSlotsForDate, setAnswer };
 }

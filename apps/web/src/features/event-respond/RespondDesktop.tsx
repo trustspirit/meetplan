@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { StickyActionBar } from "@/components/ui/sticky-action-bar";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { useAuth } from "@/features/auth/useAuth";
-import type { MeetplanEvent } from "@meetplan/shared";
+import type { MeetplanEvent, ResponseField } from "@meetplan/shared";
 import type { CellGridModel } from "./slotsToCells";
 import type { RespondState } from "./useRespondState";
 import { buildSelectionModel } from "./selectionModel";
@@ -26,6 +26,10 @@ interface Props {
   submitting: boolean;
   onSubmit: () => void;
   submitError: string | null;
+  missingReason: string | null;
+  collectPhone: boolean;
+  fields: ResponseField[];
+  onAnswerChange: (fieldId: string, value: string) => void;
 }
 
 export function RespondDesktop(props: Props) {
@@ -38,12 +42,6 @@ export function RespondDesktop(props: Props) {
 
   const selectedCount = props.state.selectedSlotIds.size;
   const selectedDays = selections.filter((s) => s.selectedTimes.length > 0).length;
-
-  const missingReason =
-    !props.state.name.trim() ? t('respond.missingName')
-    : selectedCount === 0 ? t('respond.missingSlots')
-    : !props.canSubmit ? t('respond.missingPhone')
-    : null;
 
   const scrollToCell = (dateYmd: string, hhmm: string) => {
     document
@@ -95,6 +93,10 @@ export function RespondDesktop(props: Props) {
             onNameChange={props.onNameChange}
             onPhoneChange={props.onPhoneChange}
             onNoteChange={props.onNoteChange}
+            collectPhone={props.collectPhone}
+            fields={props.fields}
+            answers={props.state.answers}
+            onAnswerChange={props.onAnswerChange}
           />
         </aside>
       </div>
@@ -107,8 +109,8 @@ export function RespondDesktop(props: Props) {
           </span>
         </div>
         <div className="flex shrink-0 items-center gap-3">
-          {(props.submitError ?? missingReason) && (
-            <span className="text-xs text-danger">{props.submitError ?? missingReason}</span>
+          {(props.submitError ?? props.missingReason) && (
+            <span className="text-xs text-danger">{props.submitError ?? props.missingReason}</span>
           )}
           <Button disabled={!props.canSubmit} onClick={props.onSubmit}>
             {props.submitting ? t('respond.saving') : t('respond.submit')}

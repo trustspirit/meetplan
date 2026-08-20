@@ -11,9 +11,10 @@ import { StickyActionBar } from "@/components/ui/sticky-action-bar";
 import { buildDisplayAxis, timesOutsideRange } from "./timeAxis";
 import { cellKey } from "./useEventCreateState";
 import { PeriodPicker } from "./PeriodPicker";
+import { ResponseFieldsEditor } from "./ResponseFieldsEditor";
 import { t } from "@/lib/i18n";
 import { STAKES } from "@meetplan/shared";
-import type { EventType } from "@meetplan/shared";
+import type { EventType, ResponseField } from "@meetplan/shared";
 import type { CalendarListItem } from "../event-respond/useGoogleCalendarBusy";
 
 interface Props {
@@ -49,6 +50,10 @@ interface Props {
   onEventTypeChange: (v: EventType) => void;
   stakeId: string;
   onStakeChange: (v: string) => void;
+  collectPhone: boolean;
+  onCollectPhoneChange: (value: boolean) => void;
+  responseFields: ResponseField[];
+  onResponseFieldsChange: (fields: ResponseField[]) => void;
 }
 
 export function MobileWizard(props: Props) {
@@ -57,7 +62,9 @@ export function MobileWizard(props: Props) {
   const painting = useRef<{ targetState: boolean; visited: Set<string> } | null>(null);
 
   const isWardVisit = props.eventType === "ward_visit";
-  const canGoNextMeeting = props.title.trim().length > 0 && props.selectedDates.length > 0;
+  const fieldsValid = props.responseFields.every((f) => f.label.trim().length > 0);
+  const canGoNextMeeting =
+    props.title.trim().length > 0 && props.selectedDates.length > 0 && fieldsValid;
   const canSubmitWardVisit = props.title.trim().length > 0 && props.stakeId.length > 0 && props.selectedDates.length > 0;
 
   const applyToCell = (key: string) => {
@@ -187,6 +194,15 @@ export function MobileWizard(props: Props) {
             sundayOnly={isWardVisit}
           />
         </div>
+
+        {!isWardVisit && (
+          <ResponseFieldsEditor
+            collectPhone={props.collectPhone}
+            onCollectPhoneChange={props.onCollectPhoneChange}
+            fields={props.responseFields}
+            onFieldsChange={props.onResponseFieldsChange}
+          />
+        )}
 
         {/* CTA button */}
         {isWardVisit ? (

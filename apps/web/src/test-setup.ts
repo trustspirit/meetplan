@@ -11,3 +11,12 @@ Object.defineProperty(window, "matchMedia", {
     addListener: vi.fn(), removeListener: vi.fn(),
   }),
 });
+
+// jsdom에는 ResizeObserver도 없다. ScrollArea(useScrollAffordance)가 마운트 시
+// 이를 구독하므로, 아무 것도 관찰하지 않는 스텁을 전역에 심어 둔다.
+class ResizeObserverStub {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+window.ResizeObserver = ResizeObserverStub as unknown as typeof ResizeObserver;

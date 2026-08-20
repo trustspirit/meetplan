@@ -13,6 +13,7 @@ import { eventCreateSchema } from "@meetplan/shared";
 import { toZonedInstant } from "@meetplan/shared";
 import type { Slot, EventType } from "@meetplan/shared";
 import { BasicInfoForm } from "./BasicInfoForm";
+import { ResponseFieldsEditor } from "./ResponseFieldsEditor";
 import { MultiDateCalendar } from "./MultiDateCalendar";
 import { TimePainter } from "./TimePainter";
 import { MobileWizard } from "./MobileWizard";
@@ -70,6 +71,8 @@ export default function EventCreatePage() {
     toggleDate,
     setDailyRange,
     setCellPainted,
+    setCollectPhone,
+    setResponseFields,
   } = useEventCreateState(initialState);
   const isDesktop = useMediaQuery("(min-width: 640px)");
 
@@ -113,9 +116,11 @@ export default function EventCreatePage() {
     ? buildSlotsFromPaintedCells(state.paintedCells, state.periodMinutes, HOST_TZ)
     : [];
 
+  const fieldsValid = state.responseFields.every((f) => f.label.trim().length > 0);
+
   const canCreate = eventType === "ward_visit"
     ? state.title.trim().length > 0 && stakeId.length > 0 && state.selectedDates.length > 0 && !submitting
-    : state.title.trim().length > 0 && slots.length > 0 && !submitting;
+    : state.title.trim().length > 0 && slots.length > 0 && fieldsValid && !submitting;
 
   const handleCreate = async () => {
     if (!user) return;
@@ -140,6 +145,8 @@ export default function EventCreatePage() {
             periodMinutes: state.periodMinutes,
             timezone: HOST_TZ,
             slots,
+            collectPhone: state.collectPhone,
+            responseFields: state.responseFields.map((f) => ({ ...f, label: f.label.trim() })),
           };
 
       const parsed = eventCreateSchema.safeParse(payload);
@@ -202,6 +209,10 @@ export default function EventCreatePage() {
           onEventTypeChange={setEventType}
           stakeId={stakeId}
           onStakeChange={setStakeId}
+          collectPhone={state.collectPhone}
+          onCollectPhoneChange={setCollectPhone}
+          responseFields={state.responseFields}
+          onResponseFieldsChange={setResponseFields}
         />
       </AppShell>
     );
@@ -228,6 +239,15 @@ export default function EventCreatePage() {
           stakeId={stakeId}
           onStakeChange={setStakeId}
         />
+
+        {eventType === "meeting" && (
+          <ResponseFieldsEditor
+            collectPhone={state.collectPhone}
+            onCollectPhoneChange={setCollectPhone}
+            fields={state.responseFields}
+            onFieldsChange={setResponseFields}
+          />
+        )}
 
         {eventType === "meeting" && (
           <section className="flex flex-col gap-4">

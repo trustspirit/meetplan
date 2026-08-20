@@ -131,6 +131,7 @@ export function WardVisitRespond({ event, eventId, user, rid, token }: Props) {
         phone: normalizePhone(phone),
         ...(trimmedNote ? { note: trimmedNote } : {}),
         selectedSlotIds: [],
+        answers: {},
         wardAssignments: final,
         ...editArgs,
       });

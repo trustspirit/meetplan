@@ -83,3 +83,24 @@ describe("useEventCreateState with initial state", () => {
     expect(result.current.state.paintedCells.size).toBe(0);
   });
 });
+
+describe("useEventCreateState — 수집 항목", () => {
+  it("기본값은 전화번호 수집 켜짐, 커스텀 항목 없음", () => {
+    const { result } = renderHook(() => useEventCreateState());
+    expect(result.current.state.collectPhone).toBe(true);
+    expect(result.current.state.responseFields).toEqual([]);
+  });
+
+  it("전화번호 수집을 끌 수 있다", () => {
+    const { result } = renderHook(() => useEventCreateState());
+    act(() => result.current.setCollectPhone(false));
+    expect(result.current.state.collectPhone).toBe(false);
+  });
+
+  it("커스텀 항목을 통째로 교체한다", () => {
+    const { result } = renderHook(() => useEventCreateState());
+    const fields = [{ id: "f1", label: "소속", required: true }];
+    act(() => result.current.setResponseFields(fields));
+    expect(result.current.state.responseFields).toEqual(fields);
+  });
+});
