@@ -25,6 +25,7 @@ interface Props {
   submitting: boolean;
   onSubmit: () => void;
   submitError: string | null;
+  missingReason: string | null;
 }
 
 /** 호스트 날짜가 이 수 이하면 Step 1은 순수 오버헤드라 건너뛴다 (스펙 §8.5). */
@@ -73,12 +74,6 @@ export function RespondMobile(props: Props) {
     }
     props.onSubmit();
   };
-
-  const missingReason =
-    !props.state.name.trim() ? t('respond.missingName')
-    : selectedCount === 0 ? t('respond.missingSlots')
-    : !props.canSubmit ? t('respond.missingPhone')
-    : null;
 
   return (
     <>
@@ -153,9 +148,9 @@ export function RespondMobile(props: Props) {
               <span className="block text-sm text-text-muted">
                 {t('respond.selectedCount', { count: selectedCount })}
               </span>
-              {(props.submitError ?? missingReason) && (
+              {(props.submitError ?? props.missingReason) && (
                 <span className="block truncate text-2xs text-danger">
-                  {props.submitError ?? missingReason}
+                  {props.submitError ?? props.missingReason}
                 </span>
               )}
             </div>

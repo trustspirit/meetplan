@@ -130,6 +130,8 @@ const ko = {
   'respond.missingName': '이름을 입력해주세요',
   'respond.missingPhone': '연락처를 확인해주세요',
   'respond.missingSlots': '가능한 시간을 골라주세요',
+  'respond.missingField': '{label}을(를) 입력해주세요',
+  'respond.fieldTooLong': '{label}이(가) 너무 깁니다',
 
   // ── Respond — error/retry ────────────────────────────────────────────
   'respond.retry': '다시 시도',
@@ -420,6 +422,8 @@ const en: TranslationMap = {
   'respond.missingName': 'Please enter your name',
   'respond.missingPhone': 'Please check your phone number',
   'respond.missingSlots': 'Please select your available times',
+  'respond.missingField': 'Please fill in {label}',
+  'respond.fieldTooLong': '{label} is too long',
 
   'respond.retry': 'Try again',
 

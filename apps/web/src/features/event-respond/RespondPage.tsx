@@ -1,7 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { Navigate, useParams, useSearchParams } from "react-router-dom";
 import { AlertCircle, Lock } from "lucide-react";
-import { phoneRegex, normalizePhone } from "@meetplan/shared";
+import {
+  normalizePhone,
+  eventCollectsPhone, eventResponseFields, validateResponseInput,
+} from "@meetplan/shared";
+import { describeMissing } from "./missingReason";
 import { useMediaQuery } from "@/lib/useMediaQuery";
 import { submitResponseCallable } from "@/lib/callable";
 import { useAuth } from "@/features/auth/useAuth";
@@ -118,10 +122,23 @@ export default function RespondPage() {
 
   const grid = slotsToCells(event.slots, VIEWER_TZ);
 
-  const nameOk = state.name.trim().length > 0;
-  const phoneOk = phoneRegex.test(state.phone);
-  const slotsOk = state.selectedSlotIds.size > 0;
-  const canSubmit = nameOk && phoneOk && slotsOk && !submitting;
+  const collectPhone = eventCollectsPhone(event);
+  const fields = eventResponseFields(event);
+
+  const violation = validateResponseInput(
+    { collectPhone, fields, requireSlots: true },
+    {
+      name: state.name,
+      phone: state.phone,
+      answers: {},
+      selectedSlotCount: state.selectedSlotIds.size,
+    }
+  );
+  const canSubmit = violation === null && !submitting;
+
+  // 제출 중에는 사유를 보여주지 않는다. canSubmit이 submitting에도 false가 되므로
+  // 이를 "입력이 잘못됐다"로 읽으면 제출 직후 오류가 깜빡인다 (회귀 방지).
+  const missingReason = submitting ? null : describeMissing(violation);
 
   const handleSubmit = async () => {
     if (!eventId) return;
@@ -183,6 +200,7 @@ export default function RespondPage() {
     submitting,
     onSubmit: handleSubmit,
     submitError,
+    missingReason,
   };
 
   return (

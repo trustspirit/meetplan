@@ -26,6 +26,7 @@ interface Props {
   submitting: boolean;
   onSubmit: () => void;
   submitError: string | null;
+  missingReason: string | null;
 }
 
 export function RespondDesktop(props: Props) {
@@ -38,12 +39,6 @@ export function RespondDesktop(props: Props) {
 
   const selectedCount = props.state.selectedSlotIds.size;
   const selectedDays = selections.filter((s) => s.selectedTimes.length > 0).length;
-
-  const missingReason =
-    !props.state.name.trim() ? t('respond.missingName')
-    : selectedCount === 0 ? t('respond.missingSlots')
-    : !props.canSubmit ? t('respond.missingPhone')
-    : null;
 
   const scrollToCell = (dateYmd: string, hhmm: string) => {
     document
@@ -107,8 +102,8 @@ export function RespondDesktop(props: Props) {
           </span>
         </div>
         <div className="flex shrink-0 items-center gap-3">
-          {(props.submitError ?? missingReason) && (
-            <span className="text-xs text-danger">{props.submitError ?? missingReason}</span>
+          {(props.submitError ?? props.missingReason) && (
+            <span className="text-xs text-danger">{props.submitError ?? props.missingReason}</span>
           )}
           <Button disabled={!props.canSubmit} onClick={props.onSubmit}>
             {props.submitting ? t('respond.saving') : t('respond.submit')}
