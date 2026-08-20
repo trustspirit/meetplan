@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { CellGridModel } from "./slotsToCells";
 
 export interface RespondState {
   name: string;
@@ -56,5 +57,16 @@ export function useRespondState(prefill?: {
     });
   }, []);
 
-  return { state, setName, setPhone, setNote, toggleSlot, setSlotChecked };
+  /** Step 1에서 날짜를 해제할 때 그 날짜의 선택된 슬롯도 함께 지운다 (스펙 §8.5). */
+  const clearSlotsForDate = useCallback((grid: CellGridModel, dateYmd: string) => {
+    setState((s) => {
+      const next = new Set(s.selectedSlotIds);
+      for (const [cellKey, slotId] of grid.slotIdByCell) {
+        if (cellKey.startsWith(`${dateYmd}_`)) next.delete(slotId);
+      }
+      return { ...s, selectedSlotIds: next };
+    });
+  }, []);
+
+  return { state, setName, setPhone, setNote, toggleSlot, setSlotChecked, clearSlotsForDate };
 }

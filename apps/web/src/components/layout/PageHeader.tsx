@@ -14,6 +14,8 @@ interface Props {
   badge?: ReactNode;
   backTo?: string;
   backLabel?: string;
+  /** backTo 대신 임의 동작으로 뒤로 갈 때 쓴다 (예: 위저드 단계 되돌리기). */
+  onBack?: () => void;
   primaryAction?: ReactNode;
   secondaryActions?: ReactNode;
   overflowActions?: MenuItem[];
@@ -29,6 +31,7 @@ export function PageHeader({
   badge,
   backTo,
   backLabel,
+  onBack,
   primaryAction,
   secondaryActions,
   overflowActions,
@@ -40,14 +43,25 @@ export function PageHeader({
   return (
     <>
       <div className="mb-6 flex flex-col gap-3 border-b border-border pb-4">
-        {backTo && (
-          <Link
-            to={backTo}
-            className="inline-flex w-fit items-center gap-1 rounded-md text-xs text-text-muted transition-colors hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <ChevronLeft size={14} aria-hidden />
-            {backLabel ?? t('nav.myEvents')}
-          </Link>
+        {(backTo ?? onBack) && (
+          onBack ? (
+            <button
+              type="button"
+              onClick={onBack}
+              className="inline-flex w-fit items-center gap-1 rounded-md text-xs text-text-muted transition-colors hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <ChevronLeft size={14} aria-hidden />
+              {backLabel ?? t('nav.myEvents')}
+            </button>
+          ) : (
+            <Link
+              to={backTo!}
+              className="inline-flex w-fit items-center gap-1 rounded-md text-xs text-text-muted transition-colors hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <ChevronLeft size={14} aria-hidden />
+              {backLabel ?? t('nav.myEvents')}
+            </Link>
+          )
         )}
 
         <div className="flex flex-wrap items-start justify-between gap-3">

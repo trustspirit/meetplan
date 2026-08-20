@@ -40,7 +40,7 @@ export default function RespondPage() {
     } : undefined,
     [existing.response]
   );
-  const { state, setName, setPhone, setNote, setSlotChecked } = useRespondState(prefill);
+  const { state, setName, setPhone, setNote, setSlotChecked, clearSlotsForDate } = useRespondState(prefill);
 
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -180,6 +180,7 @@ export default function RespondPage() {
     onPhoneChange: setPhone,
     onNoteChange: setNote,
     onSetSlot: setSlotChecked,
+    onClearDate: clearSlotsForDate,
     viewerTz: VIEWER_TZ,
     canSubmit,
     submitting,

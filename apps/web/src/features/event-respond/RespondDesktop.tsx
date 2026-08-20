@@ -16,6 +16,7 @@ interface Props {
   onPhoneChange: (v: string) => void;
   onNoteChange: (v: string) => void;
   onSetSlot: (slotId: string, on: boolean) => void;
+  onClearDate: (grid: CellGridModel, dateYmd: string) => void;
   viewerTz: string;
   canSubmit: boolean;
   submitting: boolean;
