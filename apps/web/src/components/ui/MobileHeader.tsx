@@ -60,7 +60,7 @@ export function MobileHeader({ title, subtitle, logo, onBack, actions, menuItems
 
       {actions}
 
-      <LanguageToggle variant="on-primary" className="shrink-0" />
+      <LanguageToggle className="shrink-0" />
 
       {menuItems && menuItems.length > 0 && (
         <div className="relative shrink-0" ref={menuRef}>

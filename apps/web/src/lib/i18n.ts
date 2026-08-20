@@ -6,6 +6,10 @@ const ko = {
 
   // ── App / Common ─────────────────────────────────────────────────────
   'app.name': 'MeetPlan',
+  'nav.myEvents': '내 이벤트',
+  'nav.newEvent': '새 이벤트',
+  'nav.account': '계정 메뉴',
+  'nav.language': '언어',
   'common.loading': '불러오는 중…',
   'common.saving': '저장 중…',
   'common.saveFailed': '저장 실패',
@@ -283,6 +287,10 @@ const en: TranslationMap = {
   'organizer': 'Organizer',
 
   'app.name': 'MeetPlan',
+  'nav.myEvents': 'My Events',
+  'nav.newEvent': 'New Event',
+  'nav.account': 'Account menu',
+  'nav.language': 'Language',
   'common.loading': 'Loading…',
   'common.saving': 'Saving…',
   'common.saveFailed': 'Save failed',
