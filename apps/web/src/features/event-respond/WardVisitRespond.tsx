@@ -310,7 +310,7 @@ export function WardVisitRespond({ event, eventId, user, rid, token }: Props) {
             </ul>
             <p className="text-sm text-amber-800">{t('ward.confirmAnyway')}</p>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => { setWarnings([]); setPendingAssignments(null); }}>
+              <Button variant="secondary" size="sm" onClick={() => { setWarnings([]); setPendingAssignments(null); }}>
                 ← {t('ward.backToEdit')}
               </Button>
               <Button size="sm" onClick={handleSubmit} disabled={submitting}>

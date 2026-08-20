@@ -306,7 +306,7 @@ export default function EventResultPage() {
             <LanguageToggle />
             <ShareLinkButton eventId={eventId} />
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               onClick={() =>
                 navigate("/events/new", {
@@ -323,7 +323,7 @@ export default function EventResultPage() {
             </Button>
             <Link to={`/events/${eventId}/edit`}>
               <Button
-                variant="outline"
+                variant="secondary"
                 size="sm"
                 className="border-blue-400 text-blue-600 hover:bg-blue-50"
               >
@@ -331,7 +331,7 @@ export default function EventResultPage() {
               </Button>
             </Link>
             <Button
-              variant={isClosed ? "default" : "outline"}
+              variant={isClosed ? "primary" : "secondary"}
               size="sm"
               onClick={toggleStatus}
               disabled={statusUpdating}

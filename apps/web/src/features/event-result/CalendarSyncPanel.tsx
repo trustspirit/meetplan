@@ -107,7 +107,7 @@ export function CalendarSyncPanel({
 
       <Button
         size="sm"
-        variant="outline"
+        variant="secondary"
         className="text-xs h-8 px-2.5 gap-1.5"
         onClick={handleAdd}
         disabled={isLoading || assignmentCount === 0}
@@ -137,7 +137,7 @@ export function CalendarSyncPanel({
             {!connected ? (
               <Button
                 size="sm"
-                variant="outline"
+                variant="secondary"
                 className="w-full text-xs h-8"
                 onClick={async () => { await connect(); }}
                 disabled={connecting}

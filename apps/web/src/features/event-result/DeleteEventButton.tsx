@@ -52,7 +52,7 @@ export function DeleteEventButton({ eventId, eventTitle, responseCount, autoOpen
     if (autoOpen) return null;
     return (
       <Button
-        variant="outline"
+        variant="secondary"
         size="sm"
         onClick={() => setConfirming(true)}
         className="border-destructive text-destructive hover:bg-destructive/10"
@@ -80,10 +80,10 @@ export function DeleteEventButton({ eventId, eventTitle, responseCount, autoOpen
         </p>
         {error && <p className="text-sm text-destructive mt-2">{error}</p>}
         <div className="flex justify-end gap-2 mt-5">
-          <Button ref={cancelRef} variant="outline" size="sm" onClick={handleCancel} disabled={deleting}>
+          <Button ref={cancelRef} variant="secondary" size="sm" onClick={handleCancel} disabled={deleting}>
             {t('common.cancel')}
           </Button>
-          <Button variant="destructive" size="sm" onClick={onDelete} disabled={deleting}>
+          <Button variant="danger" size="sm" onClick={onDelete} disabled={deleting}>
             {deleting ? t('delete.deleting') : t('delete.permanentDelete')}
           </Button>
         </div>

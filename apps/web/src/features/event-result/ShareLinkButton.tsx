@@ -37,7 +37,7 @@ export function ShareLinkButton({ eventId, compact }: Props) {
   }
 
   return (
-    <Button variant="outline" size="sm" onClick={onCopy}>
+    <Button variant="secondary" size="sm" onClick={onCopy}>
       {copied ? (
         <><Check size={13} className="mr-1.5" />{t('share.copied')}</>
       ) : (
