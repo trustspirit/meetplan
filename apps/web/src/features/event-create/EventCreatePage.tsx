@@ -17,7 +17,7 @@ import { CalendarBanner } from "./CalendarBanner";
 import { MobileHeader } from "@/components/ui/MobileHeader";
 import { useEventCreateState, cellKey } from "./useEventCreateState";
 import { buildSlotsFromPaintedCells } from "./generateSlots";
-import { buildTimeAxis } from "./timeAxis";
+import { buildDisplayAxis } from "./timeAxis";
 import { useGoogleCalendarBusy } from "../event-respond/useGoogleCalendarBusy";
 import { slotsToPaintedCells } from "../event-edit/slotsToPaintedCells";
 import { t } from "@/lib/i18n";
@@ -92,7 +92,7 @@ export default function EventCreatePage() {
     if (eventType === "ward_visit") return new Set<string>();
     if (!calendar.synced || calendar.busyIntervals.length === 0) return new Set<string>();
     const busy = new Set<string>();
-    const axis = buildTimeAxis(state.dailyRange[0], state.dailyRange[1], state.periodMinutes);
+    const axis = buildDisplayAxis(state.dailyRange, state.periodMinutes, state.paintedCells);
     for (const ymd of state.selectedDates) {
       for (const hhmm of axis) {
         const startMs = new Date(toZonedInstant(ymd, hhmm, HOST_TZ)).getTime();
@@ -106,7 +106,7 @@ export default function EventCreatePage() {
       }
     }
     return busy;
-  }, [eventType, calendar.synced, calendar.busyIntervals, state.selectedDates, state.dailyRange, state.periodMinutes]);
+  }, [eventType, calendar.synced, calendar.busyIntervals, state.selectedDates, state.dailyRange, state.periodMinutes, state.paintedCells]);
 
   const slots = eventType === "meeting"
     ? buildSlotsFromPaintedCells(state.paintedCells, state.periodMinutes, HOST_TZ)

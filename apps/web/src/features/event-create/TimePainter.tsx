@@ -4,7 +4,7 @@ import { Info, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { cellKey } from "./useEventCreateState";
 import { useOnce } from "@/lib/useOnce";
-import { buildTimeAxis, toMin } from "./timeAxis";
+import { buildDisplayAxis, timesOutsideRange, toMin } from "./timeAxis";
 import { t } from "@/lib/i18n";
 
 interface Props {
@@ -26,7 +26,8 @@ export function TimePainter({
   onChangeRange,
   busyCells,
 }: Props) {
-  const axis = buildTimeAxis(dailyRange[0], dailyRange[1], periodMinutes);
+  const axis = buildDisplayAxis(dailyRange, periodMinutes, paintedCells);
+  const outsideTimes = timesOutsideRange(dailyRange, periodMinutes, paintedCells);
   const { shouldShow: showHint, dismiss: dismissHint } = useOnce("create-paint-hint");
   const painting = useRef<{ targetState: boolean; visited: Set<string> } | null>(null);
 
@@ -88,31 +89,42 @@ export function TimePainter({
           </button>
         </div>
       )}
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between gap-4 mb-3">
         <div className="text-sm font-semibold">{t('painter.title')}</div>
-        <div className="flex items-center gap-2 text-xs">
+        <div className="flex items-center gap-2">
+          <span className="text-2xs text-text-muted whitespace-nowrap">
+            {t('painter.rangeLabel')}
+          </span>
           <input
             type="time"
+            aria-label={t('painter.rangeLabel')}
             value={dailyRange[0]}
             onChange={(e) => {
               const newStart = e.target.value;
               onChangeRange([newStart, dailyRange[1] > newStart ? dailyRange[1] : newStart]);
             }}
-            className="border rounded px-2 py-1 w-24"
+            className="h-9 rounded-md border border-border-strong bg-surface px-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
-          <span>–</span>
+          <span className="text-text-muted">–</span>
           <input
             type="time"
+            aria-label={t('painter.rangeLabel')}
             value={dailyRange[1]}
             onChange={(e) => {
               const newEnd = e.target.value;
               const newEndMin = newEnd === "00:00" ? 1440 : toMin(newEnd);
               if (newEndMin > toMin(dailyRange[0])) onChangeRange([dailyRange[0], newEnd]);
             }}
-            className="border rounded px-2 py-1 w-24"
+            className="h-9 rounded-md border border-border-strong bg-surface px-2 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           />
         </div>
       </div>
+
+      {outsideTimes.length > 0 && (
+        <div className="mb-3 rounded-md border border-warning/30 bg-warning/10 px-3 py-2 text-2xs text-warning">
+          {t('painter.expandedNotice', { times: outsideTimes.join(', ') })}
+        </div>
+      )}
 
       <div className="overflow-x-auto">
         <div

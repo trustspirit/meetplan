@@ -87,6 +87,8 @@ const ko = {
   'painter.hintLabel': '팁:',
   'painter.hintClose': '닫기',
   'painter.busyCellHint': '줄무늬 = 구글 캘린더에 기존 일정 있음 (페인팅 가능)',
+  'painter.rangeLabel': '표시 구간 (모든 날짜 공통)',
+  'painter.expandedNotice': '표시 구간 밖에 선택된 시간이 있어 함께 표시합니다 ({times})',
   'painter.selectDatesFirst': '왼쪽 캘린더에서 날짜를 먼저 선택하세요',
 
   // ── Respond page ─────────────────────────────────────────────────────
@@ -353,6 +355,8 @@ const en: TranslationMap = {
   'painter.hintLabel': 'Tip:',
   'painter.hintClose': 'Close',
   'painter.busyCellHint': 'Striped = existing Google Calendar event (can still paint)',
+  'painter.rangeLabel': 'Display window (all dates)',
+  'painter.expandedNotice': 'Showing times selected outside the display window ({times})',
   'painter.selectDatesFirst': 'Select dates from the calendar on the left',
 
   'respond.loading': 'Loading…',

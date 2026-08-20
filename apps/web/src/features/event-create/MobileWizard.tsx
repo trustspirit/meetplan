@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { MultiDateCalendar } from "./MultiDateCalendar";
 import { CalendarBanner } from "./CalendarBanner";
-import { buildTimeAxis } from "./timeAxis";
+import { buildDisplayAxis, timesOutsideRange } from "./timeAxis";
 import { cellKey } from "./useEventCreateState";
 import { PeriodPicker } from "./PeriodPicker";
 import { t } from "@/lib/i18n";
@@ -208,7 +208,8 @@ export function MobileWizard(props: Props) {
 
   // Step 2: time painting (meeting only)
   const currentDate = activeDate ?? props.selectedDates[0]!;
-  const axis = buildTimeAxis(props.dailyRange[0], props.dailyRange[1], props.periodMinutes);
+  const axis = buildDisplayAxis(props.dailyRange, props.periodMinutes, props.paintedCells);
+  const outsideTimes = timesOutsideRange(props.dailyRange, props.periodMinutes, props.paintedCells);
 
   return (
     <div
@@ -265,15 +266,36 @@ export function MobileWizard(props: Props) {
         ))}
       </div>
 
-      <div className="flex items-center justify-between text-xs">
-        <span className="font-semibold">{format(parseISO(currentDate), "M/d (EEE)")}</span>
-        <div className="flex items-center gap-1">
-          <input type="time" value={props.dailyRange[0]} onChange={(e) => props.onChangeRange([e.target.value, props.dailyRange[1]])}
-            className="border rounded px-1.5 py-0.5 w-20" />
-          <span>–</span>
-          <input type="time" value={props.dailyRange[1]} onChange={(e) => props.onChangeRange([props.dailyRange[0], e.target.value])}
-            className="border rounded px-1.5 py-0.5 w-20" />
+      {/* 표시 구간 — 모든 날짜 공통. 날짜 라벨과 분리해 오해를 막는다. */}
+      <div className="rounded-lg border bg-surface-subtle px-3 py-2.5">
+        <div className="text-2xs text-text-muted mb-1.5">{t('painter.rangeLabel')}</div>
+        <div className="flex items-center gap-2">
+          <input
+            type="time"
+            aria-label={t('painter.rangeLabel')}
+            value={props.dailyRange[0]}
+            onChange={(e) => props.onChangeRange([e.target.value, props.dailyRange[1]])}
+            className="h-11 flex-1 rounded-md border border-border-strong bg-surface px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          />
+          <span className="text-text-muted">–</span>
+          <input
+            type="time"
+            aria-label={t('painter.rangeLabel')}
+            value={props.dailyRange[1]}
+            onChange={(e) => props.onChangeRange([props.dailyRange[0], e.target.value])}
+            className="h-11 flex-1 rounded-md border border-border-strong bg-surface px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          />
         </div>
+      </div>
+
+      {outsideTimes.length > 0 && (
+        <div className="rounded-md border border-warning/30 bg-warning/10 px-3 py-2 text-2xs text-warning">
+          {t('painter.expandedNotice', { times: outsideTimes.join(', ') })}
+        </div>
+      )}
+
+      <div className="text-sm font-semibold">
+        {format(parseISO(currentDate), "M/d (EEE)")}
       </div>
 
       <div className="grid grid-cols-[36px_1fr] gap-1">
