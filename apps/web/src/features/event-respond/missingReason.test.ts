@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { describeMissing } from "./missingReason";
+import { describeMissing, resolveMissingReason } from "./missingReason";
 
 describe("describeMissing", () => {
   it("null이면 null", () => {
@@ -31,5 +31,24 @@ describe("describeMissing", () => {
 
   it("정의되지 않은 항목은 일반 오류로 낮춘다", () => {
     expect(describeMissing({ code: "unknown_field", fieldId: "ghost" })).toBe("입력 오류");
+  });
+});
+
+describe("resolveMissingReason", () => {
+  it("제출 중이 아니고 위반이 없으면 null", () => {
+    expect(resolveMissingReason({ submitting: false, violation: null })).toBeNull();
+  });
+
+  it("제출 중이면 위반이 없어도 null", () => {
+    expect(resolveMissingReason({ submitting: true, violation: null })).toBeNull();
+  });
+
+  it("제출 중에는 사유를 내지 않는다 (깜빡임 회귀 방지)", () => {
+    expect(resolveMissingReason({ submitting: true, violation: { code: "phone_missing" } })).toBeNull();
+  });
+
+  it("제출 중이 아니면 위반 사유를 그대로 안내한다", () => {
+    expect(resolveMissingReason({ submitting: false, violation: { code: "phone_missing" } }))
+      .toBe("연락처를 확인해주세요");
   });
 });

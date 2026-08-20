@@ -69,7 +69,7 @@ export function buildMatrixModel(
         slotCounts[sid] = (slotCounts[sid] ?? 0) + 1;
       }
     }
-    return { responseId: r.id, name: r.name, phone: r.phone, checks };
+    return { responseId: r.id, name: r.name, ...(r.phone ? { phone: r.phone } : {}), checks };
   });
 
   // Build date×time grouped structure

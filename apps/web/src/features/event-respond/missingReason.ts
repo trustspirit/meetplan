@@ -19,3 +19,16 @@ export function describeMissing(error: ResponseValidationError | null): string |
     case "unknown_field": return t('common.inputError');
   }
 }
+
+/**
+ * 하단 바에 보여줄 입력 부족 사유.
+ *
+ * 제출 중에는 사유를 내지 않는다. canSubmit이 submitting에도 false가 되므로
+ * 이를 "입력이 잘못됐다"로 읽으면 제출 직후 오류가 깜빡인다 — 이 함수가 그 회귀를 막는다.
+ */
+export function resolveMissingReason(
+  args: { submitting: boolean; violation: ResponseValidationError | null }
+): string | null {
+  if (args.submitting) return null;
+  return describeMissing(args.violation);
+}

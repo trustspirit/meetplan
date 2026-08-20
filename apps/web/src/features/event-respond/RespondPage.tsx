@@ -5,7 +5,7 @@ import {
   normalizePhone,
   eventCollectsPhone, eventResponseFields, validateResponseInput,
 } from "@meetplan/shared";
-import { describeMissing } from "./missingReason";
+import { resolveMissingReason } from "./missingReason";
 import { useMediaQuery } from "@/lib/useMediaQuery";
 import { submitResponseCallable } from "@/lib/callable";
 import { useAuth } from "@/features/auth/useAuth";
@@ -41,7 +41,7 @@ export default function RespondPage() {
   const prefill = useMemo(
     () => existing.response ? {
       name: existing.response.name,
-      phone: existing.response.phone,
+      phone: existing.response.phone ?? "",
       ...(existing.response.note ? { note: existing.response.note } : {}),
       selectedSlotIds: existing.response.selectedSlotIds,
     } : undefined,
@@ -136,9 +136,7 @@ export default function RespondPage() {
   );
   const canSubmit = violation === null && !submitting;
 
-  // 제출 중에는 사유를 보여주지 않는다. canSubmit이 submitting에도 false가 되므로
-  // 이를 "입력이 잘못됐다"로 읽으면 제출 직후 오류가 깜빡인다 (회귀 방지).
-  const missingReason = submitting ? null : describeMissing(violation);
+  const missingReason = resolveMissingReason({ submitting, violation });
 
   const handleSubmit = async () => {
     if (!eventId) return;
