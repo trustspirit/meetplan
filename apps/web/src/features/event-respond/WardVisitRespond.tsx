@@ -3,8 +3,10 @@ import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { MobileHeader } from "@/components/ui/MobileHeader";
+import { Field } from "@/components/ui/field";
+import { Textarea } from "@/components/ui/textarea";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { cn } from "@/lib/utils";
 import { t, getLocale } from "@/lib/i18n";
 import { phoneRegex, normalizePhone, getWardsByStake, getStakeName } from "@meetplan/shared";
@@ -148,15 +150,15 @@ export function WardVisitRespond({ event, eventId, user, rid, token }: Props) {
   if (result) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 p-8 text-center">
-        <CheckCircle2 size={48} className="text-green-500" />
+        <CheckCircle2 size={48} className="text-success" />
         <div className="font-semibold text-lg">{t('ward.successTitle', { name: result.name })}</div>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-text-muted">
           {t('ward.successDesc', { stake: stakeName })}
         </p>
         {result.kind === "anon" && (
-          <div className="mt-2 p-4 rounded-xl border bg-muted/50 text-left max-w-sm w-full">
-            <p className="text-xs text-muted-foreground mb-1">{t('ward.saveEditLink')}</p>
-            <p className="text-xs font-mono break-all text-foreground">{result.editUrl}</p>
+          <div className="mt-2 p-4 rounded-xl border bg-surface-subtle text-left max-w-sm w-full">
+            <p className="text-xs text-text-muted mb-1">{t('ward.saveEditLink')}</p>
+            <p className="text-xs font-mono break-all text-text">{result.editUrl}</p>
           </div>
         )}
       </div>
@@ -165,64 +167,61 @@ export function WardVisitRespond({ event, eventId, user, rid, token }: Props) {
 
   return (
     <>
-      {/* Mobile header */}
-      <MobileHeader
+      <PageHeader
         title={event.title}
         subtitle={stakeName}
         onBack={() => window.history.back()}
+        backLabel={t('common.close')}
       />
 
-      <div className="max-w-2xl mx-auto px-4 py-6 flex flex-col gap-6 pb-32 sm:pb-6">
+      <div className="mx-auto flex max-w-2xl flex-col gap-6 pb-32 sm:pb-6">
         {/* Notes from organizer */}
         {event.description && (
-          <p className="text-sm text-foreground/80 whitespace-pre-wrap bg-muted/50 rounded-lg px-3 py-2.5">{event.description}</p>
+          <p className="text-sm text-text whitespace-pre-wrap bg-surface-subtle rounded-lg px-3 py-2.5">{event.description}</p>
         )}
 
         {/* Respondent info */}
-        <section className="flex flex-col gap-4">
-          <div>
-            <Label htmlFor="wv-name">{t('form.nameLabel')}</Label>
+        <section className="flex flex-col gap-5">
+          <Field label={t('form.nameLabel')} htmlFor="wv-name">
             <Input
               id="wv-name"
-              className="mt-2"
               placeholder={t('form.namePlaceholder')}
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
-          </div>
-          <div>
-            <Label htmlFor="wv-phone">{t('form.phoneLabel')}</Label>
+          </Field>
+
+          <Field
+            label={t('form.phoneLabel')}
+            htmlFor="wv-phone"
+            {...(phone && !phoneOk ? { error: t('form.phoneError') } : {})}
+          >
             <Input
               id="wv-phone"
-              className="mt-2"
               placeholder={t('form.phonePlaceholder')}
               inputMode="tel"
               value={phone}
               onChange={(e) => setPhone(formatKoreanPhone(e.target.value))}
             />
-            {phone && !phoneOk && (
-              <p className="mt-1 text-xs text-destructive">{t('form.phoneError')}</p>
-            )}
-          </div>
-          <div>
-            <Label htmlFor="wv-note">{t('form.respondentNote')}</Label>
-            <textarea
+          </Field>
+
+          <Field label={t('form.respondentNote')} htmlFor="wv-note">
+            <Textarea
               id="wv-note"
-              className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
               rows={3}
               maxLength={300}
               placeholder={t('form.respondentNotePlaceholder')}
               value={note}
               onChange={(e) => setNote(e.target.value)}
             />
-          </div>
+          </Field>
         </section>
 
         {/* Ward assigner */}
         <section className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <p className="font-semibold text-sm">{t('ward.assignHint')}</p>
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs text-text-muted">
               {t('ward.assignedCount', { count: assignedCount })} / {t('ward.totalCount', { count: wards.length })}
             </span>
           </div>
@@ -246,7 +245,7 @@ export function WardVisitRespond({ event, eventId, user, rid, token }: Props) {
                   key={ward.id}
                   className={cn(
                     "rounded-xl border p-3 transition-colors",
-                    assigned ? "border-primary/30 bg-primary/5" : "bg-background"
+                    assigned ? "border-primary/30 bg-primary/5" : "bg-surface"
                   )}
                 >
                   <div className="flex items-center justify-between mb-2">
@@ -257,7 +256,7 @@ export function WardVisitRespond({ event, eventId, user, rid, token }: Props) {
                       </span>
                     )}
                   </div>
-                  <div className="flex gap-2 overflow-x-auto pb-1">
+                  <ScrollArea contentClassName="flex gap-2 pb-1">
                     {dates.map((date) => {
                       const isSelected = assigned === date;
                       const dj = parseISO(date);
@@ -270,20 +269,21 @@ export function WardVisitRespond({ event, eventId, user, rid, token }: Props) {
                           type="button"
                           onClick={() => assign(ward.id, date)}
                           className={cn(
-                            "flex-none flex flex-col items-center px-3 py-2 rounded-lg text-xs min-w-[52px] transition-colors",
+                            "flex min-h-touch min-w-[52px] flex-none flex-col items-center justify-center rounded-lg px-3 py-2 text-xs transition-colors",
+                            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                             isSelected && "bg-primary text-primary-foreground",
-                            !isSelected && otherWard && "bg-amber-50 border border-amber-200 text-amber-700",
-                            !isSelected && !otherWard && "bg-muted hover:bg-muted/70"
+                            !isSelected && otherWard && "border border-warning/30 bg-warning/10 text-warning",
+                            !isSelected && !otherWard && "bg-surface-subtle hover:bg-border-strong/40"
                           )}
                           title={otherWard ? t('ward.dateOccupied', { name: otherWard.name }) : undefined}
                         >
                           <span className="opacity-70 mb-0.5">{dayShort(dj)}</span>
                           <span className="font-semibold">{format(dj, "M/d")}</span>
-                          {otherWard && !isSelected && <span className="text-[9px] opacity-70 mt-0.5">!</span>}
+                          {otherWard && !isSelected && <span className="text-2xs opacity-70 mt-0.5">!</span>}
                         </button>
                       );
                     })}
-                  </div>
+                  </ScrollArea>
                 </div>
               );
             })}
@@ -292,8 +292,8 @@ export function WardVisitRespond({ event, eventId, user, rid, token }: Props) {
 
         {/* Warnings */}
         {warnings.length > 0 && (
-          <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 flex flex-col gap-3">
-            <div className="flex items-center gap-2 text-amber-700 font-semibold text-sm">
+          <div className="rounded-xl border border-warning/30 bg-warning/10 p-4 flex flex-col gap-3">
+            <div className="flex items-center gap-2 text-warning font-semibold text-sm">
               <AlertTriangle size={16} />
               {t('ward.conflictTitle')}
             </div>
@@ -302,13 +302,13 @@ export function WardVisitRespond({ event, eventId, user, rid, token }: Props) {
                 <li key={i} className="text-sm">
                   <span className={cn(
                     "font-medium",
-                    w.type === "conflict" ? "text-destructive" : "text-amber-700"
+                    w.type === "conflict" ? "text-danger" : "text-warning"
                   )}>{w.label}</span>
-                  <span className="text-muted-foreground ml-2">{w.detail}</span>
+                  <span className="text-text-muted ml-2">{w.detail}</span>
                 </li>
               ))}
             </ul>
-            <p className="text-sm text-amber-800">{t('ward.confirmAnyway')}</p>
+            <p className="text-sm text-warning">{t('ward.confirmAnyway')}</p>
             <div className="flex gap-2">
               <Button variant="secondary" size="sm" onClick={() => { setWarnings([]); setPendingAssignments(null); }}>
                 ← {t('ward.backToEdit')}
@@ -321,7 +321,7 @@ export function WardVisitRespond({ event, eventId, user, rid, token }: Props) {
         )}
 
         {submitError && (
-          <p className="text-sm text-destructive text-center">{submitError}</p>
+          <p className="text-sm text-danger text-center">{submitError}</p>
         )}
 
         {/* Desktop submit */}
@@ -340,8 +340,8 @@ export function WardVisitRespond({ event, eventId, user, rid, token }: Props) {
 
       {/* Mobile fixed bottom bar */}
       {warnings.length === 0 && (
-        <div className="sm:hidden fixed left-0 right-0 bottom-0 bg-background border-t px-4 py-3 flex items-center justify-between gap-3">
-          <div className="text-xs text-muted-foreground">
+        <div className="sm:hidden fixed left-0 right-0 bottom-0 bg-surface border-t px-4 py-3 flex items-center justify-between gap-3">
+          <div className="text-xs text-text-muted">
             {assignedCount > 0
               ? t('ward.assignedCount', { count: assignedCount })
               : t('ward.assignHint')}
@@ -377,20 +377,20 @@ interface GridProps {
 
 function DesktopGrid({ wards, dates, assignments, onAssign }: GridProps) {
   return (
-    <div className="rounded-xl border overflow-hidden">
+    <div className="overflow-hidden rounded-lg border border-border">
       {/* Header row */}
       <div
-        className="grid bg-muted/50"
+        className="grid bg-surface-subtle"
         style={{ gridTemplateColumns: `1fr repeat(${dates.length}, minmax(80px, 1fr))` }}
       >
-        <div className="p-3 text-xs font-semibold text-muted-foreground">{t('ward.resultColWard')}</div>
+        <div className="p-3 text-xs font-semibold text-text-muted">{t('ward.resultColWard')}</div>
         {dates.map((date) => {
           const d = parseISO(date);
           return (
-            <div key={date} className="p-3 text-center border-l">
-              <div className="text-xs text-muted-foreground">{format(d, "M월")}</div>
+            <div key={date} className="p-3 text-center border-l border-border">
+              <div className="text-xs text-text-muted">{format(d, "M월")}</div>
               <div className="text-sm font-semibold">{format(d, "d일")}</div>
-              <div className="text-[10px] text-muted-foreground">({dayShort(d)})</div>
+              <div className="text-2xs text-text-muted">({dayShort(d)})</div>
             </div>
           );
         })}
@@ -403,15 +403,15 @@ function DesktopGrid({ wards, dates, assignments, onAssign }: GridProps) {
           <div
             key={ward.id}
             className={cn(
-              "grid border-t transition-colors",
-              assigned ? "bg-primary/5" : i % 2 === 0 ? "bg-background" : "bg-muted/20"
+              "grid border-t border-border transition-colors",
+              assigned ? "bg-primary/5" : i % 2 === 0 ? "bg-surface" : "bg-surface-subtle/60"
             )}
             style={{ gridTemplateColumns: `1fr repeat(${dates.length}, minmax(80px, 1fr))` }}
           >
             <div className="p-3 flex items-center gap-2">
               <span className="text-sm font-medium">{ward.name}</span>
               {assigned && (
-                <span className="text-[10px] text-primary font-semibold">✓</span>
+                <span className="text-2xs text-primary font-semibold">✓</span>
               )}
             </div>
             {dates.map((date) => {
@@ -427,15 +427,15 @@ function DesktopGrid({ wards, dates, assignments, onAssign }: GridProps) {
                   className={cn(
                     "border-l h-full min-h-[48px] flex items-center justify-center transition-colors",
                     isSelected && "bg-primary text-primary-foreground",
-                    !isSelected && otherWard && "bg-amber-50 hover:bg-amber-100",
-                    !isSelected && !otherWard && "hover:bg-muted/60"
+                    !isSelected && otherWard && "bg-warning/10 hover:bg-warning/20",
+                    !isSelected && !otherWard && "hover:bg-surface-subtle/60"
                   )}
                   title={otherWard ? t('ward.dateOccupied', { name: otherWard.name }) : undefined}
                 >
                   {isSelected ? (
                     <CheckCircle2 size={18} />
                   ) : otherWard ? (
-                    <span className="text-amber-500 text-xs font-bold">!</span>
+                    <span className="text-xs font-bold text-warning">!</span>
                   ) : null}
                 </button>
               );
