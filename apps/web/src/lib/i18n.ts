@@ -43,6 +43,9 @@ const ko = {
   'list.statusOpen': '진행 중',
   'list.statusClosed': '마감됨',
   'list.slotInfo': '{slots}개 슬롯 · {minutes}분',
+  'list.responseCount': '응답 {count}명',
+  'list.noResponses': '아직 응답 없음',
+  'dashboard.subtitle': '내가 만든 이벤트와 응답 현황',
 
   // ── Event Create / BasicInfoForm ─────────────────────────────────────
   'create.back': '← 돌아가기',
@@ -320,6 +323,9 @@ const en: TranslationMap = {
   'list.statusOpen': 'Open',
   'list.statusClosed': 'Closed',
   'list.slotInfo': '{slots} slots · {minutes} min',
+  'list.responseCount': '{count} responses',
+  'list.noResponses': 'No responses yet',
+  'dashboard.subtitle': 'Your events and their responses',
 
   'create.back': '← Back',
   'create.pageTitle': 'New Event',
