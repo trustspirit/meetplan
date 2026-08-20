@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import type { ResponseField } from "@meetplan/shared";
 
 export interface EventCreateState {
   title: string;
@@ -7,6 +8,8 @@ export interface EventCreateState {
   selectedDates: string[];
   dailyRange: [string, string];
   paintedCells: Set<string>;
+  collectPhone: boolean;
+  responseFields: ResponseField[];
 }
 
 const defaultInitialState: EventCreateState = {
@@ -16,6 +19,8 @@ const defaultInitialState: EventCreateState = {
   selectedDates: [],
   dailyRange: ["09:00", "18:00"],
   paintedCells: new Set(),
+  collectPhone: true,
+  responseFields: [],
 };
 
 export function cellKey(dateYmd: string, hhmm: string): string {
@@ -77,6 +82,15 @@ export function useEventCreateState(initial?: Partial<EventCreateState>) {
     });
   }, []);
 
+  const setCollectPhone = useCallback(
+    (collectPhone: boolean) => setState((s) => ({ ...s, collectPhone })),
+    []
+  );
+  const setResponseFields = useCallback(
+    (responseFields: ResponseField[]) => setState((s) => ({ ...s, responseFields })),
+    []
+  );
+
   return {
     state,
     setTitle,
@@ -85,5 +99,7 @@ export function useEventCreateState(initial?: Partial<EventCreateState>) {
     toggleDate,
     setDailyRange,
     setCellPainted,
+    setCollectPhone,
+    setResponseFields,
   };
 }
