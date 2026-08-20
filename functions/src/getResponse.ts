@@ -24,7 +24,8 @@ export const getResponse = onCall(
       const docSnap = await docRef.get();
       if (!docSnap.exists) return { found: false };
       const doc = docSnap.data() as {
-        id: string; name: string; phone: string; note?: string | null;
+        id: string; name: string; phone?: string | null; note?: string | null;
+        answers?: Record<string, string> | null;
         selectedSlotIds: string[];
         editTokenHash: string | null;
         updatedAt: { toDate(): Date } | null;
@@ -37,8 +38,9 @@ export const getResponse = onCall(
         response: {
           id: doc.id,
           name: doc.name,
-          phone: doc.phone,
+          ...(doc.phone ? { phone: doc.phone } : {}),
           ...(doc.note ? { note: doc.note } : {}),
+          ...(doc.answers ? { answers: doc.answers } : {}),
           selectedSlotIds: doc.selectedSlotIds,
           updatedAt: doc.updatedAt ? doc.updatedAt.toDate().toISOString() : new Date().toISOString(),
         },
@@ -54,7 +56,8 @@ export const getResponse = onCall(
         .get();
       if (snap.empty) return { found: false };
       const doc = snap.docs[0]!.data() as {
-        id: string; name: string; phone: string; note?: string | null;
+        id: string; name: string; phone?: string | null; note?: string | null;
+        answers?: Record<string, string> | null;
         selectedSlotIds: string[];
         updatedAt: { toDate(): Date } | null;
       };
@@ -63,8 +66,9 @@ export const getResponse = onCall(
         response: {
           id: doc.id,
           name: doc.name,
-          phone: doc.phone,
+          ...(doc.phone ? { phone: doc.phone } : {}),
           ...(doc.note ? { note: doc.note } : {}),
+          ...(doc.answers ? { answers: doc.answers } : {}),
           selectedSlotIds: doc.selectedSlotIds,
           updatedAt: doc.updatedAt ? doc.updatedAt.toDate().toISOString() : new Date().toISOString(),
         },
