@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Check, Copy } from "lucide-react";
+import { PublicShell } from "@/components/layout/PublicShell";
 import { t } from "@/lib/i18n";
 
 interface Props {
@@ -23,24 +24,25 @@ export function SubmitSuccessAnon({ name, editUrl, slotCount, periodMinutes }: P
   };
 
   return (
-    <div className="max-w-xl mx-auto min-h-screen bg-background">
+    <PublicShell>
+     <div className="mx-auto max-w-xl overflow-hidden rounded-lg border border-border bg-surface">
       <div className="bg-primary text-primary-foreground px-6 py-8 text-center">
         <Check size={28} className="mx-auto mb-2" />
         <div className="font-semibold text-base">{t('success.title')}</div>
       </div>
       <div className="px-6 py-6 text-center">
         <div className="font-semibold text-base">{t('success.thanks', { name })}</div>
-        <div className="text-sm text-muted-foreground mt-1">
+        <div className="text-sm text-text-muted mt-1">
           {t('success.meetingInfo', { periodMinutes, slotCount })}
         </div>
 
         <div className="mt-5 bg-slate-50 rounded-xl p-4 text-left">
-          <div className="text-sm font-medium text-foreground mb-2">
+          <div className="text-sm font-medium text-text mb-2">
             {t('success.editLink')}{" "}
-            <span className="text-muted-foreground font-normal text-[12px]">{t('success.editLinkNote')}</span>
+            <span className="text-text-muted font-normal text-xs">{t('success.editLinkNote')}</span>
           </div>
           <div className="flex items-center gap-2">
-            <code className="flex-1 text-[11px] font-mono text-muted-foreground bg-background border rounded px-2 py-1.5 truncate">
+            <code className="flex-1 text-2xs font-mono text-text-muted bg-surface border rounded px-2 py-1.5 truncate">
               {editUrl}
             </code>
             <button
@@ -52,19 +54,19 @@ export function SubmitSuccessAnon({ name, editUrl, slotCount, periodMinutes }: P
               {copied ? t('success.copied') : t('success.copy')}
             </button>
           </div>
-          <p className="text-[11px] text-muted-foreground mt-2">
+          <p className="text-2xs text-text-muted mt-2">
             {t('success.editLinkSave')}
           </p>
         </div>
 
         <div className="mt-5 text-left">
-          <div className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+          <div className="text-2xs font-semibold text-text-muted uppercase tracking-wide mb-2">
             {t('success.nextStepsTitle')}
           </div>
           <ol className="flex flex-col gap-2">
             {([t('success.nextStep1'), t('success.nextStep2')] as string[]).map((step, i) => (
-              <li key={i} className="flex items-start gap-2.5 text-[12px] text-muted-foreground">
-                <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-muted text-[10px] font-bold text-foreground">
+              <li key={i} className="flex items-start gap-2.5 text-xs text-text-muted">
+                <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-surface-subtle text-2xs font-bold text-text">
                   {i + 1}
                 </span>
                 {step}
@@ -73,6 +75,7 @@ export function SubmitSuccessAnon({ name, editUrl, slotCount, periodMinutes }: P
           </ol>
         </div>
       </div>
-    </div>
+     </div>
+    </PublicShell>
   );
 }

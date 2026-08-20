@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Navigate, useParams, useSearchParams, Link } from "react-router-dom";
+import { Navigate, useParams, useSearchParams } from "react-router-dom";
 import { AlertCircle, Lock } from "lucide-react";
 import { phoneRegex, normalizePhone } from "@meetplan/shared";
 import { useMediaQuery } from "@/lib/useMediaQuery";
@@ -15,6 +15,9 @@ import { WardVisitRespond } from "./WardVisitRespond";
 import { SubmitSuccessAnon } from "./SubmitSuccessAnon";
 import { SubmitSuccessAuthed } from "./SubmitSuccessAuthed";
 import { PageSkeleton } from "@/components/ui/PageSkeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { Button } from "@/components/ui/button";
+import { PublicShell } from "@/components/layout/PublicShell";
 import { t } from "@/lib/i18n";
 
 const VIEWER_TZ =
@@ -63,39 +66,33 @@ export default function RespondPage() {
 
   if (!eventId) return <Navigate to="/" replace />;
   if (eventState.loading || existing.loading) {
-    return (
-      <>
-        <div className="sm:hidden"><PageSkeleton variant="detail" /></div>
-        <div className="hidden sm:block p-10 text-center text-muted-foreground">{t('respond.loading')}</div>
-      </>
-    );
+    return <PublicShell><PageSkeleton variant="detail" /></PublicShell>;
   }
   if (eventState.error || !eventState.event) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 p-8 text-center">
-        <AlertCircle size={36} className="text-destructive" />
-        <div className="font-semibold">{t('respond.eventNotFound')}</div>
-        <p className="text-sm text-muted-foreground max-w-xs">
-          {eventState.error ?? t('respond.eventNotFoundHint')}
-        </p>
-        <button
-          type="button"
-          onClick={() => window.location.reload()}
-          className="mt-2 text-sm text-primary hover:underline"
-        >
-          {t('respond.retry')}
-        </button>
-        <Link to="/dashboard" className="text-sm text-muted-foreground hover:underline">{t('respond.backToDashboard')}</Link>
-      </div>
+      <PublicShell>
+        <EmptyState
+          icon={<AlertCircle size={36} className="text-danger" aria-hidden />}
+          title={t('respond.eventNotFound')}
+          description={eventState.error ?? t('respond.eventNotFoundHint')}
+          action={
+            <Button variant="secondary" onClick={() => window.location.reload()}>
+              {t('respond.retry')}
+            </Button>
+          }
+        />
+      </PublicShell>
     );
   }
   if (eventState.event.status === "closed") {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 p-8 text-center">
-        <Lock size={36} className="text-muted-foreground" />
-        <div className="font-semibold">{t('respond.eventClosed')}</div>
-        <p className="text-sm text-muted-foreground">{t('respond.eventClosedHint')}</p>
-      </div>
+      <PublicShell>
+        <EmptyState
+          icon={<Lock size={36} aria-hidden />}
+          title={t('respond.eventClosed')}
+          description={t('respond.eventClosedHint')}
+        />
+      </PublicShell>
     );
   }
   if (result) {
@@ -188,5 +185,9 @@ export default function RespondPage() {
     submitError,
   };
 
-  return isDesktop ? <RespondDesktop {...commonProps} /> : <RespondMobile {...commonProps} />;
+  return (
+    <PublicShell>
+      {isDesktop ? <RespondDesktop {...commonProps} /> : <RespondMobile {...commonProps} />}
+    </PublicShell>
+  );
 }
