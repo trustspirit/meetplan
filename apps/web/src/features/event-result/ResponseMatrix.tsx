@@ -3,6 +3,9 @@ import { BarChart2, User } from "lucide-react";
 import type { MatrixModel } from "./matrixModel";
 import { cn } from "@/lib/utils";
 import { t } from "@/lib/i18n";
+import { heatLevel } from "./heatLevel";
+import { ParticipantFilterBar } from "./ParticipantFilterBar";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 type ViewMode = "heatmap" | "participant";
 
@@ -12,15 +15,16 @@ interface Props {
   participantColors: Record<string, string>;
   hiddenIds: Set<string>;
   onToggleHidden: (id: string) => void;
+  onToggleAll: (show: boolean) => void;
 }
 
-export function ResponseMatrix({ model, totalResponses, participantColors, hiddenIds, onToggleHidden }: Props) {
+export function ResponseMatrix({ model, totalResponses, participantColors, hiddenIds, onToggleHidden, onToggleAll }: Props) {
   const [view, setView] = useState<ViewMode>("heatmap");
   const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   if (model.rows.length === 0) {
     return (
-      <div className="rounded-xl border p-10 text-center text-sm text-muted-foreground bg-background">
+      <div className="rounded-lg border border-border bg-surface p-10 text-center text-sm text-text-muted">
         {t('matrix.noResponses')}
       </div>
     );
@@ -28,38 +32,15 @@ export function ResponseMatrix({ model, totalResponses, participantColors, hidde
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap gap-2 rounded-xl border bg-muted/20 px-3 py-2.5">
-        {model.rows.map((r) => {
-          const color = participantColors[r.responseId] ?? "#888";
-          const hidden = hiddenIds.has(r.responseId);
-          const hovered = hoveredId === r.responseId;
-          return (
-            <label
-              key={r.responseId}
-              className={cn(
-                "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs cursor-pointer select-none border-2 transition-all",
-                hidden ? "opacity-40" : "opacity-100"
-              )}
-              style={{
-                borderColor: hovered ? color : "transparent",
-                backgroundColor: hovered ? color + "22" : "transparent",
-              }}
-              onMouseEnter={() => setHoveredId(r.responseId)}
-              onMouseLeave={() => setHoveredId(null)}
-            >
-              <input
-                type="checkbox"
-                checked={!hidden}
-                onChange={() => onToggleHidden(r.responseId)}
-                className="w-3 h-3 cursor-pointer"
-                style={{ accentColor: color }}
-              />
-              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
-              <span className={hidden ? "line-through" : ""}>{r.name}</span>
-            </label>
-          );
-        })}
-      </div>
+      <ParticipantFilterBar
+        rows={model.rows}
+        participantColors={participantColors}
+        hiddenIds={hiddenIds}
+        onToggleHidden={onToggleHidden}
+        onToggleAll={onToggleAll}
+        hoveredId={hoveredId}
+        onHover={setHoveredId}
+      />
 
       <div className="flex gap-1 self-end">
         <ViewToggleButton active={view === "heatmap"} onClick={() => setView("heatmap")}>
@@ -106,15 +87,15 @@ function HeatmapView({ model, totalResponses, participantColors, hiddenIds, hove
 
   return (
     <>
-    <div className="rounded-xl border bg-background overflow-x-auto">
+    <ScrollArea className="rounded-lg border border-border bg-surface">
       <table className="min-w-full text-xs border-collapse">
         <thead>
-          <tr className="border-b bg-muted/30">
-            <th className="sticky left-0 bg-muted/30 text-left font-semibold px-3 py-2 z-10 min-w-[56px]">
+          <tr className="border-b border-border bg-surface-subtle">
+            <th className="sticky left-0 bg-surface-subtle text-left font-semibold px-3 py-2 z-10 min-w-[56px]">
               {t('matrix.colTime')}
             </th>
             {dateGroups.map((d) => (
-              <th key={d.dateYmd} className="px-3 py-2 font-semibold text-center min-w-[120px] border-l border-border/40">
+              <th key={d.dateYmd} className="px-3 py-2 font-semibold text-center min-w-[120px] border-l border-border">
                 {d.dateLabel}
               </th>
             ))}
@@ -123,13 +104,13 @@ function HeatmapView({ model, totalResponses, participantColors, hiddenIds, hove
         <tbody>
           {timeGroups.map((t) => (
             <tr key={t.hhmm} className="border-b last:border-0">
-              <td className="sticky left-0 bg-background px-3 py-2 font-medium text-muted-foreground border-r border-border/40">
+              <td className="sticky left-0 bg-surface px-3 py-2 font-medium text-text-muted border-r border-border">
                 {t.hhmm}
               </td>
               {dateGroups.map((d) => {
                 const cell = groupedCells[`${d.dateYmd}_${t.hhmm}`];
                 if (!cell) {
-                  return <td key={d.dateYmd} className="px-2 py-1.5 border-l border-border/40 bg-muted/10" />;
+                  return <td key={d.dateYmd} className="px-2 py-3 border-l border-border bg-surface-subtle/50" />;
                 }
 
                 const displayed = cell.participants.filter((p) => {
@@ -139,19 +120,20 @@ function HeatmapView({ model, totalResponses, participantColors, hiddenIds, hove
                 const visibleCount = cell.participants.filter((p) => !hiddenIds.has(p.responseId)).length;
                 const ratio = visibleTotal > 0 ? visibleCount / visibleTotal : 0;
 
+                const heat = heatLevel(ratio);
                 return (
                   <td
                     key={d.dateYmd}
                     className={cn(
-                      "px-2 py-1.5 border-l border-border/40 align-top transition-colors",
+                      "border-l border-border px-2 py-3 align-top transition-colors",
                       hoveredId
-                        ? displayed.length > 0 ? "bg-background" : "bg-muted/20"
-                        : heatBg(ratio)
+                        ? displayed.length > 0 ? "bg-surface" : "bg-surface-subtle"
+                        : heat.bg
                     )}
                   >
                     <span className={cn(
-                      "block font-semibold text-[11px] mb-0.5",
-                      visibleCount > 0 ? "text-foreground/70" : "text-muted-foreground"
+                      "mb-0.5 block text-2xs font-semibold",
+                      hoveredId ? "text-text-muted" : heat.fg
                     )}>
                       {visibleCount}/{visibleTotal}
                     </span>
@@ -161,11 +143,8 @@ function HeatmapView({ model, totalResponses, participantColors, hiddenIds, hove
                         return (
                           <span
                             key={p.responseId}
-                            className="block text-[10px] leading-tight px-1 rounded font-medium truncate max-w-[108px] bg-background"
-                            style={{
-                              color,
-                              borderLeft: `2px solid ${color}`,
-                            }}
+                            className="block max-w-[108px] truncate rounded bg-surface px-1 text-2xs font-medium leading-tight"
+                            style={{ color, borderLeft: `2px solid ${color}` }}
                           >
                             {p.name}
                           </span>
@@ -179,18 +158,16 @@ function HeatmapView({ model, totalResponses, participantColors, hiddenIds, hove
           ))}
         </tbody>
       </table>
-    </div>
-    <div className="flex items-center gap-3 text-[11px] text-muted-foreground mt-2 px-1">
+    </ScrollArea>
+    <div className="mt-2 flex items-center gap-2 px-1 text-2xs text-text-muted">
       <span className="shrink-0">{t('matrix.availabilityLegend')}</span>
-      <div className="flex items-center gap-1">
-        <span className="inline-block w-4 h-4 rounded-sm bg-muted/10 border border-border/30" />
-        <span>0%</span>
-      </div>
-      <span className="text-border">→</span>
-      <div className="flex items-center gap-1">
-        <span className="inline-block w-4 h-4 rounded-sm bg-muted/80" />
-        <span>100%</span>
-      </div>
+      <span className="inline-block h-4 w-4 rounded-sm border border-border bg-surface" />
+      <span className="inline-block h-4 w-4 rounded-sm bg-brand-50" />
+      <span className="inline-block h-4 w-4 rounded-sm bg-brand-100" />
+      <span className="inline-block h-4 w-4 rounded-sm bg-brand-300" />
+      <span className="inline-block h-4 w-4 rounded-sm bg-brand-500" />
+      <span className="inline-block h-4 w-4 rounded-sm bg-brand-600" />
+      <span className="shrink-0">0% → 100%</span>
     </div>
     </>
   );
@@ -210,11 +187,11 @@ function ParticipantView({ model, participantColors, hiddenIds, hoveredId }: Par
   const visibleRows = rows.filter((r) => !hiddenIds.has(r.responseId));
 
   return (
-    <div className="rounded-xl border bg-background overflow-x-auto">
+    <ScrollArea className="rounded-lg border border-border bg-surface">
       <table className="min-w-full text-xs border-collapse">
         <thead>
-          <tr className="border-b bg-muted/30">
-            <th className="sticky left-0 bg-muted/30 text-left font-semibold px-3 py-2 z-10 min-w-[80px]">
+          <tr className="border-b border-border bg-surface-subtle">
+            <th className="sticky left-0 bg-surface-subtle text-left font-semibold px-3 py-2 z-10 min-w-[80px]">
               {t('matrix.colDatetime')}
             </th>
             {visibleRows.map((r) => {
@@ -223,11 +200,11 @@ function ParticipantView({ model, participantColors, hiddenIds, hoveredId }: Par
               return (
                 <th
                   key={r.responseId}
-                  className="px-3 py-2 font-semibold text-center min-w-[72px] border-l border-border/40"
+                  className="px-3 py-2 font-semibold text-center min-w-[72px] border-l border-border"
                   style={{ opacity: hoveredId && !hovered ? 0.3 : 1 }}
                 >
                   <span
-                    className="block truncate max-w-[64px] mx-auto text-[11px]"
+                    className="block truncate max-w-[64px] mx-auto text-2xs"
                     style={{ color }}
                   >
                     {r.name}
@@ -240,12 +217,12 @@ function ParticipantView({ model, participantColors, hiddenIds, hoveredId }: Par
         <tbody>
           {dateGroups.map((d) => (
             <Fragment key={d.dateYmd}>
-              <tr className="bg-muted/30 border-b border-t">
-                <td className="sticky left-0 z-10 bg-muted/30 px-3 py-1 font-semibold text-[11px] text-muted-foreground uppercase tracking-wide">
+              <tr className="bg-surface-subtle border-b border-t">
+                <td className="sticky left-0 z-10 bg-surface-subtle px-3 py-1 font-semibold text-2xs text-text-muted uppercase tracking-wide">
                   {d.dateLabel}
                 </td>
                 {visibleRows.map((r) => (
-                  <td key={r.responseId} className="bg-muted/30 border-l border-border/40" />
+                  <td key={r.responseId} className="bg-surface-subtle border-l border-border" />
                 ))}
               </tr>
               {timeGroups.map((tm) => {
@@ -253,7 +230,7 @@ function ParticipantView({ model, participantColors, hiddenIds, hoveredId }: Par
                 if (!cell) return null;
                 return (
                   <tr key={`${d.dateYmd}_${tm.hhmm}`} className="border-b last:border-0">
-                    <td className="sticky left-0 bg-background px-3 py-2 text-muted-foreground border-r border-border/40">
+                    <td className="sticky left-0 bg-surface px-3 py-2 text-text-muted border-r border-border">
                       {tm.hhmm}
                     </td>
                     {visibleRows.map((r) => {
@@ -264,7 +241,7 @@ function ParticipantView({ model, participantColors, hiddenIds, hoveredId }: Par
                       return (
                         <td
                           key={r.responseId}
-                          className="px-2 py-2 text-center border-l border-border/40 transition-opacity"
+                          className="px-2 py-3 text-center border-l border-border transition-opacity"
                           style={{ opacity: dimmed ? 0.2 : 1 }}
                         >
                           {available ? (
@@ -278,7 +255,7 @@ function ParticipantView({ model, participantColors, hiddenIds, hoveredId }: Par
                               </svg>
                             </span>
                           ) : (
-                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-muted-foreground/25 align-middle" />
+                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-border-strong align-middle" />
                           )}
                         </td>
                       );
@@ -288,15 +265,15 @@ function ParticipantView({ model, participantColors, hiddenIds, hoveredId }: Par
               })}
             </Fragment>
           ))}
-          <tr className="bg-muted/20 border-t font-semibold">
-            <td className="sticky left-0 bg-muted/20 px-3 py-2 text-[11px] text-muted-foreground border-r border-border/40">
+          <tr className="bg-surface-subtle/60 border-t font-semibold">
+            <td className="sticky left-0 bg-surface-subtle/60 px-3 py-2 text-2xs text-text-muted border-r border-border">
               {t('matrix.rowAvailSlots')}
             </td>
             {visibleRows.map((r) => {
               const count = Object.values(r.checks).filter(Boolean).length;
               const color = participantColors[r.responseId] ?? "#888";
               return (
-                <td key={r.responseId} className="px-2 py-2 text-center text-[11px] border-l border-border/40" style={{ color }}>
+                <td key={r.responseId} className="px-2 py-3 text-center text-2xs border-l border-border" style={{ color }}>
                   {count}
                 </td>
               );
@@ -304,7 +281,7 @@ function ParticipantView({ model, participantColors, hiddenIds, hoveredId }: Par
           </tr>
         </tbody>
       </table>
-    </div>
+    </ScrollArea>
   );
 }
 
@@ -318,21 +295,14 @@ function ViewToggleButton({
       type="button"
       onClick={onClick}
       className={cn(
-        "px-3 py-1.5 text-xs rounded-md border transition-colors flex items-center",
+        "flex min-h-touch items-center rounded-md border px-3 text-xs transition-colors",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         active
-          ? "bg-foreground text-background border-foreground font-semibold"
-          : "bg-background text-muted-foreground border-border hover:text-foreground"
+          ? "border-primary bg-primary font-semibold text-primary-foreground"
+          : "border-border bg-surface text-text-muted hover:text-text"
       )}
     >
       {children}
     </button>
   );
-}
-
-function heatBg(ratio: number): string {
-  if (ratio === 0) return "bg-muted/10";
-  if (ratio <= 0.25) return "bg-muted/25";
-  if (ratio <= 0.5) return "bg-muted/45";
-  if (ratio <= 0.75) return "bg-muted/65";
-  return "bg-muted/80";
 }

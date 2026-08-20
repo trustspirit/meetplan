@@ -62,6 +62,9 @@ export default function EventResultPage() {
   const toggleHidden = (id: string) =>
     setHiddenIds((prev) => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
 
+  const toggleAll = (show: boolean) =>
+    setHiddenIds(show ? new Set() : new Set(responsesState.responses.map((r) => r.id)));
+
   const visibleResponses = useMemo(
     () => responsesState.responses.filter((r) => !hiddenIds.has(r.id)),
     [responsesState.responses, hiddenIds]
@@ -305,6 +308,7 @@ export default function EventResultPage() {
           participantColors={participantColors}
           hiddenIds={hiddenIds}
           onToggleHidden={toggleHidden}
+          onToggleAll={toggleAll}
         />
       ) : (
         <MatchingView
@@ -314,6 +318,7 @@ export default function EventResultPage() {
           participantColors={participantColors}
           hiddenIds={hiddenIds}
           onToggleHidden={toggleHidden}
+          onToggleAll={toggleAll}
           slots={event.slots}
           eventTitle={event.title}
           eventDescription={event.description}

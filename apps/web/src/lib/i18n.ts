@@ -200,6 +200,8 @@ const ko = {
   'matrix.rowAvailSlots': '가능 슬롯',
   'matrix.available': '가능',
   'matrix.availabilityLegend': '가용률:',
+  'matrix.selectAll': '전체 선택',
+  'matrix.deselectAll': '전체 해제',
 
   // ── MatchingView ─────────────────────────────────────────────────────
   'matching.noResponses': '응답이 모이면 자동 배정 조합이 표시됩니다',
@@ -467,6 +469,8 @@ const en: TranslationMap = {
   'matrix.rowAvailSlots': 'Available',
   'matrix.available': 'Available',
   'matrix.availabilityLegend': 'Availability:',
+  'matrix.selectAll': 'Select all',
+  'matrix.deselectAll': 'Deselect all',
 
   'matching.noResponses': 'Combinations will appear once responses come in',
   'matching.hiddenEmpty': '{count} participants hidden — no one left to match. Show them in the legend above.',
