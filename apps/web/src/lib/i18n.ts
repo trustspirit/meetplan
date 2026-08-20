@@ -82,6 +82,7 @@ const ko = {
   // ── Mobile Wizard ────────────────────────────────────────────────────
   'wizard.step1': '1/2단계 · 기본 정보 + 날짜',
   'wizard.step2': '2/2단계 · 시간 페인팅',
+  'wizard.progress': '{current}/{total} 단계',
   'wizard.next': '다음',
   'wizard.prev': '이전',
   'wizard.slotCount': '{count}개 슬롯',
@@ -359,6 +360,7 @@ const en: TranslationMap = {
 
   'wizard.step1': 'Step 1/2 · Info + dates',
   'wizard.step2': 'Step 2/2 · Paint times',
+  'wizard.progress': 'Step {current} of {total}',
   'wizard.next': 'Next',
   'wizard.prev': 'Back',
   'wizard.slotCount': '{count} slots',

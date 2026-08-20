@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { MultiDateCalendar } from "./MultiDateCalendar";
 import { CalendarBanner } from "./CalendarBanner";
+import { StickyActionBar } from "@/components/ui/sticky-action-bar";
 import { buildDisplayAxis, timesOutsideRange } from "./timeAxis";
 import { cellKey } from "./useEventCreateState";
 import { PeriodPicker } from "./PeriodPicker";
@@ -85,9 +86,15 @@ export function MobileWizard(props: Props) {
   if (step === 1) {
     return (
       <div className="flex flex-col gap-6 p-4 pb-8">
-        {/* Step label */}
-        <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">
-          {isWardVisit ? t('eventType.wardVisit') : t('wizard.step1')}
+        <div className="flex items-center gap-2">
+          <div className="flex-1 h-1 rounded-full bg-surface-subtle overflow-hidden">
+            <div className="h-full w-1/2 rounded-full bg-primary" />
+          </div>
+          <span className="text-2xs font-medium text-text-muted">
+            {isWardVisit
+              ? t('eventType.wardVisit')
+              : t('wizard.progress', { current: 1, total: 2 })}
+          </span>
         </div>
 
         {/* Event type toggle */}
@@ -104,7 +111,7 @@ export function MobileWizard(props: Props) {
                   type !== "meeting" && "border-l border-border",
                   props.eventType === type
                     ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground"
+                    : "text-text-muted hover:text-text"
                 )}
               >
                 {type === "meeting" ? t('eventType.meeting') : t('eventType.wardVisit')}
@@ -130,7 +137,7 @@ export function MobileWizard(props: Props) {
           <Label htmlFor="ev-notes-m">{t('form.notes')}</Label>
           <textarea
             id="ev-notes-m"
-            className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+            className="mt-2 w-full rounded-md border border-border-strong bg-surface px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus-visible:ring-ring resize-none"
             rows={3}
             maxLength={500}
             placeholder={t('form.notesPlaceholder')}
@@ -149,7 +156,7 @@ export function MobileWizard(props: Props) {
             id="ev-stake-m"
             value={props.stakeId}
             onChange={(e) => props.onStakeChange(e.target.value)}
-            className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2.5 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            className="mt-2 w-full rounded-md border border-border-strong bg-surface px-3 py-2.5 text-sm shadow-sm focus:outline-none focus:ring-2 focus-visible:ring-ring"
           >
             <option value="">{t('ward.stakePlaceholder')}</option>
             {STAKES.map((s) => (
@@ -172,7 +179,7 @@ export function MobileWizard(props: Props) {
         {/* Date picker */}
         <div>
           {isWardVisit && (
-            <p className="text-xs text-muted-foreground mb-2">{t('ward.datesLabel')} — {t('ward.selectSundayHint')}</p>
+            <p className="text-xs text-text-muted mb-2">{t('ward.datesLabel')} — {t('ward.selectSundayHint')}</p>
           )}
           <MultiDateCalendar
             selectedDates={props.selectedDates}
@@ -213,22 +220,26 @@ export function MobileWizard(props: Props) {
 
   return (
     <div
-      className="flex flex-col gap-4 p-4"
+      className="flex flex-col gap-4 p-4 pb-24"
       onPointerMove={handleRootPointerMove}
       onPointerUp={handleUp}
       onPointerCancel={handleUp}
       onPointerLeave={handleUp}
     >
-      <div className="flex items-center justify-between">
-        <button type="button" onClick={() => setStep(1)} className="text-sm hover:underline">
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setStep(1)}
+          className="min-h-touch -ml-2 px-2 text-sm text-text-muted hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md"
+        >
           ← {t('wizard.prev')}
         </button>
-        <div className="text-xs text-muted-foreground font-semibold uppercase tracking-wide">
-          {t('wizard.step2')}
+        <div className="flex-1 h-1 rounded-full bg-surface-subtle overflow-hidden">
+          <div className="h-full w-full rounded-full bg-primary" />
         </div>
-        <div className="text-xs text-muted-foreground">
-          {t('wizard.slotCount', { count: props.slotCount })}
-        </div>
+        <span className="text-2xs font-medium text-text-muted">
+          {t('wizard.progress', { current: 2, total: 2 })}
+        </span>
       </div>
 
       {props.calendarChoice === "pending" && props.onCalendarConnect && (
@@ -244,7 +255,7 @@ export function MobileWizard(props: Props) {
         />
       )}
       {props.calendarSynced && (
-        <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+        <p className="text-2xs text-text-muted flex items-center gap-1">
           <Calendar size={11} /> {t('wizard.calendarSynced')}
         </p>
       )}
@@ -257,10 +268,10 @@ export function MobileWizard(props: Props) {
             onClick={() => setActiveDate(ymd)}
             className={cn(
               "flex-none px-3 py-2 rounded-lg text-xs min-w-[56px] text-center",
-              ymd === currentDate ? "bg-primary text-primary-foreground" : "bg-muted"
+              ymd === currentDate ? "bg-primary text-primary-foreground" : "bg-surface-subtle"
             )}
           >
-            <span className="block text-[9px] opacity-70 mb-0.5">{format(parseISO(ymd), "EEE")}</span>
+            <span className="block text-2xs opacity-70 mb-0.5">{format(parseISO(ymd), "EEE")}</span>
             <span className="font-semibold">{format(parseISO(ymd), "M/d")}</span>
           </button>
         ))}
@@ -305,7 +316,7 @@ export function MobileWizard(props: Props) {
           const isBusy = props.busyCells?.has(key) ?? false;
           return (
             <Fragment key={hhmm}>
-              <div className="text-right text-[10px] text-muted-foreground leading-[22px] tabular-nums pr-1">
+              <div className="text-right text-2xs text-text-muted leading-[22px] tabular-nums pr-1">
                 {hhmm}
               </div>
               <div
@@ -315,10 +326,10 @@ export function MobileWizard(props: Props) {
                 onPointerDown={() => handleDown(key, on)}
                 className={cn(
                   "h-[22px] rounded select-none transition-colors touch-none",
-                  on && !isBusy && "bg-accent",
-                  on && isBusy && "bg-accent cell-busy",
-                  !on && !isBusy && "bg-muted",
-                  !on && isBusy && "bg-muted cell-busy",
+                  on && !isBusy && "bg-primary",
+                  on && isBusy && "bg-primary cell-busy",
+                  !on && !isBusy && "bg-surface-subtle",
+                  !on && isBusy && "bg-surface-subtle cell-busy",
                 )}
               />
             </Fragment>
@@ -327,19 +338,24 @@ export function MobileWizard(props: Props) {
       </div>
 
       {props.busyCells && props.busyCells.size > 0 && (
-        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-          <span className="inline-block w-3 h-3 rounded-sm bg-muted cell-busy shrink-0" />
+        <div className="flex items-center gap-1.5 text-2xs text-text-muted">
+          <span className="inline-block w-3 h-3 rounded-sm bg-surface-subtle cell-busy shrink-0" />
           {t('wizard.busyCellHint')}
         </div>
       )}
 
-      <div className="text-[10px] text-muted-foreground text-center p-2 bg-muted rounded">
+      <div className="text-2xs text-text-muted text-center p-2 bg-surface-subtle rounded">
         {t('wizard.dragHint')}
       </div>
 
-      <Button size="lg" disabled={!props.canSubmit} onClick={props.onSubmit}>
-        {props.submitting ? t('common.saving') : t('create.submitMobile')}
-      </Button>
+      <StickyActionBar>
+        <span className="text-sm text-text-muted">
+          {t('wizard.slotCount', { count: props.slotCount })}
+        </span>
+        <Button size="lg" disabled={!props.canSubmit} onClick={props.onSubmit}>
+          {props.submitting ? t('common.saving') : t('create.submitMobile')}
+        </Button>
+      </StickyActionBar>
     </div>
   );
 }

@@ -45,9 +45,12 @@ export function PeriodPicker({ value, onChange }: Props) {
     onChange(nearestPreset(value));
   };
 
-  const btnBase = "px-4 py-2 rounded-md text-sm border transition-colors";
+  const btnBase = cn(
+    "h-11 px-4 rounded-md text-sm border transition-colors",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+  );
   const btnActive = "bg-primary text-primary-foreground border-primary";
-  const btnIdle = "bg-background border-border hover:bg-muted";
+  const btnIdle = "bg-surface border-border hover:bg-surface-subtle";
 
   return (
     <div className="flex gap-2 flex-wrap items-center">
@@ -75,19 +78,20 @@ export function PeriodPicker({ value, onChange }: Props) {
             onBlur={handleCustomBlur}
             placeholder={t('period.placeholder')}
             className={cn(
-              "w-16 px-2 py-2 rounded-md text-sm border text-center",
+              "h-11 w-16 px-2 rounded-md text-base border text-center",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               "border-primary bg-primary/5",
               "[appearance:textfield]",
               "[&::-webkit-outer-spin-button]:appearance-none",
               "[&::-webkit-inner-spin-button]:appearance-none"
             )}
           />
-          <span className="text-sm text-muted-foreground">{t('period.suffix')}</span>
+          <span className="text-sm text-text-muted">{t('period.suffix')}</span>
           <button
             type="button"
             onMouseDown={(e) => e.preventDefault()}
             onClick={handleCustomClose}
-            className="text-muted-foreground hover:text-foreground p-1"
+            className="min-h-touch min-w-touch flex items-center justify-center text-text-muted hover:text-text rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             aria-label={t('period.customClose')}
           >
             <X size={14} />

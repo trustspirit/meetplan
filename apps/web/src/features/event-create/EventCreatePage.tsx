@@ -1,8 +1,11 @@
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useMemo, useState } from "react";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { StickyActionBar } from "@/components/ui/sticky-action-bar";
+import { AppShell } from "@/components/layout/AppShell";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/features/auth/useAuth";
 import { useMediaQuery } from "@/lib/useMediaQuery";
@@ -14,14 +17,12 @@ import { MultiDateCalendar } from "./MultiDateCalendar";
 import { TimePainter } from "./TimePainter";
 import { MobileWizard } from "./MobileWizard";
 import { CalendarBanner } from "./CalendarBanner";
-import { MobileHeader } from "@/components/ui/MobileHeader";
 import { useEventCreateState, cellKey } from "./useEventCreateState";
 import { buildSlotsFromPaintedCells } from "./generateSlots";
 import { buildDisplayAxis } from "./timeAxis";
 import { useGoogleCalendarBusy } from "../event-respond/useGoogleCalendarBusy";
 import { slotsToPaintedCells } from "../event-edit/slotsToPaintedCells";
 import { t } from "@/lib/i18n";
-import { LanguageToggle } from "@/components/ui/LanguageToggle";
 
 const HOST_TZ =
   Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Seoul";
@@ -163,8 +164,12 @@ export default function EventCreatePage() {
 
   if (!isDesktop) {
     return (
-      <>
-        <MobileHeader logo onBack={() => navigate("/dashboard")} />
+      <AppShell>
+        <PageHeader
+          title={t('create.pageTitle')}
+          backTo="/dashboard"
+          backLabel={t('nav.myEvents')}
+        />
         <MobileWizard
           title={state.title}
           onTitleChange={setTitle}
@@ -198,24 +203,19 @@ export default function EventCreatePage() {
           stakeId={stakeId}
           onStakeChange={setStakeId}
         />
-      </>
+      </AppShell>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-8">
-      <header className="flex items-center justify-between pb-6 border-b">
-        <Link to="/dashboard" className="text-sm hover:underline">{t('create.back')}</Link>
-        <h1 className="font-semibold">{t('create.pageTitle')}</h1>
-        <div className="flex items-center gap-3">
-          <LanguageToggle />
-          <Button onClick={handleCreate} disabled={!canCreate}>
-            {submitting ? t('common.saving') : t('create.submit')}
-          </Button>
-        </div>
-      </header>
+    <AppShell>
+      <PageHeader
+        title={t('create.pageTitle')}
+        backTo="/dashboard"
+        backLabel={t('nav.myEvents')}
+      />
 
-      <div className="py-8 flex flex-col gap-10">
+      <div className="flex flex-col gap-8 pb-24">
         <BasicInfoForm
           title={state.title}
           onTitleChange={setTitle}
@@ -245,12 +245,15 @@ export default function EventCreatePage() {
               />
             )}
             {calendar.synced && (
-              <p className="text-xs text-muted-foreground flex items-center gap-1">
-                <Calendar size={12} /> {t('create.calendarSynced')}
+              <p className="flex items-center gap-1 text-xs text-text-muted">
+                <Calendar size={12} aria-hidden /> {t('create.calendarSynced')}
               </p>
             )}
-            <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6 items-start">
-              <MultiDateCalendar selectedDates={state.selectedDates} onToggleDate={toggleDate} />
+            <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[320px_1fr]">
+              {/* 좌측을 sticky로 고정해 우측 그리드를 스크롤해도 날짜 선택이 남는다. */}
+              <div className="lg:sticky lg:top-20">
+                <MultiDateCalendar selectedDates={state.selectedDates} onToggleDate={toggleDate} />
+              </div>
               <TimePainter
                 selectedDates={state.selectedDates}
                 dailyRange={state.dailyRange}
@@ -265,32 +268,37 @@ export default function EventCreatePage() {
         )}
 
         {eventType === "ward_visit" && (
-          <section className="flex flex-col gap-4">
+          <section className="flex flex-col gap-3">
             <div>
-              <p className="text-sm font-medium mb-1">{t('ward.datesLabel')}</p>
-              <p className="text-xs text-muted-foreground mb-3">{t('ward.datesHint')}</p>
-              <div className="max-w-sm">
-                <MultiDateCalendar
-                  selectedDates={state.selectedDates}
-                  onToggleDate={toggleDate}
-                  sundayOnly
-                />
-              </div>
+              <p className="text-sm font-medium text-text">{t('ward.datesLabel')}</p>
+              <p className="mt-1 text-xs text-text-muted">{t('ward.datesHint')}</p>
+            </div>
+            <div className="max-w-sm">
+              <MultiDateCalendar
+                selectedDates={state.selectedDates}
+                onToggleDate={toggleDate}
+                sundayOnly
+              />
             </div>
           </section>
         )}
       </div>
 
-      <footer className="sticky bottom-0 -mx-6 px-6 py-3 bg-muted/80 backdrop-blur border-t flex items-center justify-between text-sm">
-        <div>
+      <StickyActionBar>
+        <div className="min-w-0 text-sm text-text-muted">
           {eventType === "meeting"
             ? t('create.slotsPreview', { count: slots.length })
             : state.selectedDates.length > 0
               ? t('ward.selectedSundays', { count: state.selectedDates.length })
               : ""}
         </div>
-        {error && <div className="text-destructive">{error}</div>}
-      </footer>
-    </div>
+        <div className="flex shrink-0 items-center gap-3">
+          {error && <span className="text-xs text-danger">{error}</span>}
+          <Button onClick={handleCreate} disabled={!canCreate}>
+            {submitting ? t('common.saving') : t('create.submit')}
+          </Button>
+        </div>
+      </StickyActionBar>
+    </AppShell>
   );
 }
