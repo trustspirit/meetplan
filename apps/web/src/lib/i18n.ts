@@ -154,6 +154,7 @@ const ko = {
   'success.nextStepsTitle': '다음에는',
   'success.nextStep1': '주최자가 응답을 확인하고 미팅 일정을 확정합니다',
   'success.nextStep2': '확정되면 등록하신 번호로 문자 알림이 갑니다',
+  'success.nextStep2NoPhone': '확정되면 주최자가 공유한 경로로 안내합니다',
 
   // ── Matching ─────────────────────────────────────────────────────────
   'matching.description': '각 참가자가 서로 겹치지 않는 시간에 1:1 미팅을 할 수 있는 최적 배정 조합입니다.',
@@ -458,6 +459,7 @@ const en: TranslationMap = {
   'success.nextStepsTitle': "What's next",
   'success.nextStep1': 'The organizer reviews responses and confirms a meeting time',
   'success.nextStep2': "You'll receive a text notification when the time is confirmed",
+  'success.nextStep2NoPhone': 'The organizer will let you know once it is confirmed',
 
   'matching.description': 'Optimal 1:1 schedule where each participant gets a unique, non-overlapping time slot.',
 
