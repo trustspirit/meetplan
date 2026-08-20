@@ -62,7 +62,9 @@ export function MobileWizard(props: Props) {
   const painting = useRef<{ targetState: boolean; visited: Set<string> } | null>(null);
 
   const isWardVisit = props.eventType === "ward_visit";
-  const canGoNextMeeting = props.title.trim().length > 0 && props.selectedDates.length > 0;
+  const fieldsValid = props.responseFields.every((f) => f.label.trim().length > 0);
+  const canGoNextMeeting =
+    props.title.trim().length > 0 && props.selectedDates.length > 0 && fieldsValid;
   const canSubmitWardVisit = props.title.trim().length > 0 && props.stakeId.length > 0 && props.selectedDates.length > 0;
 
   const applyToCell = (key: string) => {

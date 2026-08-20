@@ -114,6 +114,24 @@ describe("validateResponseInput", () => {
     const broken: ResponseInputView = { name: "", phone: undefined, answers: {}, selectedSlotCount: 0 };
     expect(validateResponseInput(CFG, broken)).toEqual({ code: "name_missing" });
   });
+
+  it("항목 id가 'constructor'여도 던지지 않고, 필수면 field_required", () => {
+    const cfg: ResponseConfig = {
+      ...CFG,
+      fields: [{ id: "constructor", label: "위험", required: true }],
+    };
+    expect(() => validateResponseInput(cfg, { ...OK, answers: {} })).not.toThrow();
+    expect(validateResponseInput(cfg, { ...OK, answers: {} }))
+      .toEqual({ code: "field_required", fieldId: "constructor", label: "위험" });
+  });
+
+  it("항목 id가 'constructor'이고 선택 항목이면 null", () => {
+    const cfg: ResponseConfig = {
+      ...CFG,
+      fields: [{ id: "constructor", label: "위험", required: false }],
+    };
+    expect(validateResponseInput(cfg, { ...OK, answers: {} })).toBeNull();
+  });
 });
 
 describe("sanitizeAnswers", () => {
@@ -131,5 +149,15 @@ describe("sanitizeAnswers", () => {
 
   it("항목이 없으면 빈 객체", () => {
     expect(sanitizeAnswers([], { team: "1팀" })).toEqual({});
+  });
+
+  it("항목 id가 'constructor'여도 던지지 않고 빈 객체를 돌려준다", () => {
+    const fields: ResponseField[] = [{ id: "constructor", label: "위험", required: false }];
+    expect(() => sanitizeAnswers(fields, {})).not.toThrow();
+    expect(sanitizeAnswers(fields, {})).toEqual({});
+  });
+
+  it("정상 id는 여전히 값을 그대로 되돌린다 (가드가 정상 경로를 바꾸지 않음)", () => {
+    expect(sanitizeAnswers(FIELDS, { team: "1팀", car: "있음" })).toEqual({ team: "1팀", car: "있음" });
   });
 });

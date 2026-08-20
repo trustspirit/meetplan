@@ -66,7 +66,8 @@ export function validateResponseInput(
   }
 
   for (const field of cfg.fields) {
-    const value = (input.answers[field.id] ?? "").trim();
+    const raw = Object.hasOwn(input.answers, field.id) ? input.answers[field.id] : undefined;
+    const value = (typeof raw === "string" ? raw : "").trim();
     if (field.required && value.length === 0) {
       return { code: "field_required", fieldId: field.id, label: field.label };
     }
@@ -88,7 +89,8 @@ export function sanitizeAnswers(
 ): Record<string, string> {
   const out: Record<string, string> = {};
   for (const field of fields) {
-    const value = (answers[field.id] ?? "").trim();
+    const raw = Object.hasOwn(answers, field.id) ? answers[field.id] : undefined;
+    const value = (typeof raw === "string" ? raw : "").trim();
     if (value.length > 0) out[field.id] = value;
   }
   return out;

@@ -14,8 +14,11 @@ export default defineConfig(({ mode }) => {
         // og:image는 절대 URL을 요구하는 크롤러가 많다(Slack·KakaoTalk). 배포 도메인은
         // 빌드 시점 .env 파일/쉘 변수로만 알 수 있으므로 loadEnv로 직접 읽어 주입한다.
         // 미설정(빈 문자열)이면 "/og.png" 상대 경로로 폴백 (앱은 정상, 썸네일만 빠짐).
+        // index.html의 플레이스홀더는 "__OG_ORIGIN__"이다 — Vite의 내장 %VITE_*%
+        // 치환 훅과 패턴이 겹치지 않게 해서, 이 플러그인이 유일한 치환자가 되도록 한다.
+        // 환경 변수 이름(VITE_PUBLIC_ORIGIN)은 배포 워크플로/문서와 맞춰 그대로 둔다.
         name: "og-origin",
-        transformIndexHtml: (html: string) => html.replaceAll("%VITE_PUBLIC_ORIGIN%", publicOrigin),
+        transformIndexHtml: (html: string) => html.replaceAll("__OG_ORIGIN__", publicOrigin),
       },
     ],
     resolve: {
