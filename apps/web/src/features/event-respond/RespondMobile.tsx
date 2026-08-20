@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { StickyActionBar } from "@/components/ui/sticky-action-bar";
 import { PageHeader } from "@/components/layout/PageHeader";
-import type { MeetplanEvent } from "@meetplan/shared";
+import type { MeetplanEvent, ResponseField } from "@meetplan/shared";
 import type { CellGridModel } from "./slotsToCells";
 import type { RespondState } from "./useRespondState";
 import { buildSelectionModel } from "./selectionModel";
@@ -26,6 +26,9 @@ interface Props {
   onSubmit: () => void;
   submitError: string | null;
   missingReason: string | null;
+  collectPhone: boolean;
+  fields: ResponseField[];
+  onAnswerChange: (fieldId: string, value: string) => void;
 }
 
 /** 호스트 날짜가 이 수 이하면 Step 1은 순수 오버헤드라 건너뛴다 (스펙 §8.5). */
@@ -127,6 +130,10 @@ export function RespondMobile(props: Props) {
               onNameChange={props.onNameChange}
               onPhoneChange={props.onPhoneChange}
               onNoteChange={props.onNoteChange}
+              collectPhone={props.collectPhone}
+              fields={props.fields}
+              answers={props.state.answers}
+              onAnswerChange={props.onAnswerChange}
             />
           </div>
         )}

@@ -44,10 +44,11 @@ export default function RespondPage() {
       phone: existing.response.phone ?? "",
       ...(existing.response.note ? { note: existing.response.note } : {}),
       selectedSlotIds: existing.response.selectedSlotIds,
+      ...(existing.response.answers ? { answers: existing.response.answers } : {}),
     } : undefined,
     [existing.response]
   );
-  const { state, setName, setPhone, setNote, setSlotChecked, clearSlotsForDate } = useRespondState(prefill);
+  const { state, setName, setPhone, setNote, setSlotChecked, clearSlotsForDate, setAnswer } = useRespondState(prefill);
 
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -130,7 +131,7 @@ export default function RespondPage() {
     {
       name: state.name,
       phone: state.phone,
-      answers: {},
+      answers: state.answers,
       selectedSlotCount: state.selectedSlotIds.size,
     }
   );
@@ -160,6 +161,7 @@ export default function RespondPage() {
         phone: normalizePhone(state.phone),
         ...(note ? { note } : {}),
         selectedSlotIds: [...state.selectedSlotIds],
+        answers: state.answers,
         ...editArgs,
       });
 
@@ -199,6 +201,9 @@ export default function RespondPage() {
     onSubmit: handleSubmit,
     submitError,
     missingReason,
+    collectPhone,
+    fields,
+    onAnswerChange: setAnswer,
   };
 
   return (

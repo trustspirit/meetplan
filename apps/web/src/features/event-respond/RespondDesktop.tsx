@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { StickyActionBar } from "@/components/ui/sticky-action-bar";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { useAuth } from "@/features/auth/useAuth";
-import type { MeetplanEvent } from "@meetplan/shared";
+import type { MeetplanEvent, ResponseField } from "@meetplan/shared";
 import type { CellGridModel } from "./slotsToCells";
 import type { RespondState } from "./useRespondState";
 import { buildSelectionModel } from "./selectionModel";
@@ -27,6 +27,9 @@ interface Props {
   onSubmit: () => void;
   submitError: string | null;
   missingReason: string | null;
+  collectPhone: boolean;
+  fields: ResponseField[];
+  onAnswerChange: (fieldId: string, value: string) => void;
 }
 
 export function RespondDesktop(props: Props) {
@@ -90,6 +93,10 @@ export function RespondDesktop(props: Props) {
             onNameChange={props.onNameChange}
             onPhoneChange={props.onPhoneChange}
             onNoteChange={props.onNoteChange}
+            collectPhone={props.collectPhone}
+            fields={props.fields}
+            answers={props.state.answers}
+            onAnswerChange={props.onAnswerChange}
           />
         </aside>
       </div>
