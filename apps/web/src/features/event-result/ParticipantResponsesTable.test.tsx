@@ -1,4 +1,5 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+import userEvent from "@testing-library/user-event";
 import { render, screen } from "@testing-library/react";
 import { ParticipantResponsesTable } from "./ParticipantResponsesTable";
 import type { ParticipantResponse, ResponseField } from "@meetplan/shared";
@@ -52,5 +53,27 @@ describe("ParticipantResponsesTable", () => {
     const noNote: ParticipantResponse[] = [withoutNote];
     render(<ParticipantResponsesTable responses={noNote} collectPhone fields={FIELDS} />);
     expect(screen.queryByRole("columnheader", { name: "기타 사항" })).not.toBeInTheDocument();
+  });
+
+  it("직접 추가한 응답에만 배지와 삭제 버튼을 보여준다", async () => {
+    const manual: ParticipantResponse = {
+      id: "r2", name: "이영희", selectedSlotIds: ["s1"],
+      ownerUid: null, editTokenHash: null, addedByHost: true,
+      createdAt: "", updatedAt: "",
+    };
+    const onDeleteManual = vi.fn().mockResolvedValue(undefined);
+    vi.spyOn(window, "confirm").mockReturnValue(true);
+    render(
+      <ParticipantResponsesTable
+        responses={[...RESPONSES, manual]}
+        collectPhone
+        fields={FIELDS}
+        onDeleteManual={onDeleteManual}
+      />
+    );
+    expect(screen.getAllByText("직접 추가")).toHaveLength(1);
+    expect(screen.queryByRole("button", { name: /김민수/ })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "삭제 이영희" }));
+    expect(onDeleteManual).toHaveBeenCalledWith(manual);
   });
 });

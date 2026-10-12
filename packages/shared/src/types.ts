@@ -54,4 +54,5 @@ export interface ParticipantResponse {
   createdAt: string;
   updatedAt: string;
   wardAssignments?: WardAssignment[]; // for ward_visit events
+  addedByHost?: boolean;              // 호스트가 결과 화면에서 직접 추가한 응답
 }

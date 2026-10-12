@@ -21,8 +21,10 @@ import { MatchingView } from "./MatchingView";
 import { ParticipantResponsesTable } from "./ParticipantResponsesTable";
 import { ShareLinkButton } from "./ShareLinkButton";
 import { DeleteEventButton } from "./DeleteEventButton";
+import { AddManualResponseDialog } from "./AddManualResponseDialog";
+import { hostDeleteResponseCallable } from "@/lib/callable";
 import { cn } from "@/lib/utils";
-import { Copy, Pencil, CircleSlash, RotateCcw, Trash2, AlertCircle } from "lucide-react";
+import { Copy, Pencil, CircleSlash, RotateCcw, Trash2, AlertCircle, UserPlus } from "lucide-react";
 import { PageSkeleton } from "@/components/ui/PageSkeleton";
 import { t, getLocale } from "@/lib/i18n";
 
@@ -96,6 +98,7 @@ export default function EventResultPage() {
   const [statusUpdating, setStatusUpdating] = useState(false);
   const [statusError, setStatusError] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [addingManual, setAddingManual] = useState(false);
 
   const toggleStatus = async () => {
     if (!eventId || !event) return;
@@ -294,15 +297,21 @@ export default function EventResultPage() {
 
       {statusError && <p className="mb-4 text-sm text-danger">{statusError}</p>}
 
-      <Tabs
-        items={[
-          { value: "matrix", label: t('result.tabMatrix') },
-          { value: "matching", label: t('result.tabMatching') },
-        ] as const}
-        value={tab}
-        onChange={setTab}
-        className="mb-6"
-      />
+      <div className="mb-6 flex items-end justify-between gap-3">
+        <Tabs
+          items={[
+            { value: "matrix", label: t('result.tabMatrix') },
+            { value: "matching", label: t('result.tabMatching') },
+          ] as const}
+          value={tab}
+          onChange={setTab}
+          className="min-w-0 flex-1"
+        />
+        <Button variant="secondary" size="sm" onClick={() => setAddingManual(true)} className="shrink-0">
+          <UserPlus size={14} className="mr-1" aria-hidden />
+          {t('manual.addButton')}
+        </Button>
+      </div>
 
       {responsesState.loading ? (
         <PageSkeleton variant="detail" />
@@ -334,7 +343,18 @@ export default function EventResultPage() {
         responses={responsesState.responses}
         collectPhone={eventCollectsPhone(event)}
         fields={eventResponseFields(event)}
+        onDeleteManual={async (r) => {
+          await hostDeleteResponseCallable({ eventId, responseId: r.id });
+        }}
       />
+
+      {addingManual && (
+        <AddManualResponseDialog
+          eventId={eventId}
+          slotColumns={matrixModel.slotColumns}
+          onClose={() => setAddingManual(false)}
+        />
+      )}
 
       {confirmingDelete && (
         <DeleteEventButton

@@ -9,6 +9,10 @@ import type {
   DeleteEventOutput,
   UpdateEventSlotsInput,
   UpdateEventSlotsOutput,
+  HostAddResponseInput,
+  HostAddResponseOutput,
+  HostDeleteResponseInput,
+  HostDeleteResponseOutput,
 } from "@meetplan/shared";
 
 export const submitResponseCallable = httpsCallable<SubmitResponseInput, SubmitResponseOutput>(
@@ -29,4 +33,14 @@ export const deleteEventCallable = httpsCallable<DeleteEventInput, DeleteEventOu
 export const updateEventSlotsCallable = httpsCallable<UpdateEventSlotsInput, UpdateEventSlotsOutput>(
   functions,
   "updateEventSlots"
+);
+
+export const hostAddResponseCallable = httpsCallable<HostAddResponseInput, HostAddResponseOutput>(
+  functions,
+  "hostAddResponse"
+);
+
+export const hostDeleteResponseCallable = httpsCallable<HostDeleteResponseInput, HostDeleteResponseOutput>(
+  functions,
+  "hostDeleteResponse"
 );
