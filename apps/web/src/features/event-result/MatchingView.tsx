@@ -154,6 +154,10 @@ function ListView({ matching, model, participantNameById, participantColors, sel
   const slotLabelById = Object.fromEntries(
     model.slotColumns.map((c) => [c.slotId, `${c.dateLabel} ${c.timeLabel}`])
   );
+  // Chronological sort key per slot ("yyyy-MM-dd HH:mm" in viewer tz sorts lexicographically)
+  const slotSortKeyById: Record<string, string> = Object.fromEntries(
+    model.slotColumns.map((c) => [c.slotId, `${c.dateYmd} ${c.timeLabel}`])
+  );
 
   return (
     <div className="flex flex-col gap-3">
@@ -190,7 +194,11 @@ function ListView({ matching, model, participantNameById, participantColors, sel
               />
             </div>
             <div className="flex flex-col gap-1.5 text-sm">
-              {Object.entries(m.assignments).map(([pid, slotId]) => {
+              {Object.entries(m.assignments)
+                .sort(([, a], [, b]) =>
+                  (slotSortKeyById[a] ?? a).localeCompare(slotSortKeyById[b] ?? b)
+                )
+                .map(([pid, slotId]) => {
                 const color = participantColors[pid];
                 return (
                   <div key={pid} className="flex items-center justify-between gap-2">
