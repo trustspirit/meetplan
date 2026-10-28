@@ -76,80 +76,82 @@ const R_USER = {
 
 async function seed() {
   await testEnv.withSecurityRulesDisabled(async (c) => {
-    await setDoc(doc(c.firestore(), "events/e1"), EV);
-    await setDoc(doc(c.firestore(), "events/e1/responses/r_anon"), R_ANON);
-    await setDoc(doc(c.firestore(), "events/e1/responses/r_user"), R_USER);
+    // Call firestore() once per context — repeated calls re-apply emulator settings and throw
+    const db = c.firestore();
+    await setDoc(doc(db, "events/e1"), EV);
+    await setDoc(doc(db, "events/e1/responses/r_anon"), R_ANON);
+    await setDoc(doc(db, "events/e1/responses/r_user"), R_USER);
   });
 }
 
 describe("responses rules", () => {
   it("host can get any response", async () => {
     await seed();
-    const ctx = testEnv.authenticatedContext("host1");
+    const db = testEnv.authenticatedContext("host1").firestore();
     await assertSucceeds(
-      getDoc(doc(ctx.firestore(), "events/e1/responses/r_anon")),
+      getDoc(doc(db, "events/e1/responses/r_anon")),
     );
     await assertSucceeds(
-      getDoc(doc(ctx.firestore(), "events/e1/responses/r_user")),
+      getDoc(doc(db, "events/e1/responses/r_user")),
     );
   });
 
   it("host can list all responses", async () => {
     await seed();
-    const ctx = testEnv.authenticatedContext("host1");
+    const db = testEnv.authenticatedContext("host1").firestore();
     await assertSucceeds(
-      getDocs(collection(ctx.firestore(), "events/e1/responses")),
+      getDocs(collection(db, "events/e1/responses")),
     );
   });
 
   it("logged-in participant can get own response", async () => {
     await seed();
-    const ctx = testEnv.authenticatedContext("participant1");
+    const db = testEnv.authenticatedContext("participant1").firestore();
     await assertSucceeds(
-      getDoc(doc(ctx.firestore(), "events/e1/responses/r_user")),
+      getDoc(doc(db, "events/e1/responses/r_user")),
     );
   });
 
   it("logged-in participant cannot get someone else's response", async () => {
     await seed();
-    const ctx = testEnv.authenticatedContext("participant1");
+    const db = testEnv.authenticatedContext("participant1").firestore();
     await assertFails(
-      getDoc(doc(ctx.firestore(), "events/e1/responses/r_anon")),
+      getDoc(doc(db, "events/e1/responses/r_anon")),
     );
   });
 
   it("unauthed cannot get any response", async () => {
     await seed();
-    const ctx = testEnv.unauthenticatedContext();
+    const db = testEnv.unauthenticatedContext().firestore();
     await assertFails(
-      getDoc(doc(ctx.firestore(), "events/e1/responses/r_anon")),
+      getDoc(doc(db, "events/e1/responses/r_anon")),
     );
     await assertFails(
-      getDoc(doc(ctx.firestore(), "events/e1/responses/r_user")),
+      getDoc(doc(db, "events/e1/responses/r_user")),
     );
   });
 
   it("non-host cannot list responses", async () => {
     await seed();
-    const ctx = testEnv.authenticatedContext("participant1");
+    const db = testEnv.authenticatedContext("participant1").firestore();
     await assertFails(
-      getDocs(collection(ctx.firestore(), "events/e1/responses")),
+      getDocs(collection(db, "events/e1/responses")),
     );
   });
 
   it("no client write allowed (even for host)", async () => {
     await seed();
-    const ctx = testEnv.authenticatedContext("host1");
+    const db = testEnv.authenticatedContext("host1").firestore();
     await assertFails(
-      setDoc(doc(ctx.firestore(), "events/e1/responses/r_new"), R_ANON),
+      setDoc(doc(db, "events/e1/responses/r_new"), R_ANON),
     );
     await assertFails(
-      updateDoc(doc(ctx.firestore(), "events/e1/responses/r_anon"), {
+      updateDoc(doc(db, "events/e1/responses/r_anon"), {
         name: "X",
       }),
     );
     await assertFails(
-      deleteDoc(doc(ctx.firestore(), "events/e1/responses/r_anon")),
+      deleteDoc(doc(db, "events/e1/responses/r_anon")),
     );
   });
 });
