@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { CalendarPlus, Settings, Check, AlertCircle } from "lucide-react";
 import type { Matching, Slot } from "@meetplan/shared";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,9 @@ interface Props {
   participantNameById: Record<string, string>;
 }
 
-type Status = "idle" | "connecting" | "creating" | "success" | "error";
+type Status = "idle" | "connecting" | "creating" | "success" | "partial" | "error";
+
+const RESULT_RESET_MS = 3000;
 
 export function CalendarSyncPanel({
   selectedMatching,
@@ -30,6 +32,7 @@ export function CalendarSyncPanel({
     calendarList,
     selectedCalendarId,
     setSelectedCalendarId,
+    getSelectedCalendarId,
     connect,
     createEvents,
     creating,
@@ -39,6 +42,16 @@ export function CalendarSyncPanel({
   const [resultMsg, setResultMsg] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
+  // `${calendarId}|${eventKey}` of events added this session — re-clicking only adds what's missing
+  const [addedKeys, setAddedKeys] = useState<Set<string>>(() => new Set());
+  const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearResetTimer = useCallback(() => {
+    if (resetTimerRef.current) clearTimeout(resetTimerRef.current);
+    resetTimerRef.current = null;
+  }, []);
+
+  useEffect(() => clearResetTimer, [clearResetTimer]);
 
   useEffect(() => {
     if (!settingsOpen) return;
@@ -51,41 +64,72 @@ export function CalendarSyncPanel({
     return () => document.removeEventListener("mousedown", handler);
   }, [settingsOpen]);
 
-  const assignmentCount = Object.keys(selectedMatching.assignments).length;
+  const events: GCalEventInput[] = Object.entries(selectedMatching.assignments).flatMap(
+    ([pid, slotId]) => {
+      const slot = slots.find((s) => s.id === slotId);
+      if (!slot) return [];
+      return [{
+        key: `${pid}:${slotId}`,
+        summary: `${eventTitle} - ${participantNameById[pid] ?? pid}`,
+        ...(eventDescription ? { description: eventDescription } : {}),
+        start: slot.start,
+        end: slot.end,
+      }];
+    }
+  );
+
+  const allAdded =
+    connected &&
+    selectedCalendarId !== null &&
+    events.length > 0 &&
+    events.every((ev) => addedKeys.has(`${selectedCalendarId}|${ev.key}`));
 
   const handleAdd = async () => {
+    clearResetTimer();
     setResultMsg(null);
     setStatus("connecting");
 
     if (!connected) {
-      const ok = await connect();
-      if (!ok) { setStatus("idle"); return; }
+      const { ok, error } = await connect();
+      if (!ok) {
+        // error is null when the user just closed the popup
+        setStatus(error ? "error" : "idle");
+        setResultMsg(error);
+        return;
+      }
     }
 
-    const events: GCalEventInput[] = Object.entries(selectedMatching.assignments).flatMap(
-      ([pid, slotId]) => {
-        const slot = slots.find((s) => s.id === slotId);
-        if (!slot) return [];
-        return [{
-          summary: `${eventTitle} - ${participantNameById[pid] ?? pid}`,
-          ...(eventDescription ? { description: eventDescription } : {}),
-          start: slot.start,
-          end: slot.end,
-        }];
-      }
-    );
+    const targetId = getSelectedCalendarId();
+    const pending = events.filter((ev) => !addedKeys.has(`${targetId}|${ev.key}`));
 
     setStatus("creating");
-    const { created, error } = await createEvents(events);
+    const { calendarId, createdKeys, error } = await createEvents(pending);
 
-    if (error && created === 0) {
-      setStatus("error");
-      setResultMsg(error);
-    } else {
-      setStatus("success");
-      setResultMsg(t("gcal.added", { n: created }));
-      setTimeout(() => { setStatus("idle"); setResultMsg(null); }, 3000);
+    if (createdKeys.length > 0) {
+      setAddedKeys((prev) => {
+        const next = new Set(prev);
+        for (const k of createdKeys) next.add(`${calendarId}|${k}`);
+        return next;
+      });
     }
+
+    if (error) {
+      setStatus(createdKeys.length > 0 ? "partial" : "error");
+      setResultMsg(
+        createdKeys.length > 0
+          ? `${t("gcal.added", { n: createdKeys.length })} · ${error}`
+          : error
+      );
+      return;
+    }
+
+    setStatus("success");
+    setResultMsg(t("gcal.added", { n: createdKeys.length }));
+    resetTimerRef.current = setTimeout(() => {
+      resetTimerRef.current = null;
+      setStatus("idle");
+      setResultMsg(null);
+    }, RESULT_RESET_MS);
   };
 
   const isLoading = status === "connecting" || status === "creating" || connecting || creating;
@@ -98,8 +142,13 @@ export function CalendarSyncPanel({
           {resultMsg}
         </span>
       )}
-      {status === "error" && resultMsg && (
-        <span className="flex items-center gap-1 text-xs text-danger whitespace-nowrap">
+      {(status === "error" || status === "partial") && resultMsg && (
+        <span
+          className={cn(
+            "flex items-center gap-1 text-xs whitespace-nowrap",
+            status === "partial" ? "text-warning" : "text-danger"
+          )}
+        >
           <AlertCircle size={12} />
           {resultMsg}
         </span>
@@ -110,10 +159,10 @@ export function CalendarSyncPanel({
         variant="secondary"
         className="text-xs h-8 px-2.5 gap-1.5"
         onClick={handleAdd}
-        disabled={isLoading || assignmentCount === 0}
+        disabled={isLoading || events.length === 0 || allAdded}
       >
-        <CalendarPlus size={13} />
-        {isLoading ? t("gcal.adding") : t("gcal.addToCalendar")}
+        {allAdded ? <Check size={13} /> : <CalendarPlus size={13} />}
+        {isLoading ? t("gcal.adding") : allAdded ? t("gcal.allAdded") : t("gcal.addToCalendar")}
       </Button>
 
       <div className="relative" ref={settingsRef}>

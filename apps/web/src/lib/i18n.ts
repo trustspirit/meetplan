@@ -328,8 +328,14 @@ const ko = {
   'gcal.selectCalendar': '캘린더 선택',
   'gcal.adding':         '추가 중…',
   'gcal.added':          '{n}개 이벤트 추가됨',
-  'gcal.addFailed':      '추가 실패',
+  'gcal.addFailed':      '{n}개 추가 실패',
+  'gcal.allAdded':       '추가 완료',
   'gcal.tokenExpired':   '인증이 만료되었습니다. 다시 연결해주세요.',
+  'gcal.loginRequired':  '로그인이 필요합니다',
+  'gcal.noToken':        '캘린더 접근 권한을 가져오지 못했습니다',
+  'gcal.listFailed':     '캘린더 목록을 불러오지 못했습니다',
+  'gcal.noCalendar':     '캘린더를 먼저 연결해주세요',
+  'gcal.unknownError':   '오류가 발생했습니다',
 } as const;
 
 type Dict = typeof ko;
@@ -636,8 +642,14 @@ const en: TranslationMap = {
   'gcal.selectCalendar': 'Select calendar',
   'gcal.adding':         'Adding…',
   'gcal.added':          '{n} events added',
-  'gcal.addFailed':      'Failed to add',
+  'gcal.addFailed':      '{n} failed',
+  'gcal.allAdded':       'Added',
   'gcal.tokenExpired':   'Session expired. Reconnect.',
+  'gcal.loginRequired':  'Sign-in required',
+  'gcal.noToken':        'Could not get calendar access',
+  'gcal.listFailed':     'Could not load calendars',
+  'gcal.noCalendar':     'Connect a calendar first',
+  'gcal.unknownError':   'Something went wrong',
 };
 
 const dicts: Record<Locale, TranslationMap> = { ko, en };

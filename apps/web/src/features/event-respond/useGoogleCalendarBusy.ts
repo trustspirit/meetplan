@@ -1,16 +1,11 @@
 import { useState, useCallback } from "react";
-import { reauthenticateWithPopup, GoogleAuthProvider } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { connectGoogleCalendar, type CalendarListItem } from "@/lib/googleCalendar";
+
+export type { CalendarListItem };
 
 export interface BusyInterval {
   start: string; // ISO UTC
   end: string;   // ISO UTC
-}
-
-export interface CalendarListItem {
-  id: string;
-  summary: string;
-  primary?: boolean;
 }
 
 export interface GoogleCalendarBusyState {
@@ -38,35 +33,13 @@ export function useGoogleCalendarBusy(): GoogleCalendarBusyState {
 
   // Step 1: OAuth popup → fetch calendar list → user picks a calendar
   const connectCalendar = useCallback(async (): Promise<boolean> => {
-    const currentUser = auth.currentUser;
-    if (!currentUser) { setError("로그인이 필요합니다"); return false; }
-
     setLoading(true);
     setError(null);
 
     try {
-      const provider = new GoogleAuthProvider();
-      provider.addScope("https://www.googleapis.com/auth/calendar.readonly");
-      // reauthenticateWithPopup ensures the same Google account — prevents accidental account switching
-      const result = await reauthenticateWithPopup(currentUser, provider);
-      const credential = GoogleAuthProvider.credentialFromResult(result);
-      const token = credential?.accessToken;
-      if (!token) throw new Error("캘린더 접근 권한을 가져오지 못했습니다");
-
-      const res = await fetch(
-        "https://www.googleapis.com/calendar/v3/users/me/calendarList?minAccessRole=reader",
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      if (!res.ok) throw new Error("캘린더 목록을 불러오지 못했습니다");
-
-      const data = await res.json();
-      const items: CalendarListItem[] = (data.items ?? []).map(
-        (c: { id: string; summary: string; primary?: boolean }) => ({
-          id: c.id,
-          summary: c.summary,
-          primary: c.primary,
-        })
-      );
+      const conn = await connectGoogleCalendar(["calendar.readonly"], "reader");
+      if (!conn) return false;
+      const { token, items } = conn;
       setCalendarList(items);
       setAccessToken(token);
       // Pre-select primary calendar
@@ -74,10 +47,6 @@ export function useGoogleCalendarBusy(): GoogleCalendarBusyState {
       setSelectedCalendarId(primary?.id ?? items[0]?.id ?? null);
       return true;
     } catch (e: unknown) {
-      const code = (e as { code?: string })?.code;
-      if (code === "auth/popup-closed-by-user" || code === "auth/cancelled-popup-request") {
-        return false;
-      }
       setError(e instanceof Error ? e.message : "오류가 발생했습니다");
       return false;
     } finally {

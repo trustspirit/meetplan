@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { List, CalendarDays } from "lucide-react";
-import type { MatchingResult, Slot } from "@meetplan/shared";
+import type { Matching, MatchingResult, Slot } from "@meetplan/shared";
 import type { MatrixModel } from "./matrixModel";
 import { CalendarSyncPanel } from "./CalendarSyncPanel";
 import { ParticipantFilterBar } from "./ParticipantFilterBar";
@@ -23,6 +23,14 @@ interface Props {
 
 type ViewMode = "list" | "grid";
 
+/** Identity of a combination that survives recomputation of the matchings list. */
+function matchingKey(m: Matching): string {
+  return Object.entries(m.assignments)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([p, s]) => `${p}:${s}`)
+    .join("|");
+}
+
 export function MatchingView({
   matching,
   model,
@@ -37,11 +45,14 @@ export function MatchingView({
 }: Props) {
   const [view, setView] = useState<ViewMode>("list");
   const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const [selectedIdx, setSelectedIdx] = useState(0);
-
-  useEffect(() => {
-    if (selectedIdx >= matching.matchings.length) setSelectedIdx(0);
-  }, [matching.matchings.length, selectedIdx]);
+  // Keyed by combination, not index — the list is rebuilt when participants are hidden or responses arrive
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  const foundIdx = matching.matchings.findIndex((m) => matchingKey(m) === selectedKey);
+  const selectedIdx = foundIdx >= 0 ? foundIdx : 0;
+  const setSelectedIdx = (i: number) => {
+    const m = matching.matchings[i];
+    setSelectedKey(m ? matchingKey(m) : null);
+  };
 
   const hiddenCount = hiddenIds.size;
 
@@ -162,11 +173,7 @@ function ListView({ matching, model, participantNameById, participantColors, sel
   return (
     <div className="flex flex-col gap-3">
       {matching.matchings.map((m, idx) => {
-        const stableKey =
-          Object.entries(m.assignments)
-            .sort(([a], [b]) => a.localeCompare(b))
-            .map(([p, s]) => `${p}:${s}`)
-            .join("|") || `empty-${idx}`;
+        const stableKey = matchingKey(m) || `empty-${idx}`;
         const isSelected = idx === selectedIdx;
         return (
           <div
