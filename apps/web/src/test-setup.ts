@@ -20,3 +20,12 @@ class ResizeObserverStub {
   disconnect() {}
 }
 window.ResizeObserver = ResizeObserverStub as unknown as typeof ResizeObserver;
+
+// Node 22+의 실험적 전역 localStorage/sessionStorage가 jsdom 것을 가리고,
+// --localstorage-file 없이는 undefined가 된다. jsdom의 스토리지로 되돌린다.
+const jsdomWindow = (globalThis as { jsdom?: { window: Window } }).jsdom?.window;
+if (jsdomWindow) {
+  for (const name of ["localStorage", "sessionStorage"] as const) {
+    Object.defineProperty(globalThis, name, { configurable: true, value: jsdomWindow[name] });
+  }
+}
